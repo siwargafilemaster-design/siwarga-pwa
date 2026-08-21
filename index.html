@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uji Sambungan — SiWARGA</title>
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:#F2F4F7;color:#1F2933;}
+.wrap{max-width:480px;margin:0 auto;padding:24px 16px;}
+h1{font-size:1.1rem;margin:0 0 6px;}
+p.sub{font-size:.83rem;color:#7A8794;margin:0 0 20px;line-height:1.5;}
+button{width:100%;padding:15px;border:none;border-radius:11px;background:#22303F;
+color:#fff;font-size:.92rem;font-weight:600;font-family:inherit;}
+button:disabled{opacity:.5;}
+.box{margin-top:18px;border-radius:12px;padding:15px;font-size:.85rem;
+line-height:1.55;display:none;}
+.box.on{display:block;}
+.ok{background:#E3F0E7;border:1px solid #3F7D58;color:#28563B;}
+.bad{background:#FBE6E6;border:1px solid #D64545;color:#8F2C2C;}
+.box b{display:block;margin-bottom:6px;}
+pre{background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:10px;
+font-size:.75rem;white-space:pre-wrap;word-break:break-word;margin:10px 0 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Uji Sambungan SiWARGA</h1>
+  <p class="sub">Menguji Vercel &rarr; AppScript. Halaman ini sementara dan akan dihapus di Tahap 1.</p>
+  <button id="btn">Kirim Ping</button>
+  <div class="box" id="hasil"></div>
+</div>
+
+<script src="/inti/api.js"></script>
+<script>
+const btn = document.getElementById('btn');
+const box = document.getElementById('hasil');
+
+btn.onclick = async () => {
+  btn.disabled = true; btn.textContent = 'Menghubungi...';
+  box.className = 'box';
+  try {
+    const data = await panggilAPI('ping');
+    box.className = 'box on ok';
+    box.innerHTML = '<b>Berhasil — sambungan aman</b>' +
+      'Vercel bisa memanggil AppScript. Tahap 0 selesai.' +
+      '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+  } catch (err) {
+    box.className = 'box on bad';
+    box.innerHTML = '<b>Gagal</b>' +
+      'Cek URL di inti/api.js dan setelan deploy AppScript.' +
+      '<pre>' + String(err) + '</pre>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Kirim Ping';
+  }
+};
+</script>
+</body>
+</html>
