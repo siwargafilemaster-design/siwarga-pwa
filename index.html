@@ -39,8 +39,7 @@ btn.onclick = async () => {
   btn.disabled = true; btn.textContent = 'Menghubungi...';
   box.className = 'box';
   try {
-    const data = await panggilAPI('login', 'BENDAHARA', 'PIN_ASLI_BAPAK');
-    localStorage.setItem('siwarga_token', data.token);
+    const data = await panggilAPI('ping')
     box.className = 'box on ok';
     box.innerHTML = '<b>Berhasil — sambungan aman</b>' +
       'Vercel bisa memanggil AppScript. Tahap 0 selesai.' +
