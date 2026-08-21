@@ -3,7 +3,7 @@
 // Pola dari "FONDASI Project Baru" (terbukti di app Zakat)
 // =========================================================
 
-const URL_API = "TEMPEL_URL_EXEC_DI_SINI";
+const URL_API = "https://script.google.com/macros/s/AKfycbzaT1gqIqhh2suw-_ixWRpsABpPqwiI8qNGx2nRV16h8x_xnbTse4bcrkBxngvOed-ZEQ/exec";
 
 /**
  * Memanggil satu action di backend.
