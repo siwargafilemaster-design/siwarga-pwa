@@ -2,59 +2,98 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Uji Sambungan — SiWARGA</title>
-<style>
-body{margin:0;font-family:system-ui,sans-serif;background:#F2F4F7;color:#1F2933;}
-.wrap{max-width:480px;margin:0 auto;padding:24px 16px;}
-h1{font-size:1.1rem;margin:0 0 6px;}
-p.sub{font-size:.83rem;color:#7A8794;margin:0 0 20px;line-height:1.5;}
-button{width:100%;padding:15px;border:none;border-radius:11px;background:#22303F;
-color:#fff;font-size:.92rem;font-weight:600;font-family:inherit;}
-button:disabled{opacity:.5;}
-.box{margin-top:18px;border-radius:12px;padding:15px;font-size:.85rem;
-line-height:1.55;display:none;}
-.box.on{display:block;}
-.ok{background:#E3F0E7;border:1px solid #3F7D58;color:#28563B;}
-.bad{background:#FBE6E6;border:1px solid #D64545;color:#8F2C2C;}
-.box b{display:block;margin-bottom:6px;}
-pre{background:#fff;border:1px solid #E8EBEF;border-radius:8px;padding:10px;
-font-size:.75rem;white-space:pre-wrap;word-break:break-word;margin:10px 0 0;}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#22303F">
+<title>SiWARGA</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/inti/base.css">
+<link rel="stylesheet" href="/inti/components.css">
 </head>
 <body>
-<div class="wrap">
-  <h1>Uji Sambungan SiWARGA</h1>
-  <p class="sub">Menguji Vercel &rarr; AppScript. Halaman ini sementara dan akan dihapus di Tahap 1.</p>
-  <button id="btn">Kirim Ping</button>
-  <div class="box" id="hasil"></div>
+
+<svg style="display:none" aria-hidden="true"><defs>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></symbol>
+<symbol id="i-house" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5"/><path d="M5 10v10h14V10"/><circle cx="12" cy="14" r="1.3"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><rect x="3" y="7" width="18" height="12" rx="2"/><circle cx="16" cy="13" r="1.4"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></symbol>
+<symbol id="i-idcard" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M5 17c.5-2 2-3 3-3s2.5 1 3 3"/><path d="M13 10h6M13 14h4"/></symbol>
+<symbol id="i-shieldcheck" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6z"/><path d="M9 12l2.2 2.2L15 10"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.2"/><path d="M15.5 14.2c2.4.4 4 2.3 4.5 5.3"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 6.3v3.4M10.4 8h3.2"/><path d="M4 19c1-2.5 3-4 5-4h6c2 0 4 1.5 5 4"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H12v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H12v16h6.5a1.5 1.5 0 0 0 1.5-1.5z"/></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v2H9z"/><path d="M8.5 13l2 2 4.5-4.5"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2z"/><path d="M9 4v14M15 6v14"/></symbol>
+<symbol id="i-tree" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.7"/><path d="M12 6.2V11"/><path d="M5 15v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/><circle cx="5" cy="18" r="1.7"/><circle cx="12" cy="18" r="1.7"/><circle cx="19" cy="18" r="1.7"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 6.5 12 13l8-6.5"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.2M12 18.8V21M4.2 12H2M22 12h-2.2M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6z"/></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12"/><path d="M9 9c-1.4 0-2.6-.9-2.6-2.3S7.6 5 9 6.4C10.4 5 12 5.6 12 9"/><path d="M15 9c1.4 0 2.6-.9 2.6-2.3S16.4 5 15 6.4C13.6 5 12 5.6 12 9"/></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 10 12 4l9 6"/><path d="M7 10v9M11 10v9M13 10v9M17 10v9"/><path d="M3.5 19h17"/></symbol>
+<symbol id="i-siren" viewBox="0 0 24 24"><path d="M7 17v-4a5 5 0 0 1 10 0v4"/><path d="M4 17h16M4 20h16"/><path d="M12 4V2M5.5 6 4 4.5M18.5 6 20 4.5"/></symbol>
+<symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h3l7 4V5L8 9H5a1 1 0 0 0-1 1z"/><path d="M18 9.5a3.5 3.5 0 0 1 0 5"/></symbol>
+<symbol id="i-lamp" viewBox="0 0 24 24"><path d="M12 3v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="4"/><path d="M10 18h4M10.5 21h3"/></symbol>
+<symbol id="i-seal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+</defs></svg>
+
+<div class="app">
+  <div id="konten"><div class="memuat">Memuat…</div></div>
+
+  <button class="sos sembunyi" id="btnSos" aria-label="Sinyal darurat">
+    <svg class="ic ic-lg"><use href="#i-siren"/></svg>
+  </button>
+
+  <nav class="bnav" id="bnav"></nav>
 </div>
 
-<script src="/inti/api.js"></script>
-<script>
-const btn = document.getElementById('btn');
-const box = document.getElementById('hasil');
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="dr-head">
+    <b id="drNama">SiWARGA</b>
+    <small id="drSub">Sistem Integrasi Warga</small>
+    <div class="dr-akun">
+      <span id="drRole">Mode Tamu</span>
+      <button id="btnAkun">Login</button>
+    </div>
+  </div>
+  <div class="dr-scroll" id="drMenu"></div>
+  <div class="dr-foot">SiWARGA PWA · v2.0</div>
+</aside>
 
-btn.onclick = async () => {
-  btn.disabled = true; btn.textContent = 'Menghubungi...';
-  box.className = 'box';
-  try {
-    localStorage.removeItem('siwarga_token');
-await panggilAPI('cekSaya');
-    box.className = 'box on ok';;;;;;;    box.className = 'box on ok';;;;;;;
-        box.className = 'box on ok';
-    box.innerHTML = '<b>Berhasil — sambungan aman</b>' +
-      'Vercel bisa memanggil AppScript. Tahap 0 selesai.' +
-      '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-  } catch (err) {
-    box.className = 'box on bad';
-    box.innerHTML = '<b>Gagal</b>' +
-      'Cek URL di inti/api.js dan setelan deploy AppScript.' +
-      '<pre>' + String(err) + '</pre>';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Kirim Ping';
-  }
-};
-</script>
+<div class="sheet" id="sheetLogin">
+  <div class="sheet-box">
+    <h2>Login Pengurus</h2>
+    <p>Pilih jabatan dan masukkan PIN.</p>
+    <div class="pesan-galat" id="galatLogin"></div>
+    <div class="field">
+      <label for="inRole">Jabatan</label>
+      <select id="inRole">
+        <option value="RT">Admin RT</option>
+        <option value="SEKRETARIS">Sekretaris</option>
+        <option value="BENDAHARA">Bendahara RT</option>
+        <option value="PKK">Admin PKK</option>
+        <option value="HUMAS">Admin Humas</option>
+        <option value="TELLER">Admin Bank PKK</option>
+        <option value="DEVELOPER">Super Admin</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="inPin">PIN</label>
+      <input id="inPin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••••">
+    </div>
+    <button class="btn btn-utama" id="btnMasuk">Masuk</button>
+    <button class="btn btn-halus" id="btnBatal">Batal</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/inti/api.js"></script>
+<script src="/inti/app.js"></script>
 </body>
 </html>

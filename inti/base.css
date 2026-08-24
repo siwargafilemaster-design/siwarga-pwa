@@ -1,0 +1,41 @@
+:root{
+  /* Warna inti */
+  --hero-1:#22303F;
+  --hero-2:#33475C;
+  --ink:#1F2933;
+  --muted:#7A8794;
+  --line:#E8EBEF;
+  --bg:#F2F4F7;
+  --card:#FFFFFF;
+
+  /* Aksen */
+  --gold:#D99A2B;      --gold-soft:#FDF3DF;   --gold-ink:#9C6D14;
+  --sage:#3F7D58;      --sage-soft:#E3F0E7;
+  --red:#D64545;       --red-soft:#FBE6E6;
+  --pink:#C2557C;      --pink-soft:#FBE8EF;
+
+  /* Ukuran */
+  --navh:64px;
+  --r-lg:18px;
+  --r-md:13px;
+  --r-sm:9px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Poppins',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+.app{max-width:430px;margin:0 auto;position:relative;min-height:100vh;background:var(--bg);}
+
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.ic-sm{width:16px;height:16px;}
+.ic-xs{width:13px;height:13px;}
+.ic-lg{width:24px;height:24px;}
+
+.sembunyi{display:none !important;}
+.pad-bot{height:calc(var(--navh) + 26px);}
