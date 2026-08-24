@@ -14,9 +14,9 @@
 
 <div class="wrap lift">
   <div class="card id-card">
-    <div class="id-mark" id="dashLogo">SW</div>
-    <h2 id="dashJudul">Lingkungan RT</h2>
-    <p>Sistem Pelayanan Digital Warga</p>
+    <div class="id-mark" id="dashLogo">—</div>
+    <h2 id="dashJudul">Memuat…</h2>
+    <p id="dashSubJudul"></p>
     <span class="id-role">
       <svg class="ic ic-xs"><use href="#i-seal"/></svg>
       <b id="dashRoleTag">Mode Tamu</b>
@@ -26,11 +26,29 @@
 
 <div class="wrap">
 
+  <!-- PENGUMUMAN -->
   <div class="sec">
-    <div class="sec-head"><h3>Pengumuman</h3></div>
+    <div class="sec-head">
+      <h3>Pengumuman</h3>
+      <button class="btn-kelola sembunyi" id="btnKelolaUmum" onclick="bukaEditorPengumuman()">
+        <svg class="ic ic-xs"><use href="#i-pensil"/></svg>Kelola
+      </button>
+    </div>
     <div id="boxPengumuman"><div class="memuat">Memuat…</div></div>
   </div>
 
+  <!-- KALENDER KEGIATAN -->
+  <div class="sec">
+    <div class="sec-head">
+      <h3>Kalender Kegiatan</h3>
+      <span class="sec-act" id="lblJmlKegiatan"></span>
+    </div>
+    <div class="card" id="boxKalender">
+      <div class="memuat">Memuat…</div>
+    </div>
+  </div>
+
+  <!-- STATISTIK -->
   <div class="sec">
     <div class="sec-head"><h3>Statistik Warga</h3></div>
     <div class="stat-row" id="boxStatistik">
@@ -39,6 +57,7 @@
     </div>
   </div>
 
+  <!-- RONDA -->
   <div class="sec">
     <div class="sec-head"><h3>Jadwal Ronda</h3></div>
     <div class="ronda">
@@ -48,6 +67,9 @@
           <b>Ronda Malam Ini</b>
           <small id="rondaHari">Memuat…</small>
         </div>
+        <button class="ronda-cog sembunyi" id="btnKelolaRonda" onclick="bukaEditorRonda()">
+          <svg class="ic ic-sm"><use href="#i-gear"/></svg>
+        </button>
       </div>
       <div class="ronda-list" id="rondaList"></div>
     </div>
@@ -56,3 +78,97 @@
 </div>
 
 <div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: SOS ============ -->
+<div class="lembar" id="lembarSos">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Sinyal Darurat</h2>
+      <button onclick="tutupLembar('lembarSos')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="field">
+        <label for="sosLokasi">Lokasi kejadian</label>
+        <input id="sosLokasi" type="text" placeholder="Contoh: Blok A1" autocomplete="off">
+      </div>
+      <label style="font-size:.72rem;font-weight:600;display:block;margin-bottom:8px;">
+        Pilih jenis darurat
+      </label>
+      <div class="sos-grid">
+        <button class="sos-pilih api"    onclick="pilihSos('KEBAKARAN')">
+          <svg><use href="#i-api"/></svg>Kebakaran</button>
+        <button class="sos-pilih maling" onclick="pilihSos('MALING')">
+          <svg><use href="#i-maling"/></svg>Maling</button>
+        <button class="sos-pilih medis"  onclick="pilihSos('MEDIS')">
+          <svg><use href="#i-medis"/></svg>Medis</button>
+        <button class="sos-pilih umum"   onclick="pilihSos('DARURAT LAIN')">
+          <svg><use href="#i-alert"/></svg>Darurat Lain</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: PENGUMUMAN ============ -->
+<div class="lembar" id="lembarUmum">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Kelola Pengumuman</h2>
+      <button onclick="tutupLembar('lembarUmum')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div id="daftarEditUmum"></div>
+      <button class="btn-tambah" onclick="tambahBarisUmum('')">
+        <svg class="ic ic-sm"><use href="#i-plus"/></svg>Tambah Pengumuman
+      </button>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnSimpanUmum" onclick="simpanPengumuman()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: RONDA ============ -->
+<div class="lembar" id="lembarRonda">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Atur Jadwal Ronda</h2>
+      <button onclick="tutupLembar('lembarRonda')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="hari-baris" id="hariBaris"></div>
+      <div class="cari-baris">
+        <input id="cariPetugas" list="dlWarga" placeholder="Ketik blok atau nama…" autocomplete="off">
+        <datalist id="dlWarga"></datalist>
+        <button onclick="tambahPetugas()"><svg class="ic ic-sm"><use href="#i-plus"/></svg></button>
+      </div>
+      <div class="petugas-kotak" id="petugasKotak"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnSimpanRonda" onclick="simpanRonda()">Simpan Hari Ini</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: STATUS KEGIATAN ============ -->
+<div class="lembar" id="lembarStatus">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Ubah Status</h2>
+      <button onclick="tutupLembar('lembarStatus')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="status-judul">
+        <b id="statAcara">—</b>
+        <span id="statInfo">—</span>
+      </div>
+      <div class="status-daftar" id="statDaftar"></div>
+      <p style="font-size:.72rem;color:var(--muted);margin:16px 0 0;line-height:1.5;">
+        Perubahan status juga otomatis tercatat di sheet notulen rapat yang bersangkutan.
+      </p>
+    </div>
+  </div>
+</div>
