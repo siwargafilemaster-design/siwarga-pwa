@@ -1,9 +1,7 @@
 /* =================================================================
    app.js — kerangka aplikasi
-   Pengganti GlobalJS.html: nav, drawer, login, bottom nav per peran
    ================================================================= */
 
-/* ---------- DAFTAR MENU (urutan & grup sama seperti aplikasi lama) ---------- */
 const MENU = [
   { key:'home',        folder:'dashboard',    label:'Beranda',              ikon:'i-home' },
 
@@ -34,13 +32,11 @@ const MENU = [
   { key:'tabungan',    folder:'tabungan',     label:'Bank PKK',             ikon:'i-bank', extra:true }
 ];
 
-/* ---------- GRUP IZIN (salinan tampilan dari server) ---------- */
 const GRUP_UI = {
   VERIFIKASI: ['DEVELOPER','BENDAHARA'],
   SURAT:      ['DEVELOPER','RT','SEKRETARIS']
 };
 
-/* ---------- PINTASAN BOTTOM NAV PER PERAN ---------- */
 const NAV_PERAN = {
   GUEST:      ['home','rumah','peta','arisan'],
   RT:         ['home','rumah','surat','dokumen-rt'],
@@ -66,11 +62,11 @@ const LABEL_PENDEK = {
   humas:'Hunian', arisan:'Arisan', tabungan:'Bank PKK'
 };
 
-/* ---------- KEADAAN APLIKASI ---------- */
 const App = {
   peran: 'GUEST',
   halaman: 'home',
   identitas: null,
+  dataBeranda: null,     // diisi saat pembuka, dipakai modul dashboard
   modulTerpasang: {}
 };
 
@@ -81,8 +77,7 @@ function cariMenu(key){ return MENU.find(m => m.key === key); }
 
 function bolehLihat(item){
   if (!item.izin) return true;
-  const daftar = GRUP_UI[item.izin] || [];
-  return daftar.indexOf(App.peran) !== -1;
+  return (GRUP_UI[item.izin] || []).indexOf(App.peran) !== -1;
 }
 
 function toast(pesan){
@@ -90,6 +85,15 @@ function toast(pesan){
   t.textContent = pesan;
   t.classList.add('on');
   setTimeout(() => t.classList.remove('on'), 2600);
+}
+
+function terapkanIdentitas(cfg){
+  if (!cfg) return;
+  App.identitas = cfg;
+  document.title = cfg.appName || 'SiWARGA';
+  $('drNama').textContent = cfg.appName || 'SiWARGA';
+  $('drSub').textContent  = cfg.namaRT  || '';
+  if (cfg.theme) document.documentElement.style.setProperty('--hero-1', cfg.theme);
 }
 
 /* ---------- DRAWER ---------- */
@@ -180,7 +184,6 @@ async function pergiKe(key){
     return;
   }
 
-  // Muat script modul sekali saja
   if (!App.modulTerpasang[item.folder]){
     try {
       await new Promise((selesai, gagal) => {
@@ -190,7 +193,7 @@ async function pergiKe(key){
         document.body.appendChild(s);
       });
       App.modulTerpasang[item.folder] = true;
-    } catch (e) { /* modul tanpa js, tidak apa-apa */ }
+    } catch (e) { /* modul tanpa js */ }
   }
 
   const namaInit = 'init_' + item.folder.replace(/-/g, '_');
@@ -222,6 +225,7 @@ async function prosesLogin(){
     const hasil = await panggilAPI('login', peran, pin);
     simpanToken(hasil.token);
     App.peran = hasil.role;
+    localStorage.setItem('siwarga_peran', hasil.role);
 
     tutupLogin();
     tutupDrawer();
@@ -239,6 +243,8 @@ async function prosesLogin(){
 async function prosesLogout(){
   try { await panggilAPI('logout'); } catch (e) {}
   buangToken();
+  localStorage.removeItem('siwarga_peran');
+  hapusSemuaIngatan();
   App.peran = 'GUEST';
   tutupDrawer();
   toast('Sudah keluar');
@@ -255,35 +261,63 @@ async function kirimSinyal(jenis, lokasi){
   }
 }
 
-/* ---------- MULAI ---------- */
+/* =================================================================
+   MULAI — inilah bagian yang membuat aplikasi terasa cepat
+   ================================================================= */
 async function mulai(){
-  // 1. Identitas (tanpa login)
-  try {
-    App.identitas = await panggilAPI('getKonfigurasiPublik');
-    document.title = App.identitas.appName || 'SiWARGA';
-    $('drNama').textContent = App.identitas.appName || 'SiWARGA';
-    $('drSub').textContent  = App.identitas.namaRT  || '';
-    if (App.identitas.theme){
-      document.documentElement.style.setProperty('--hero-1', App.identitas.theme);
-    }
-  } catch (e) { console.error('Identitas gagal:', e); }
 
-  // 2. Token lama masih berlaku?
-  let mendarat = 'home';
-  if (ambilToken()){
-    try {
-      const saya = await panggilAPI('cekSaya');
-      if (saya.login){ App.peran = saya.role; }
-    } catch (e) { buangToken(); }
-  }
+  // --- LANGKAH 1: tampilkan dari ingatan HP, SEKETIKA ---
+  // Tidak menunggu server sama sekali. Layar langsung terisi.
+  const peranTersimpan = localStorage.getItem('siwarga_peran');
+  if (peranTersimpan) App.peran = peranTersimpan;
+
+  const cfgLama = ambilIngatan('config');
+  if (cfgLama) terapkanIdentitas(cfgLama);
+
+  const berandaLama = ambilIngatan('beranda');
+  if (berandaLama) App.dataBeranda = berandaLama;
 
   gambarBnav();
   gambarDrawer();
-  pergiKe(mendarat);
+  pergiKe('home');
+
+  // --- LANGKAH 2: satu panggilan ke server, di belakang layar ---
+  try {
+    const d = await panggilAPI('pembuka');
+
+    if (d.config){
+      terapkanIdentitas(d.config);
+      simpanIngatan('config', d.config);
+    }
+
+    // Peran dari server yang menentukan, bukan yang tersimpan di HP
+    const peranBaru = (d.sesi && d.sesi.login) ? d.sesi.role : 'GUEST';
+    const peranBerubah = (peranBaru !== App.peran);
+
+    App.peran = peranBaru;
+    if (peranBaru === 'GUEST') localStorage.removeItem('siwarga_peran');
+    else localStorage.setItem('siwarga_peran', peranBaru);
+
+    if (peranBerubah){ gambarBnav(); gambarDrawer(); }
+
+    if (d.beranda){
+      App.dataBeranda = d.beranda;
+      simpanIngatan('beranda', d.beranda);
+
+      // Kalau modul Beranda sedang terbuka, segarkan isinya
+      if (App.halaman === 'home' && typeof segarkan_dashboard === 'function'){
+        segarkan_dashboard(d.beranda);
+      }
+    }
+
+  } catch (e) {
+    console.error('Pembuka gagal:', e);
+    if (!berandaLama) toast('Gagal menghubungi server');
+  }
 }
 
 /* ---------- PASANG PENDENGAR ---------- */
-$('scrim').onclick   = tutupDrawer;
+$('scrim').onclick    = tutupDrawer;
 $('btnBatal').onclick = tutupLogin;
 $('btnMasuk').onclick = prosesLogin;
 $('inPin').addEventListener('keydown', e => { if (e.key === 'Enter') prosesLogin(); });
@@ -298,6 +332,7 @@ $('btnSos').onclick = () => {
 
 window.addEventListener('sesi-habis', () => {
   App.peran = 'GUEST';
+  localStorage.removeItem('siwarga_peran');
   gambarBnav(); gambarDrawer();
   toast('Sesi berakhir, silakan login lagi');
   bukaLogin();

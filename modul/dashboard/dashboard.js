@@ -33,30 +33,65 @@ const Beranda = {
 /* ---------- MULAI ---------- */
 async function init_dashboard(){
   tanggalBeranda();
-
-  const labelPeran = LABEL_PERAN[App.peran] || App.peran;
-  document.getElementById('dashPeran').textContent   = labelPeran;
-  document.getElementById('dashRoleTag').textContent = labelPeran;
+  pasangLabelPeran();
 
   if (bolehKelola()){
     document.getElementById('btnKelolaUmum').classList.remove('sembunyi');
     document.getElementById('btnKelolaRonda').classList.remove('sembunyi');
   }
 
+  // Identitas dari config yang sudah ada di memori — tanpa memanggil server
+  if (App.identitas) isiIdentitas(App.identitas);
+
+  // Kalau data sudah ada (dari ingatan HP atau panggilan pembuka),
+  // langsung gambar. TIDAK memanggil server lagi.
+  if (App.dataBeranda){
+    gambarSemua(App.dataBeranda);
+    return;
+  }
+
+  // Hanya kalau benar-benar belum ada apa-apa, baru menunggu.
   try {
     const d = await panggilAPI('getBeranda');
-    isiIdentitas(d.info);
-    Beranda.pengumuman = d.pengumuman || [];
-    Beranda.kalender   = d.kalender   || [];
-    isiPengumuman();
-    isiKalender();
-    isiStatistik(d.statistik);
-    isiRonda(d.ronda);
+    App.dataBeranda = d;
+    simpanIngatan('beranda', d);
+    gambarSemua(d);
   } catch (e) {
     document.getElementById('boxPengumuman').innerHTML =
       '<div class="card ann"><div class="ann-body">Gagal memuat data: ' +
       amanTeks(e.message) + '</div></div>';
   }
+}
+
+/** Dipanggil app.js saat data segar tiba dari server. */
+function segarkan_dashboard(d){
+  if (!d) return;
+  pasangLabelPeran();
+  if (App.identitas) isiIdentitas(App.identitas);
+
+  if (bolehKelola()){
+    document.getElementById('btnKelolaUmum').classList.remove('sembunyi');
+    document.getElementById('btnKelolaRonda').classList.remove('sembunyi');
+  }
+
+  gambarSemua(d);
+}
+
+function gambarSemua(d){
+  Beranda.pengumuman = d.pengumuman || [];
+  Beranda.kalender   = d.kalender   || [];
+  isiPengumuman();
+  isiKalender();
+  isiStatistik(d.statistik);
+  isiRonda(d.ronda);
+}
+
+function pasangLabelPeran(){
+  const label = LABEL_PERAN[App.peran] || App.peran;
+  const a = document.getElementById('dashPeran');
+  const b = document.getElementById('dashRoleTag');
+  if (a) a.textContent = label;
+  if (b) b.textContent = label;
 }
 
 function bolehKelola(){
@@ -81,11 +116,11 @@ function tglIndo(d){
 }
 
 /* ---------- IDENTITAS ---------- */
-function isiIdentitas(info){
-  if (!info) return;
+function isiIdentitas(cfg){
+  if (!cfg) return;
 
-  const nama = info.nama || '';
-  const desc = info.desc || '';
+  const nama = cfg.namaRT || '';
+  const desc = cfg.desc   || '';
 
   document.getElementById('dashNamaRT').textContent   = nama ? ('Warga ' + nama) : 'Beranda';
   document.getElementById('dashDesc').textContent     = desc;
@@ -93,9 +128,9 @@ function isiIdentitas(info){
   document.getElementById('dashSubJudul').textContent = desc;
 
   const kotak = document.getElementById('dashLogo');
-  if (info.logo && String(info.logo).length > 20){
+  if (cfg.logo && String(cfg.logo).length > 20){
     kotak.classList.add('id-mark--polos');
-    kotak.innerHTML = '<img src="' + info.logo + '" alt="Logo">';
+    kotak.innerHTML = '<img src="' + cfg.logo + '" alt="Logo">';
   } else {
     kotak.classList.remove('id-mark--polos');
     kotak.textContent = inisialLembaga(nama);
@@ -166,6 +201,7 @@ async function simpanPengumuman(){
   try {
     await panggilAPI('simpanPengumuman', isi);
     Beranda.pengumuman = isi;
+    if (App.dataBeranda){ App.dataBeranda.pengumuman = isi; simpanIngatan('beranda', App.dataBeranda); }
     isiPengumuman();
     tutupLembar('lembarUmum');
     toast('Pengumuman tersimpan');

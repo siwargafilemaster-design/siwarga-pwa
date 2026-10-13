@@ -4,9 +4,9 @@
 
 const URL_API = "https://script.google.com/macros/s/AKfycbxTY7Rdrx9rFouyj1YaQlwIugU-g1FMRdbia7e7K0qmZ-oencN_SpITipFJlw8KfyFzYg/exec";
 
-function ambilToken()      { return localStorage.getItem('siwarga_token'); }
-function simpanToken(t)    { localStorage.setItem('siwarga_token', t); }
-function buangToken()      { localStorage.removeItem('siwarga_token'); }
+function ambilToken()   { return localStorage.getItem('siwarga_token'); }
+function simpanToken(t) { localStorage.setItem('siwarga_token', t); }
+function buangToken()   { localStorage.removeItem('siwarga_token'); }
 
 /**
  * PENTING: sengaja TANPA header Content-Type.
@@ -21,7 +21,6 @@ async function panggilAPI(action, ...args) {
   const json = await res.json();
 
   if (json.status === "error") {
-    // Sesi habis di tengah jalan → bersihkan & beri tahu aplikasi
     if (json.code === 'SESI_HABIS') {
       buangToken();
       window.dispatchEvent(new CustomEvent('sesi-habis'));
@@ -32,4 +31,34 @@ async function panggilAPI(action, ...args) {
   }
 
   return json.data;
+}
+
+/* ---------------------------------------------------------
+   INGATAN SEMENTARA DI HP
+   Supaya layar bisa langsung terisi tanpa menunggu server.
+   Isinya bukan data rahasia — hanya tampilan Beranda.
+   --------------------------------------------------------- */
+
+function simpanIngatan(nama, data){
+  try {
+    localStorage.setItem('siwarga_ingat_' + nama,
+      JSON.stringify({ waktu: Date.now(), isi: data }));
+  } catch (e) {}
+}
+
+function ambilIngatan(nama){
+  try {
+    const mentah = localStorage.getItem('siwarga_ingat_' + nama);
+    if (!mentah) return null;
+    const bungkus = JSON.parse(mentah);
+    return bungkus.isi || null;
+  } catch (e) { return null; }
+}
+
+function hapusSemuaIngatan(){
+  try {
+    Object.keys(localStorage).forEach(function(k){
+      if (k.indexOf('siwarga_ingat_') === 0) localStorage.removeItem(k);
+    });
+  } catch (e) {}
 }
