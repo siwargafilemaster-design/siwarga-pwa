@@ -22,7 +22,7 @@ const MENU = [
   { key:'peta',        folder:'peta',         label:'Denah Lingkungan',     ikon:'i-map' },
   { key:'pengurus',    folder:'pengurus',     label:'Daftar Pengurus',      ikon:'i-tree' },
   { key:'surat',       folder:'surat',        label:'Layanan Surat',        ikon:'i-mail', izin:'SURAT' },
-  { key:'setting',     folder:'setting',      label:'Pengaturan',           ikon:'i-gear' },
+  { key:'setting',     folder:'setting',      label:'Pengaturan',           ikon:'i-atur' },
 
   { grup:'Management Property' },
   { key:'humas',       folder:'humas',        label:'Layanan Hunian',       ikon:'i-shield' },

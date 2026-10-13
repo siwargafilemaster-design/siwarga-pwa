@@ -31,7 +31,7 @@ body{
 }
 .app{max-width:430px;margin:0 auto;position:relative;min-height:100vh;background:var(--bg);}
 
-.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;
     stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 .ic-sm{width:16px;height:16px;}
 .ic-xs{width:13px;height:13px;}
