@@ -87,6 +87,19 @@
 .jur-aksi .ubah{background:var(--gold-soft);color:var(--gold-ink);}
 .jur-aksi .buang{background:var(--red-soft);color:var(--red);}
 
+.aksi-daftar{display:flex;flex-direction:column;gap:9px;}
+.aksi-item{display:flex;align-items:center;gap:12px;padding:13px 14px;
+  border:1px solid var(--line);border-radius:var(--r-md);background:#fff;
+  font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink);text-align:left;}
+.aksi-item svg{color:var(--muted);}
+.aksi-item.bahaya{border-color:#F0CFCF;color:var(--red);}
+.aksi-item.bahaya svg{color:var(--red);}
+.aksi-ket{font-size:.68rem;font-weight:400;color:var(--muted);display:block;margin-top:2px;}
+.kw-kirim{padding:11px 14px;border-top:1px solid var(--line);}
+.kw-kirim button{width:100%;background:var(--sage-soft);color:var(--sage);border:none;
+  font-family:inherit;font-size:.78rem;font-weight:600;padding:10px;border-radius:var(--r-md);
+  display:flex;align-items:center;justify-content:center;gap:7px;}
+
 .fab-catat{position:fixed;bottom:calc(var(--navh) + 16px);right:calc(50% - 215px + 16px);
   height:46px;padding:0 18px;border-radius:999px;background:var(--hero-1);border:none;
   color:#fff;font-family:inherit;font-size:.82rem;font-weight:600;display:flex;
@@ -102,6 +115,10 @@
     <h1>Buku Kas RT</h1>
     <small id="keuSub">Memuat…</small>
   </div>
+  <button class="hero-btn sembunyi" id="btnAksiKeu" style="margin-left:auto;"
+          onclick="bukaMenuAksi()">
+    <svg class="ic"><use href="#i-atur"/></svg>
+  </button>
 </div>
 
 <div class="wrap" style="margin-top:16px;">
@@ -192,6 +209,93 @@
     <div class="lembar-bawah" style="display:flex;gap:9px;">
       <button class="btn btn-halus" style="flex:1;" onclick="tutupLembar('lembarPeringatan')">Batal</button>
       <button class="btn btn-utama" style="flex:1;" onclick="lanjutkanSimpan()">Tetap Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: MENU AKSI ============ -->
+<div class="lembar" id="lembarAksi">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Laporan &amp; Penagihan</h2>
+      <button onclick="tutupLembar('lembarAksi')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan">
+      <div class="aksi-daftar">
+        <button class="aksi-item" onclick="bukaPilihPeriode('BULANAN')">
+          <svg class="ic"><use href="#i-berkas"/></svg>
+          <span>Laporan Bulanan<span class="aksi-ket">PDF kas masuk &amp; keluar per bulan</span></span>
+        </button>
+        <button class="aksi-item" onclick="bukaPilihPeriode('JIMPITAN')">
+          <svg class="ic"><use href="#i-berkas"/></svg>
+          <span>Rekap Jimpitan<span class="aksi-ket">Pembagian hak jimpitan &amp; kas RT</span></span>
+        </button>
+        <button class="aksi-item" onclick="bukaPilihPeriode('TAHUNAN')">
+          <svg class="ic"><use href="#i-berkas"/></svg>
+          <span>Laporan Tahunan<span class="aksi-ket">Butuh 10–20 detik</span></span>
+        </button>
+        <button class="aksi-item bahaya" onclick="konfirmasiMassal('PENUNGGAK')">
+          <svg class="ic"><use href="#i-wa"/></svg>
+          <span>Tagih Penunggak<span class="aksi-ket">WA ke warga menunggak lebih dari 3 bulan</span></span>
+        </button>
+        <button class="aksi-item bahaya" onclick="konfirmasiMassal('REKAP')">
+          <svg class="ic"><use href="#i-wa"/></svg>
+          <span>Kirim Rekap Massal<span class="aksi-ket">WA ke SELURUH warga</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: PILIH PERIODE ============ -->
+<div class="lembar" id="lembarPeriode">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="periodeJudul">Pilih Periode</h2>
+      <button onclick="tutupLembar('lembarPeriode')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan">
+      <div class="field" id="kotakBulan">
+        <label for="lapBulan">Bulan</label>
+        <select id="lapBulan"></select>
+      </div>
+      <div class="field">
+        <label for="lapTahun">Tahun</label>
+        <input type="number" id="lapTahun">
+      </div>
+      <div class="pesan-galat" id="lapGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnBuatLaporan" onclick="buatLaporan()">Buat PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: KONFIRMASI KIRIM MASSAL ============ -->
+<div class="lembar" id="lembarMassal">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="massalJudul">Konfirmasi</h2>
+      <button onclick="tutupLembar('lembarMassal')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan">
+      <div id="massalKet" style="font-size:.84rem;line-height:1.6;margin-bottom:14px;"></div>
+      <div class="field sembunyi" id="kotakPeriodeMassal">
+        <label for="massalPeriode">Bulan &amp; tahun</label>
+        <input id="massalPeriode" placeholder="Contoh: Januari 2026">
+      </div>
+      <div class="pesan-galat" id="massalGalat"></div>
+    </div>
+    <div class="lembar-bawah" style="display:flex;gap:9px;">
+      <button class="btn btn-halus" style="flex:1;" onclick="tutupLembar('lembarMassal')">Batal</button>
+      <button class="btn btn-utama" style="flex:1;background:var(--red);"
+              id="btnKirimMassal" onclick="kirimMassal()">Kirim</button>
     </div>
   </div>
 </div>

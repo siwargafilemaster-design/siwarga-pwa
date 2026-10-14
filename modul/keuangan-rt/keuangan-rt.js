@@ -37,7 +37,11 @@ function bolehCatat(){
 async function init_keuangan_rt(){
   pasangPencarian();
 
-  if (bolehCatat()) document.getElementById('btnCatat').classList.remove('sembunyi');
+  if (bolehCatat()){
+    document.getElementById('btnCatat').classList.remove('sembunyi');
+    document.getElementById('btnAksiKeu').classList.remove('sembunyi');
+    muatSkripAksi();
+  }
 
   const lama = ambilIngatan('keuangan');
   if (lama){
@@ -189,6 +193,21 @@ function gambarBukuBesar(d, no){
       baris = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:18px;">Tidak ada tagihan pada periode ini.</td></tr>';
     }
 
+    // Tombol kirim tagihan — hanya untuk pengurus keuangan
+    let tombolKirim = '';
+    if (bolehCatat()){
+      const lingkup = (c.type === 'PAST') ? 'PAST' : 'CURRENT';
+      const perlu = (c.type !== 'PAST') || (c.totalHutang > 0);
+      if (perlu){
+        tombolKirim =
+          '<div class="kw-kirim"><button onclick="kirimTagihanSatu(\'' +
+            String(no).replace(/'/g, "\\'") + '\',\'' + lingkup + '\',this)">' +
+            '<svg class="ic ic-sm"><use href="#i-wa"/></svg>' +
+            (c.type === 'PAST' ? 'Tagih Hutang Lama' : 'Kirim Tagihan') +
+          '</button></div>';
+      }
+    }
+
     html +=
       '<div class="kartu-warga">' +
         '<div class="kw-atas ' + gaya + '">' +
@@ -200,6 +219,8 @@ function gambarBukuBesar(d, no){
           '<thead><tr><th>Bulan</th><th class="num">Tagihan</th><th>Status</th><th class="num">Bayar</th></tr></thead>' +
           '<tbody>' + baris + '</tbody>' +
         '</table></div>' +
+      '</table></div>' + tombolKirim +
+      '</div>';
       '</div>';
   });
 
@@ -527,4 +548,14 @@ function aman(t){
   const d = document.createElement('div');
   d.textContent = String(t == null ? '' : t);
   return d.innerHTML;
+}
+
+/** Memuat berkas aksi sekali saja, saat memang dibutuhkan. */
+function muatSkripAksi(){
+  if (window.__aksiKeuDimuat) return;
+  window.__aksiKeuDimuat = true;
+
+  const s = document.createElement('script');
+  s.src = '/modul/keuangan-rt/keuangan-aksi.js';
+  document.body.appendChild(s);
 }
