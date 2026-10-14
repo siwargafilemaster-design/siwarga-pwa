@@ -1,0 +1,37 @@
+<div class="field">
+  <label for="trxTgl">Tanggal transaksi</label>
+  <input type="date" id="trxTgl">
+</div>
+
+<div class="field">
+  <label for="trxMetode">Metode bayar</label>
+  <select id="trxMetode">
+    <option value="Cash">Tunai</option>
+    <option value="Transfer">Transfer Bank</option>
+  </select>
+</div>
+
+<div class="field">
+  <label for="trxSumber">Sumber / tujuan</label>
+  <input id="trxSumber" list="dlSumber" placeholder="Nomor rumah atau Bendahara…" autocomplete="off">
+  <datalist id="dlSumber"></datalist>
+</div>
+
+<div class="field">
+  <label for="trxNominal">Nominal</label>
+  <input id="trxNominal" inputmode="numeric" placeholder="0">
+</div>
+
+<div class="field">
+  <label for="trxKet">Keterangan</label>
+  <select id="trxKet">
+    <option value="">— pilih sumber dulu —</option>
+  </select>
+</div>
+
+<div class="field sembunyi" id="trxExtraBox">
+  <label for="trxExtra">Rincian tambahan</label>
+  <input id="trxExtra" placeholder="Contoh: Lomba 17-an">
+</div>
+
+<div class="pesan-galat" id="trxGalat"></div>

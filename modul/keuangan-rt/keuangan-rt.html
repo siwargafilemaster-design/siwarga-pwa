@@ -20,6 +20,11 @@
 
 .keu-update{font-size:.62rem;color:var(--muted);text-align:right;margin:6px 2px 0;}
 
+.keu-tab{display:flex;gap:7px;margin:4px 0 14px;}
+.keu-tab button{flex:1;font-family:inherit;font-size:.78rem;font-weight:600;padding:9px;
+  border-radius:var(--r-md);background:var(--card);border:1px solid var(--line);color:var(--muted);}
+.keu-tab button.on{background:var(--hero-1);color:#fff;border-color:var(--hero-1);}
+
 .keu-cari{display:flex;align-items:center;gap:8px;background:var(--card);
   border-radius:var(--r-md);padding:11px 13px;box-shadow:0 2px 10px rgba(31,41,51,.05);}
 .keu-cari input{flex:1;border:none;outline:none;font-family:inherit;
@@ -39,7 +44,7 @@
 .kw-nama{font-size:.92rem;font-weight:700;margin-bottom:5px;}
 .kw-label{display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.04em;
   background:rgba(255,255,255,.2);padding:3px 9px;border-radius:999px;margin-right:5px;}
-.kw-hutang{margin-top:11px;display:flex;align-items:flex-end;justify-content:space-between;}
+.kw-hutang{margin-top:11px;}
 .kw-hutang small{font-size:.63rem;opacity:.8;display:block;}
 .kw-hutang b{font-size:1.15rem;font-weight:700;}
 
@@ -60,6 +65,33 @@
   background:var(--sage-soft);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px;}
 .keu-saldo-titipan span{font-size:.76rem;color:var(--sage);font-weight:600;}
 .keu-saldo-titipan b{font-size:1rem;color:var(--sage);font-weight:700;}
+
+/* ===== JURNAL ===== */
+.jur{display:flex;gap:11px;padding:12px 14px;align-items:center;border-bottom:1px solid var(--line);}
+.jur:last-child{border-bottom:none;}
+.jur-ic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;}
+.jur-ic.masuk{background:var(--sage-soft);color:var(--sage);}
+.jur-ic.keluar{background:var(--red-soft);color:var(--red);}
+.jur-isi{flex:1;min-width:0;}
+.jur-isi b{display:block;font-size:.79rem;font-weight:600;margin-bottom:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.jur-isi small{font-size:.66rem;color:var(--muted);}
+.jur-kanan{text-align:right;flex-shrink:0;}
+.jur-kanan b{font-size:.8rem;font-weight:700;display:block;white-space:nowrap;}
+.jur-kanan b.masuk{color:var(--sage);}
+.jur-kanan b.keluar{color:var(--red);}
+.jur-aksi{display:flex;gap:5px;margin-top:5px;justify-content:flex-end;}
+.jur-aksi button{width:27px;height:27px;border-radius:8px;border:none;
+  display:flex;align-items:center;justify-content:center;}
+.jur-aksi .ubah{background:var(--gold-soft);color:var(--gold-ink);}
+.jur-aksi .buang{background:var(--red-soft);color:var(--red);}
+
+.fab-catat{position:fixed;bottom:calc(var(--navh) + 16px);right:calc(50% - 215px + 16px);
+  height:46px;padding:0 18px;border-radius:999px;background:var(--hero-1);border:none;
+  color:#fff;font-family:inherit;font-size:.82rem;font-weight:600;display:flex;
+  align-items:center;gap:7px;z-index:60;box-shadow:0 5px 16px rgba(34,48,63,.3);}
+@media(max-width:460px){.fab-catat{right:16px;}}
 </style>
 
 <div class="plain-head">
@@ -74,7 +106,6 @@
 
 <div class="wrap" style="margin-top:16px;">
 
-  <!-- SALDO FISIK -->
   <div class="sec" style="margin-top:0;">
     <div class="sec-head"><h3>Saldo Kas</h3></div>
     <div class="keu-saldo">
@@ -84,7 +115,6 @@
     </div>
   </div>
 
-  <!-- ALOKASI POS -->
   <div class="sec">
     <div class="sec-head"><h3>Alokasi Dana per Pos</h3></div>
     <div class="keu-pos">
@@ -95,22 +125,73 @@
     <div class="keu-update" id="keuUpdate"></div>
   </div>
 
-  <!-- PILIH RUMAH -->
   <div class="sec">
-    <div class="sec-head">
-      <h3>Buku Besar Warga</h3>
-      <span class="sec-act" id="keuJmlRumah"></span>
+    <div class="keu-tab">
+      <button id="tabBuku" class="on" onclick="gantiTab('buku')">Buku Besar</button>
+      <button id="tabJurnal" onclick="gantiTab('jurnal')">Jurnal</button>
     </div>
-    <div class="keu-cari">
-      <svg class="ic ic-sm" style="color:var(--muted)"><use href="#i-search"/></svg>
-      <input id="cariRumah" placeholder="Ketik nomor rumah…" autocomplete="off">
-    </div>
-    <div class="rumah-grid" id="rumahGrid"></div>
-  </div>
 
-  <!-- HASIL -->
-  <div class="sec" id="hasilBuku"></div>
+    <!-- TAMPILAN: BUKU BESAR -->
+    <div id="viewBuku">
+      <div class="keu-cari">
+        <svg class="ic ic-sm" style="color:var(--muted)"><use href="#i-cari"/></svg>
+        <input id="cariRumah" placeholder="Ketik nomor rumah…" autocomplete="off">
+      </div>
+      <div class="rumah-grid" id="rumahGrid"></div>
+      <div id="hasilBuku" style="margin-top:18px;"></div>
+    </div>
+
+    <!-- TAMPILAN: JURNAL -->
+    <div id="viewJurnal" class="sembunyi">
+      <div class="card" id="kotakJurnal">
+        <div class="memuat">Memuat…</div>
+      </div>
+    </div>
+  </div>
 
 </div>
 
 <div class="pad-bot"></div>
+
+<button class="fab-catat sembunyi" id="btnCatat" onclick="bukaFormTransaksi('CREATE')">
+  <svg class="ic ic-sm"><use href="#i-plus"/></svg>Catat
+</button>
+
+
+<!-- ============ LEMBAR: FORM TRANSAKSI ============ -->
+<div class="lembar" id="lembarTrx">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="trxJudul">Catat Transaksi</h2>
+      <button onclick="tutupLembar('lembarTrx')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan" id="isiFormTrx">
+      <div class="memuat">Memuat form…</div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnSimpanTrx" onclick="simpanTransaksi()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: PERINGATAN SATPAM ============ -->
+<div class="lembar" id="lembarPeringatan">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Perlu Diperiksa</h2>
+      <button onclick="tutupLembar('lembarPeringatan')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan">
+      <div id="isiPeringatan" style="font-size:.82rem;line-height:1.6;"></div>
+    </div>
+    <div class="lembar-bawah" style="display:flex;gap:9px;">
+      <button class="btn btn-halus" style="flex:1;" onclick="tutupLembar('lembarPeringatan')">Batal</button>
+      <button class="btn btn-utama" style="flex:1;" onclick="lanjutkanSimpan()">Tetap Simpan</button>
+    </div>
+  </div>
+</div>
