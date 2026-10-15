@@ -37,8 +37,11 @@ function bolehCatat(){
 async function init_keuangan_rt(){
   pasangPencarian();
 
-  if (bolehCatat()){
-    document.getElementById('btnCatat').classList.remove('sembunyi');
+  const bolehAksi = bolehCatat() ||
+                    ['DEVELOPER','RT','SEKRETARIS'].indexOf(App.peran) !== -1;
+
+  if (bolehCatat()) document.getElementById('btnCatat').classList.remove('sembunyi');
+  if (bolehAksi){
     document.getElementById('btnAksiKeu').classList.remove('sembunyi');
     muatSkripAksi();
   }
@@ -557,5 +560,8 @@ function muatSkripAksi(){
 
   const s = document.createElement('script');
   s.src = '/modul/keuangan-rt/keuangan-aksi.js';
+  s.onload = function(){
+    if (typeof siapkanMenuAksi === 'function') siapkanMenuAksi();
+  };
   document.body.appendChild(s);
 }

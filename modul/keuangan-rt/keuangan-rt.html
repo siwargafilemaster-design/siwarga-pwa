@@ -105,6 +105,44 @@
   color:#fff;font-family:inherit;font-size:.82rem;font-weight:600;display:flex;
   align-items:center;gap:7px;z-index:60;box-shadow:0 5px 16px rgba(34,48,63,.3);}
 @media(max-width:460px){.fab-catat{right:16px;}}
+
+.op-grup{background:var(--bg);border-radius:var(--r-md);padding:12px;margin-bottom:12px;}
+.op-grup h4{font-size:.72rem;font-weight:700;margin:0 0 9px;color:var(--ink);}
+.op-baris{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.op-baris input{width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r-sm);
+  font-family:inherit;font-size:.83rem;background:#fff;color:var(--ink);}
+
+.au-kartu{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px;}
+.au-atas{background:var(--ink);color:#fff;padding:10px 13px;display:flex;
+  align-items:center;justify-content:space-between;font-size:.78rem;font-weight:600;}
+.au-cap{font-size:.58rem;font-weight:700;padding:3px 9px;border-radius:999px;}
+.au-cap.wajar{background:var(--sage);color:#fff;}
+.au-cap.periksa{background:var(--red);color:#fff;}
+.au-cap.tutup{background:var(--sage);color:#fff;}
+.au-tabel{width:100%;border-collapse:collapse;font-size:.76rem;}
+.au-tabel th{font-size:.58rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+  font-weight:700;padding:8px 10px;background:var(--bg);text-align:left;}
+.au-tabel td{padding:8px 10px;border-bottom:1px solid var(--line);}
+.au-tabel .num{text-align:right;white-space:nowrap;}
+.au-selisih{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 13px;font-size:.8rem;font-weight:700;background:var(--bg);}
+.au-selisih.minus{color:var(--red);}
+.au-narasi{padding:11px 13px;font-size:.75rem;line-height:1.55;color:var(--muted);}
+.au-aksi{display:flex;gap:8px;padding:0 13px 13px;}
+.au-aksi button{flex:1;font-family:inherit;font-size:.76rem;font-weight:600;padding:10px;
+  border-radius:var(--r-sm);border:1px solid var(--line);background:#fff;color:var(--ink);}
+.au-aksi .putih{background:var(--red);color:#fff;border-color:var(--red);}
+.au-selesai{margin:0 13px 13px;padding:9px;text-align:center;font-size:.74rem;
+  font-weight:600;color:var(--sage);background:var(--sage-soft);border-radius:var(--r-sm);}
+
+.riw{display:flex;align-items:center;gap:11px;padding:12px 13px;border-bottom:1px solid var(--line);}
+.riw:last-child{border-bottom:none;}
+.riw-isi{flex:1;min-width:0;}
+.riw-isi b{display:block;font-size:.78rem;font-weight:600;margin-bottom:4px;}
+.riw-cap{display:inline-block;font-size:.58rem;font-weight:700;padding:2px 8px;
+  border-radius:999px;margin-right:5px;}
+.riw-cap.open{background:var(--gold-soft);color:var(--gold-ink);}
+.riw-cap.closed{background:var(--sage-soft);color:var(--sage);}
 </style>
 
 <div class="plain-head">
@@ -244,6 +282,14 @@
           <svg class="ic"><use href="#i-wa"/></svg>
           <span>Kirim Rekap Massal<span class="aksi-ket">WA ke SELURUH warga</span></span>
         </button>
+        <button class="aksi-item" id="aksiOpname" onclick="bukaOpname()">
+          <svg class="ic"><use href="#i-shieldcheck"/></svg>
+          <span>Cash Opname<span class="aksi-ket">Cocokkan saldo sistem dengan uang riil</span></span>
+        </button>
+        <button class="aksi-item" id="aksiRiwayat" onclick="bukaRiwayatAudit()">
+          <svg class="ic"><use href="#i-clip"/></svg>
+          <span>Riwayat Audit<span class="aksi-ket">Temuan yang menunggu tindak lanjut</span></span>
+        </button>
       </div>
     </div>
   </div>
@@ -296,6 +342,78 @@
       <button class="btn btn-halus" style="flex:1;" onclick="tutupLembar('lembarMassal')">Batal</button>
       <button class="btn btn-utama" style="flex:1;background:var(--red);"
               id="btnKirimMassal" onclick="kirimMassal()">Kirim</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: CASH OPNAME ============ -->
+<div class="lembar" id="lembarOpname">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Cash Opname</h2>
+      <button onclick="tutupLembar('lembarOpname')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan">
+      <p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin:0 0 14px;">
+        Masukkan saldo <b>yang benar-benar ada</b> saat ini. Sistem akan membandingkannya
+        dengan catatan pembukuan.
+      </p>
+
+      <div class="op-grup">
+        <h4>Bendahara 1 — Kas RT</h4>
+        <div class="op-baris">
+          <input id="opB1Tunai" inputmode="numeric" placeholder="Tunai">
+          <input id="opB1Bank"  inputmode="numeric" placeholder="Bank">
+        </div>
+      </div>
+
+      <div class="op-grup">
+        <h4>Bendahara 2 — Jimpitan</h4>
+        <div class="op-baris">
+          <input id="opB2Tunai" inputmode="numeric" placeholder="Tunai">
+          <input id="opB2Bank"  inputmode="numeric" placeholder="Bank">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="opCatatan">Catatan (opsional)</label>
+        <input id="opCatatan" placeholder="Alasan selisih, bila ada">
+      </div>
+
+      <div class="pesan-galat" id="opGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnProsesAudit" onclick="jalankanAudit()">Proses Audit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: HASIL AUDIT ============ -->
+<div class="lembar" id="lembarHasilAudit">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Hasil Audit</h2>
+      <button onclick="tutupLembar('lembarHasilAudit')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan" id="isiHasilAudit"></div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: RIWAYAT AUDIT ============ -->
+<div class="lembar" id="lembarRiwayat">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Riwayat Audit</h2>
+      <button onclick="tutupLembar('lembarRiwayat')">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+    <div class="lembar-badan" id="isiRiwayat">
+      <div class="memuat">Memuat…</div>
     </div>
   </div>
 </div>
