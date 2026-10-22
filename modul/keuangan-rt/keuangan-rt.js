@@ -35,6 +35,12 @@ function bolehCatat(){
 
 /* ---------- MULAI ---------- */
 async function init_keuangan_rt(){
+  // HTML halaman diambil baru tiap kunjungan, jadi keadaan lama dibuang
+  Keu.formDimuat = false;
+  Keu.terpilih   = null;
+  Keu.jurnal     = null;
+  Keu.tab        = 'buku';
+  Keu.tertunda   = null;
   pasangPencarian();
 
   const bolehAksi = bolehCatat() ||
@@ -553,15 +559,18 @@ function aman(t){
   return d.innerHTML;
 }
 
-/** Memuat berkas aksi sekali saja, saat memang dibutuhkan. */
 function muatSkripAksi(){
-  if (window.__aksiKeuDimuat) return;
+  // Berkas dimuat sekali per sesi, tapi menu harus disaring ulang
+  // setiap halaman dibuka, karena HTML-nya diambil baru tiap kunjungan.
+  if (typeof siapkanMenuAksi === 'function'){
+    siapkanMenuAksi();
+    return;
+  }
+  if (window.__aksiKeuDimuat) return;   // masih proses memuat
   window.__aksiKeuDimuat = true;
 
   const s = document.createElement('script');
   s.src = '/modul/keuangan-rt/keuangan-aksi.js';
-  s.onload = function(){
-    if (typeof siapkanMenuAksi === 'function') siapkanMenuAksi();
-  };
+  s.onload = function(){ siapkanMenuAksi(); };
   document.body.appendChild(s);
 }
