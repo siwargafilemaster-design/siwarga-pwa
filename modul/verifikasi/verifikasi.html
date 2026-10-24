@@ -1,0 +1,120 @@
+<style>
+/* ===== VERIFIKASI SETORAN — gaya khusus modul ===== */
+.vf-kartu{background:var(--card);border-radius:var(--r-lg);padding:15px;margin-bottom:12px;
+  box-shadow:0 2px 14px rgba(31,41,51,.07);border-left:4px solid var(--gold);}
+.vf-atas{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.vf-cap{font-size:.58rem;font-weight:700;letter-spacing:.05em;padding:3px 10px;
+  border-radius:999px;background:var(--gold-soft);color:var(--gold-ink);}
+.vf-atas small{font-size:.68rem;color:var(--muted);font-weight:600;}
+.vf-nominal{font-size:1.3rem;font-weight:700;letter-spacing:-.02em;margin-bottom:2px;}
+.vf-rumah{font-size:.8rem;font-weight:600;color:var(--hero-2);margin-bottom:8px;}
+.vf-ket{font-size:.74rem;color:var(--muted);line-height:1.45;margin-bottom:12px;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+
+.vf-gambar{background:#1C2430;border-radius:var(--r-md);min-height:180px;max-height:46vh;
+  overflow:auto;display:flex;}
+.vf-gambar img{width:100%;height:auto;display:block;flex-shrink:0;margin:auto;cursor:zoom-in;}
+.vf-gambar.zoom img{width:220%;max-width:none;cursor:zoom-out;}
+.vf-gambar .teks{margin:auto;color:#9AA5B1;font-size:.8rem;padding:40px 20px;text-align:center;}
+.vf-petunjuk{font-size:.64rem;color:var(--muted);text-align:center;margin:7px 0 14px;}
+
+.vf-info{background:var(--bg);border-radius:var(--r-md);padding:8px 14px;}
+.vf-baris{display:flex;justify-content:space-between;gap:14px;font-size:.78rem;padding:7px 0;
+  border-bottom:1px solid var(--line);}
+.vf-baris:last-child{border-bottom:none;}
+.vf-baris span{color:var(--muted);flex-shrink:0;}
+.vf-baris b{text-align:right;font-weight:600;word-break:break-word;}
+.vf-baris.besar b{font-size:1rem;color:var(--sage);}
+
+.alasan-daftar{display:flex;flex-direction:column;gap:8px;}
+.alasan-pil{font-family:inherit;font-size:.82rem;font-weight:600;text-align:left;
+  padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-md);
+  background:#fff;color:var(--ink);}
+.alasan-pil.on{border-color:var(--red);background:var(--red-soft);color:var(--red);}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Verifikasi Setoran</h1>
+    <small id="vfSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="muatAntrian()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div id="vfDaftar"><div class="memuat">Memuat…</div></div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: PERIKSA BUKTI ============ -->
+<div class="lembar" id="lembarBukti">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Periksa Bukti</h2>
+      <button onclick="vTutup('lembarBukti')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="vf-gambar" id="vfGambar"><div class="teks">Memuat gambar…</div></div>
+      <div class="vf-petunjuk">Ketuk gambar untuk memperbesar, ketuk lagi untuk memperkecil</div>
+      <div class="vf-info" id="vfInfo"></div>
+    </div>
+    <div class="lembar-bawah" style="display:flex;gap:9px;">
+      <button class="btn" style="flex:1;background:var(--red-soft);color:var(--red);"
+              onclick="bukaTolak()">Tolak</button>
+      <button class="btn btn-utama" style="flex:2;background:var(--sage);"
+              onclick="setujui(false)">Setujui</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: ALASAN PENOLAKAN ============ -->
+<div class="lembar" id="lembarTolak">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Alasan Penolakan</h2>
+      <button onclick="vTutup('lembarTolak')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p style="font-size:.76rem;color:var(--muted);line-height:1.5;margin:0 0 14px;">
+        Alasan ini akan dikirim ke warga lewat WhatsApp.
+      </p>
+      <div class="alasan-daftar" id="alasanDaftar"></div>
+      <div class="field sembunyi" id="kotakLainnya" style="margin-top:12px;">
+        <label for="alasanManual">Tulis alasannya</label>
+        <input id="alasanManual" maxlength="200" placeholder="Alasan spesifik…" autocomplete="off">
+      </div>
+      <div class="pesan-galat" id="tolakGalat" style="margin-top:12px;"></div>
+    </div>
+    <div class="lembar-bawah" style="display:flex;gap:9px;">
+      <button class="btn btn-halus" style="flex:1;" onclick="vTutup('lembarTolak')">Batal</button>
+      <button class="btn btn-utama" style="flex:1;background:var(--red);"
+              onclick="tolakSekarang()">Tolak Sekarang</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: PERINGATAN DUPLIKAT ============ -->
+<div class="lembar" id="lembarDuplikat">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Potensi Duplikat</h2>
+      <button onclick="vTutup('lembarDuplikat')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div id="isiDuplikat" style="font-size:.84rem;line-height:1.6;white-space:pre-line;"></div>
+    </div>
+    <div class="lembar-bawah" style="display:flex;gap:9px;">
+      <button class="btn btn-halus" style="flex:1;" onclick="vTutup('lembarDuplikat')">Batalkan</button>
+      <button class="btn btn-utama" style="flex:1;" onclick="setujuiPaksa()">Tetap Setujui</button>
+    </div>
+  </div>
+</div>
