@@ -192,10 +192,18 @@ async function kirimKeputusan(form){
   Verif.sibuk = true;
   kunciTombol(true);
 
+  const setuju = (form.action === 'APPROVE');
+  tunggu(
+    setuju ? 'Menyetujui setoran…' : 'Menolak setoran…',
+    (setuju
+      ? 'Mencatat ke jurnal dan memberi tahu warga lewat WhatsApp.'
+      : 'Mengirim pesan penolakan ke warga lewat WhatsApp.') +
+    ' Butuh beberapa detik, jangan tutup halaman ini.'
+  );
+
   try {
     const r = await panggilAPI('prosesVerifikasi', form);
 
-    // Peringatan duplikat: tanyakan dulu, jangan anggap selesai
     if (r && r.status === 'warning'){
       document.getElementById('isiDuplikat').textContent = r.message || 'Transaksi serupa sudah ada.';
       vBuka('lembarDuplikat');
@@ -213,7 +221,6 @@ async function kirimKeputusan(form){
   } catch (e) {
     toast('Gagal: ' + e.message);
 
-    // Kemungkinan sudah diproses orang lain → tutup semua dan segarkan
     if (String(e.message).indexOf('sudah diproses') !== -1){
       vTutup('lembarTolak');
       vTutup('lembarDuplikat');
@@ -222,6 +229,7 @@ async function kirimKeputusan(form){
       muatAntrian();
     }
   } finally {
+    selesaiTunggu();
     Verif.sibuk = false;
     kunciTombol(false);
   }

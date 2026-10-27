@@ -96,6 +96,27 @@ function terapkanIdentitas(cfg){
   if (cfg.theme) document.documentElement.style.setProperty('--hero-1', cfg.theme);
 }
 
+/* ---------- LAYAR TUNGGU ---------- */
+let _tungguWaktu = null;
+
+function tunggu(judul, keterangan){
+  $('tungguJudul').textContent = judul || 'Memproses…';
+  $('tungguKet').textContent   = keterangan || '';
+  $('tungguTutup').classList.add('sembunyi');
+  $('layarTunggu').classList.add('on');
+
+  // Jaga-jaga kalau jaringan macet: setelah 20 detik beri jalan keluar
+  clearTimeout(_tungguWaktu);
+  _tungguWaktu = setTimeout(function(){
+    $('tungguTutup').classList.remove('sembunyi');
+  }, 20000);
+}
+
+function selesaiTunggu(){
+  clearTimeout(_tungguWaktu);
+  $('layarTunggu').classList.remove('on');
+}
+
 /* ---------- DRAWER ---------- */
 function bukaDrawer(){ $('drawer').classList.add('on'); $('scrim').classList.add('on'); }
 function tutupDrawer(){ $('drawer').classList.remove('on'); $('scrim').classList.remove('on'); }
