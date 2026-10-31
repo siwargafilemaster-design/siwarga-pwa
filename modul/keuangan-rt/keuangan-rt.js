@@ -90,12 +90,12 @@ function gantiTab(nama){
 /* ---------- SALDO ---------- */
 function gambarSaldo(s){
   if (!s) return;
-  document.getElementById('keuTunai').textContent   = rupiahPendek(s.tunai);
-  document.getElementById('keuBank').textContent    = rupiahPendek(s.bank);
-  document.getElementById('keuTotal').textContent   = rupiahPendek(s.total);
-  document.getElementById('keuB1').textContent      = rupiahPendek(s.b1_total);
-  document.getElementById('keuB2').textContent      = rupiahPendek(s.b2_total);
-  document.getElementById('keuTitipan').textContent = rupiahPendek(s.titipan);
+  document.getElementById('keuTotal').textContent   = rupiah(s.total);
+  document.getElementById('keuTunai').textContent   = rupiah(s.tunai);
+  document.getElementById('keuBank').textContent    = rupiah(s.bank);
+  document.getElementById('keuB1').textContent      = rupiah(s.b1_total);
+  document.getElementById('keuB2').textContent      = rupiah(s.b2_total);
+  document.getElementById('keuTitipan').textContent = rupiah(s.titipan);
   document.getElementById('keuSub').textContent     = 'Total kas ' + rupiah(s.total);
 
   const n = new Date();
