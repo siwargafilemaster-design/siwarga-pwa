@@ -104,14 +104,22 @@ async function kirimTagihanSatu(noRumah, lingkup, tombol){
   const teksAsli = tombol ? tombol.innerHTML : '';
   if (tombol){ tombol.disabled = true; tombol.textContent = 'Mengirim…'; }
 
+  tunggu('Mengirim tagihan…',
+         'Mengirim pesan tagihan ke rumah ' + noRumah +
+         ' lewat WhatsApp. Butuh beberapa detik.');
+
+  let pesan;
   try {
     const r = await panggilAPI('kirimTagihan', noRumah, lingkup);
-    toast(r && r.message ? r.message : 'Terkirim');
+    pesan = (r && r.message) ? r.message : 'Terkirim';
   } catch (e) {
-    toast('Gagal: ' + e.message);
-  } finally {
-    if (tombol){ tombol.disabled = false; tombol.innerHTML = teksAsli; }
+    pesan = 'Gagal: ' + e.message;
   }
+
+  // Layar tunggu ditutup SEBELUM toast, supaya pesan terlihat penuh
+  selesaiTunggu();
+  if (tombol){ tombol.disabled = false; tombol.innerHTML = teksAsli; }
+  toast(pesan);
 }
 
 /* ---------- KIRIM MASSAL ---------- */
@@ -144,8 +152,8 @@ function konfirmasiMassal(jenis){
 }
 
 async function kirimMassal(){
-  const galat  = document.getElementById('massalGalat');
-  const tombol = document.getElementById('btnKirimMassal');
+  const galat   = document.getElementById('massalGalat');
+  const tombol  = document.getElementById('btnKirimMassal');
   const periode = document.getElementById('massalPeriode').value.trim();
 
   if (Aksi.massal === 'REKAP' && !periode){
@@ -158,14 +166,31 @@ async function kirimMassal(){
   tombol.disabled = true;
   tombol.textContent = 'Mengirim…';
 
+  tunggu(
+    (Aksi.massal === 'REKAP') ? 'Mengirim rekap ke seluruh warga…' : 'Mengirim tagihan penunggak…',
+    'Pesan dikirim satu per satu dengan jeda antar pesan, jadi ini bisa memakan waktu ' +
+    'beberapa menit. Jangan tutup halaman ini dan jangan kirim ulang.'
+  );
+
   try {
     const r = await panggilAPI('kirimMassal', Aksi.massal, periode);
+    selesaiTunggu();
     tutupLembar('lembarMassal');
     toast(r && r.message ? r.message : 'Terkirim');
+
   } catch (e) {
-    galat.textContent = e.message;
+    selesaiTunggu();
+
+    // TypeError = koneksi HP putus; SyntaxError = server kehabisan waktu
+    // dan membalas halaman error (bukan JSON). Keduanya BUKAN penolakan biasa.
+    galat.textContent = (e instanceof TypeError || e instanceof SyntaxError)
+      ? 'Koneksi terputus atau waktu server habis di tengah jalan. Sebagian pesan ' +
+        'kemungkinan sudah terkirim. Jangan kirim ulang, periksa riwayat Fonnte.'
+      : e.message;
     galat.classList.add('on');
+
   } finally {
+    selesaiTunggu();
     tombol.disabled = false;
     tombol.textContent = 'Kirim';
   }
