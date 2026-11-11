@@ -448,9 +448,11 @@ async function simpanTransaksi(){
   if (Keu.mode === 'CREATE'){
     const tombol = document.getElementById('btnSimpanTrx');
     tombol.disabled = true; tombol.textContent = 'Memeriksa…';
+    tunggu('Memeriksa transaksi…', 'Memastikan tidak ada transaksi ganda.');
 
     try {
       const cek = await panggilAPI('cekAmanTransaksi', hasil.form.sumber, hasil.form.nominal);
+      selesaiTunggu();
       tombol.disabled = false; tombol.textContent = 'Simpan';
 
       if (cek && cek.status !== 'safe'){
@@ -460,6 +462,7 @@ async function simpanTransaksi(){
         return;
       }
     } catch (e) {
+      selesaiTunggu();
       tombol.disabled = false; tombol.textContent = 'Simpan';
       // Satpam gagal bukan alasan membatalkan — lanjut saja
     }
@@ -481,9 +484,23 @@ async function kirimTransaksi(form){
   const tombol = document.getElementById('btnSimpanTrx');
   tombol.disabled = true; tombol.textContent = 'Menyimpan…';
 
+  // Struk WA hanya terkirim untuk pemasukan baru dari warga (aturan di server)
+  const kirimStruk = (Keu.mode === 'CREATE' && form.tipe === 'MASUK' &&
+                      form.sumber.indexOf('Bendahara') !== 0);
+
+  tunggu(
+    Keu.mode === 'EDIT' ? 'Memperbarui transaksi…' : 'Menyimpan transaksi…',
+    (kirimStruk
+      ? 'Mencatat ke jurnal, menghitung ulang saldo rumah, lalu mengirim struk WhatsApp ke warga (bila ada nomor HP).'
+      : 'Mencatat ke jurnal dan menghitung ulang saldo.') +
+    ' Butuh beberapa detik, jangan tutup halaman ini.'
+  );
+
   try {
     const r = await panggilAPI('simpanTransaksi', Keu.mode, form);
 
+    // Layar tunggu ditutup SEBELUM toast, supaya pesan sukses terlihat penuh
+    selesaiTunggu();
     tutupLembar('lembarTrx');
     toast(r && r.message ? r.message : 'Transaksi tersimpan');
 
@@ -491,7 +508,6 @@ async function kirimTransaksi(form){
     await segarkanSaldo();
     if (Keu.tab === 'jurnal') muatJurnal();
 
-    // Segarkan kartu rumah yang bersangkutan (perbaikan bug B-7)
     if (form.sumber && form.sumber.indexOf('Bendahara') !== 0){
       if (Keu.terpilih === form.sumber) pilihRumah(form.sumber);
     }
@@ -501,6 +517,7 @@ async function kirimTransaksi(form){
     galat.textContent = e.message;
     galat.classList.add('on');
   } finally {
+    selesaiTunggu();
     tombol.disabled = false; tombol.textContent = 'Simpan';
   }
 }
