@@ -109,6 +109,35 @@
   </div>
 </div>
 
+<!-- ============ LEMBAR: KONFIRMASI SOS (4C) ============ -->
+<style>
+.sos-yakin-teks{font-size:1.05rem;font-weight:700;text-align:center;margin:4px 0 10px;}
+.sos-yakin-info{font-size:.78rem;line-height:1.5;text-align:center;color:var(--muted);margin-bottom:4px;}
+.sos-yakin-info.habis{background:var(--gold-soft);color:var(--gold-ink);
+  padding:10px 12px;border-radius:var(--r-md);font-weight:600;}
+.btn-sos-kirim{background:var(--red);color:#fff;}
+.btn-sos-wa{display:block;text-align:center;text-decoration:none;background:#1F9D55;color:#fff;}
+.sos-sembunyi{display:none !important;}
+</style>
+
+<div class="lembar" id="lembarSosYakin">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Kirim Sinyal Darurat?</h2>
+      <button onclick="batalSos()"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="sos-yakin-teks" id="sosYakinTeks">-</div>
+      <div class="sos-yakin-info" id="sosYakinInfo">Pesan akan dikirim ke petugas keamanan.</div>
+    </div>
+    <div class="lembar-bawah" style="display:flex;flex-direction:column;gap:9px;">
+      <button class="btn btn-sos-kirim" id="btnSosKirim" onclick="kirimSosSekarang()">Kirim Sinyal ke Petugas</button>
+      <a class="btn btn-sos-wa sos-sembunyi" id="lnkSosWa" href="#" target="_blank" rel="noopener"
+         onclick="tutupLembar('lembarSosYakin')">Hubungi Petugas Keamanan</a>
+      <button class="btn btn-halus" onclick="batalSos()">Batal</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============ LEMBAR: PENGUMUMAN ============ -->
 <div class="lembar" id="lembarUmum">

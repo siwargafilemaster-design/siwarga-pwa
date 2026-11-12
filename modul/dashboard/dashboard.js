@@ -517,6 +517,9 @@ async function simpanRonda(){
 }
 
 /* ---------- SOS ---------- */
+const SOS_KUNCI_MANUAL = 'siwarga_sos_manual';   // { tgl, nomor, templat } — berlaku sampai ganti hari
+let sosJenis = '';
+
 function bukaKentongan(){
   document.getElementById('sosLokasi').value = '';
   bukaLembar('lembarSos');
@@ -532,11 +535,90 @@ function pilihSos(jenis){
     return;
   }
 
-  if (!confirm('Kirim sinyal ' + jenis + ' di ' + lokasi +
-               '?\n\nPesan akan dikirim ke petugas keamanan.')) return;
+  sosJenis = jenis;
+  document.getElementById('sosYakinTeks').textContent = jenis + ' di ' + lokasi;
+
+  const manual = ambilSosManual();
+  aturTombolSos(manual, manual
+    ? 'Batas sinyal otomatis hari ini sudah habis. Pesan dikirim dari WhatsApp Anda sendiri.'
+    : 'Pesan akan dikirim ke petugas keamanan.');
 
   tutupLembar('lembarSos');
-  kirimSinyal(jenis, lokasi);
+  bukaLembar('lembarSosYakin');
+}
+
+/** Batal = kembali ke lembar SOS, lokasi yang sudah diketik tetap ada. */
+function batalSos(){
+  tutupLembar('lembarSosYakin');
+  bukaLembar('lembarSos');
+}
+
+async function kirimSosSekarang(){
+  const btn = document.getElementById('btnSosKirim');
+  if (btn.disabled) return;
+
+  const lokasi = document.getElementById('sosLokasi').value.trim();
+  btn.disabled = true;
+  btn.textContent = 'Mengirim…';
+
+  try {
+    const h = await panggilAPI('kirimSOS', sosJenis, lokasi, '');
+
+    if (h && h.terkirim){
+      tutupLembar('lembarSosYakin');
+      toast(h.message || 'Sinyal terkirim ke petugas!');
+      return;
+    }
+
+    // Tidak terkirim otomatis → beralih ke WA pribadi warga
+    const manual = { tgl: hariIniLokal(), nomor: h.nomor, templat: h.templat };
+    if (h.alasan === 'HABIS'){
+      try { localStorage.setItem(SOS_KUNCI_MANUAL, JSON.stringify(manual)); } catch (e) {}
+    }
+    aturTombolSos(manual, h.message);
+
+  } catch (e) {
+    toast('Gagal mengirim: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Kirim Sinyal ke Petugas';
+  }
+}
+
+/** manual = null → tombol kirim biasa; manual = {nomor, templat} → tombol WA pribadi. */
+function aturTombolSos(manual, info){
+  const btn  = document.getElementById('btnSosKirim');
+  const lnk  = document.getElementById('lnkSosWa');
+  const kot  = document.getElementById('sosYakinInfo');
+
+  kot.textContent = info || '';
+  kot.classList.toggle('habis', !!manual);
+
+  if (manual && manual.nomor && manual.templat){
+    const lokasi = document.getElementById('sosLokasi').value.trim();
+    const teks = String(manual.templat).split('{JENIS}').join(sosJenis).split('{LOKASI}').join(lokasi);
+    lnk.href = 'https://wa.me/' + encodeURIComponent(manual.nomor) + '?text=' + encodeURIComponent(teks);
+    lnk.classList.remove('sos-sembunyi');
+    btn.classList.add('sos-sembunyi');
+  } else {
+    lnk.classList.add('sos-sembunyi');
+    btn.classList.remove('sos-sembunyi');
+  }
+}
+
+function ambilSosManual(){
+  try {
+    const m = JSON.parse(localStorage.getItem(SOS_KUNCI_MANUAL) || 'null');
+    if (m && m.tgl === hariIniLokal() && m.nomor && m.templat) return m;
+    if (m) localStorage.removeItem(SOS_KUNCI_MANUAL);     // sudah ganti hari
+  } catch (e) {}
+  return null;
+}
+
+function hariIniLokal(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+         String(d.getDate()).padStart(2, '0');
 }
 
 /* ---------- ALAT ---------- */
