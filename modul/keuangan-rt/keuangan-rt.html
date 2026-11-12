@@ -154,6 +154,28 @@
   border-radius:999px;margin-right:5px;}
 .riw-cap.open{background:var(--gold-soft);color:var(--gold-ink);}
 .riw-cap.closed{background:var(--sage-soft);color:var(--sage);}
+
+/* ===== 4B — UNGGAH BUKTI ===== */
+.keu-unggah{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:0 0 14px;padding:13px;border:1.5px dashed var(--hero-1);background:transparent;
+  color:var(--hero-1);border-radius:var(--r-md);font-size:.86rem;font-weight:700;cursor:pointer;}
+.ung-sembunyi{display:none !important;}
+.ung-rumah{font-size:.8rem;color:var(--muted);margin-bottom:12px;}
+.ung-rumah b{color:var(--ink);font-size:.95rem;}
+.ung-pilih{text-align:center;padding:22px 8px 8px;}
+.ung-pilih .ic{width:38px;height:38px;color:var(--muted);margin-bottom:8px;}
+.ung-pilih h3{font-size:.98rem;margin:0 0 4px;}
+.ung-pilih p{font-size:.78rem;color:var(--muted);margin:0 0 16px;line-height:1.5;}
+.ung-img{display:block;width:100%;max-height:230px;object-fit:contain;
+  background:var(--bg);border-radius:var(--r-md);margin-bottom:10px;}
+.ung-status{font-size:.78rem;line-height:1.5;padding:10px 12px;border-radius:var(--r-md);
+  margin-bottom:12px;white-space:pre-line;}
+.ung-status.proses{background:var(--bg);color:var(--muted);}
+.ung-status.ok{background:var(--sage-soft);color:var(--sage);font-weight:600;}
+.ung-status.ragu{background:var(--gold-soft);color:var(--gold-ink);}
+.ung-status.salah{background:var(--red-soft);color:var(--red);font-weight:600;}
+.ung-ulang{background:transparent;border:none;color:var(--hero-1);font-weight:700;
+  font-size:.78rem;padding:4px 0 12px;cursor:pointer;}
 </style>
 
 <div class="plain-head">
@@ -261,6 +283,60 @@
     <div class="lembar-bawah" style="display:flex;gap:9px;">
       <button class="btn btn-halus" style="flex:1;" onclick="tutupLembar('lembarPeringatan')">Batal</button>
       <button class="btn btn-utama" style="flex:1;" onclick="lanjutkanSimpan()">Tetap Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: UNGGAH BUKTI BAYAR (4B) ============ -->
+<div class="lembar" id="lembarUnggah">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Upload Bukti Bayar</h2>
+      <button onclick="tutupUnggah()">
+        <svg class="ic ic-sm"><use href="#i-tutup"/></svg>
+      </button>
+    </div>
+
+    <div class="lembar-badan">
+      <div class="ung-rumah">Untuk rumah <b id="ungRumah">-</b></div>
+
+      <div id="ungPilih" class="ung-pilih">
+        <svg class="ic"><use href="#i-unggah"/></svg>
+        <h3>Foto bukti transfer</h3>
+        <p>Struk dibaca otomatis. Anda tetap bisa memperbaiki isinya sebelum dikirim.</p>
+        <button class="btn btn-utama" onclick="document.getElementById('ungBerkas').click()">Pilih Foto Struk</button>
+        <div class="pesan-galat" id="ungGalat1" style="margin-top:12px;"></div>
+      </div>
+
+      <input type="file" id="ungBerkas" accept="image/*" style="display:none;">
+
+      <div id="ungHasil" class="ung-sembunyi">
+        <img id="ungPratinjau" class="ung-img" alt="Pratinjau struk">
+        <div id="ungStatus" class="ung-status proses"></div>
+        <button class="ung-ulang" onclick="ulangiPilih()">Pilih foto lain</button>
+
+        <div id="ungForm">
+          <div class="field">
+            <label for="ungTgl">Tanggal transfer</label>
+            <input type="date" id="ungTgl">
+          </div>
+          <div class="field">
+            <label for="ungNominal">Nominal</label>
+            <input id="ungNominal" inputmode="numeric" placeholder="0">
+          </div>
+          <div class="field">
+            <label for="ungKet">Keterangan</label>
+            <input id="ungKet" maxlength="200" placeholder="Contoh: Iuran Oktober">
+          </div>
+          <input type="hidden" id="ungRef">
+        </div>
+
+        <div class="pesan-galat" id="ungGalat"></div>
+      </div>
+    </div>
+
+    <div class="lembar-bawah ung-sembunyi" id="ungBawah">
+      <button class="btn btn-utama" id="btnKirimBukti" onclick="kirimBukti()">Kirim ke Bendahara</button>
     </div>
   </div>
 </div>

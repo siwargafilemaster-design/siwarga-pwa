@@ -175,7 +175,10 @@ function gambarBukuBesar(d, no){
 
   const saldo = (d.info && d.info.saldo) ? d.info.saldo : 0;
   html += '<div class="keu-saldo-titipan"><span>Saldo titipan rumah</span><b>' + rupiah(saldo) + '</b></div>';
-
+  html += '<button class="keu-unggah" onclick="mulaiUnggahBukti(\'' +
+            String(no).replace(/'/g, "\\'") + '\')">' +
+            '<svg class="ic ic-sm"><use href="#i-unggah"/></svg> Upload bukti bayar</button>';
+            
   if (!d.cards || !d.cards.length){
     kotak.innerHTML = html + '<div class="kosong"><h2>Belum ada data</h2><p>Rumah ini belum punya kartu tagihan.</p></div>';
     return;
@@ -590,4 +593,30 @@ function muatSkripAksi(){
   s.src = '/modul/keuangan-rt/keuangan-aksi.js';
   s.onload = function(){ siapkanMenuAksi(); };
   document.body.appendChild(s);
+}
+
+/** Memuat keuangan-unggah.js sekali saja. Janji disimpan agar klik ganda tidak memuat dua kali. */
+function muatSkripUnggah(){
+  if (window.__unggahJanji) return window.__unggahJanji;
+
+  window.__unggahJanji = new Promise(function(ok, gagal){
+    const s = document.createElement('script');
+    s.src = '/modul/keuangan-rt/keuangan-unggah.js';
+    s.onload  = function(){ ok(); };
+    s.onerror = function(){
+      window.__unggahJanji = null;               // boleh dicoba lagi
+      gagal(new Error('Gagal memuat modul unggah. Periksa sambungan.'));
+    };
+    document.body.appendChild(s);
+  });
+  return window.__unggahJanji;
+}
+
+async function mulaiUnggahBukti(noRumah){
+  try {
+    await muatSkripUnggah();
+    bukaUnggah(noRumah);
+  } catch (e) {
+    toast(e.message);
+  }
 }
