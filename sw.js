@@ -9,7 +9,7 @@
    Mengubah kode modul biasa TIDAK perlu menaikkan versi.
    ================================================================= */
 
-const VERSI = 'siwarga-v1';
+const VERSI = 'siwarga-v2';
 const BATAS_TUNGGU = 4000;   // ms; lewat dari ini & ada salinan → pakai salinan
 
 const SIMPAN_AWAL = [
@@ -22,7 +22,11 @@ const SIMPAN_AWAL = [
   '/modul/dashboard/dashboard.html',
   '/modul/dashboard/dashboard.js',
   '/aset/icon-192.png',
-  '/aset/icon-512.png'
+  '/aset/icon-512.png',
+  '/aset/splash-teal.png',
+  '/aset/splash-oranye.png',
+  '/aset/splash-logo.png',
+  '/aset/splash-tulisan.png'
 ];
 
 /* ---------- PASANG: simpan berkas inti ---------- */

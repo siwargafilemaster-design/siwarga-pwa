@@ -24,8 +24,89 @@ if (location.search.indexOf('debug') !== -1) {
   document.head.appendChild(s);
 }
 </script>
+<style>
+/* ===== SPLASH (4E) — ditaruh di <head> supaya tampil seketika ===== */
+#splash{position:fixed;inset:0;z-index:9999;background:#F2F4F7;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;transition:opacity .45s ease;}
+#splash.selesai{opacity:0;pointer-events:none;}
+#splash .sp-logo{position:relative;width:140px;height:140px;}
+#splash .sp-logo img{position:absolute;inset:0;width:100%;height:100%;opacity:0;}
+#splash .sp-tulisan{width:min(300px,80vw);height:auto;opacity:0;}
+#splash.jalan .sp-teal{animation:spKiri .9s cubic-bezier(.2,.8,.2,1) both, spPudar .2s ease 1s forwards;}
+#splash.jalan .sp-oranye{animation:spKanan .9s cubic-bezier(.2,.8,.2,1) both, spPudar .2s ease 1s forwards;}
+#splash.jalan .sp-utuh{animation:spMuncul .25s ease .92s forwards, spDenyut .55s ease .95s both;}
+#splash.jalan .sp-tulisan{animation:spSapu .85s cubic-bezier(.3,.7,.2,1) 1.35s both;}
+@keyframes spKiri{from{transform:translateX(-80px) rotate(-20deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes spKanan{from{transform:translateX(80px) rotate(20deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes spMuncul{to{opacity:1}}
+@keyframes spPudar{to{opacity:0}}
+@keyframes spDenyut{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes spSapu{from{opacity:0;clip-path:inset(0 100% 0 0);transform:translateY(6px)}
+                  to{opacity:1;clip-path:inset(0 0 0 0);transform:none}}
+@media (prefers-reduced-motion:reduce){
+  #splash.jalan *{animation:none !important;}
+  #splash.jalan .sp-utuh,#splash.jalan .sp-tulisan{opacity:1;}
+}
+</style>
 </head>
 <body>
+
+<!-- ===== SPLASH (4E) — harus jadi elemen PERTAMA di dalam <body> ===== -->
+<div id="splash" aria-hidden="true">
+  <div class="sp-logo">
+    <img class="sp-teal"   src="/aset/splash-teal.png"   alt="">
+    <img class="sp-oranye" src="/aset/splash-oranye.png" alt="">
+    <img class="sp-utuh"   src="/aset/splash-logo.png"   alt="">
+  </div>
+  <img class="sp-tulisan" src="/aset/splash-tulisan.png" alt="SiWARGA">
+</div>
+<script>
+/* Splash hanya saat aplikasi dibuka dari keadaan tertutup.
+   Pindah halaman / muat ulang dalam sesi yang sama → langsung dilewati. */
+(function () {
+  var sp = document.getElementById('splash');
+  var sudah = false;
+  try {
+    sudah = sessionStorage.getItem('siwarga_splash') === '1';
+    sessionStorage.setItem('siwarga_splash', '1');
+  } catch (e) {}
+
+  if (sudah) { sp.remove(); window.splashSiap = function () {}; return; }
+
+  var hemat = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var MIN  = hemat ? 800 : 2800;   // animasi selalu tampil utuh minimal selama ini
+  var MAKS = 8000;                 // pengaman: apa pun yang terjadi, splash hilang
+  var mulaiT = 0, siap = false, tutup = false;
+
+  function hilang() {
+    if (tutup) return; tutup = true;
+    sp.classList.add('selesai');
+    setTimeout(function () { sp.remove(); }, 500);
+  }
+  function cobaTutup() {
+    if (!siap || !mulaiT) return;
+    setTimeout(hilang, Math.max(0, MIN - (Date.now() - mulaiT)));
+  }
+  function jalan() {
+    if (mulaiT) return;
+    mulaiT = Date.now();
+    sp.classList.add('jalan');
+    cobaTutup();
+  }
+
+  // Animasi baru diputar setelah keempat gambar siap (maks. tunggu 1,5 dtk)
+  var gambar = sp.querySelectorAll('img'), sisa = gambar.length;
+  gambar.forEach(function (g) {
+    if (g.complete) { if (--sisa === 0) jalan(); }
+    else { g.onload = g.onerror = function () { if (--sisa === 0) jalan(); }; }
+  });
+  setTimeout(jalan, 1500);
+  setTimeout(hilang, MAKS);
+
+  // Dipanggil app.js saat Beranda siap ditampilkan
+  window.splashSiap = function () { siap = true; cobaTutup(); };
+})();
+</script>
 
 <!-- =================================================================
      GUDANG IKON — bergaya Lucide (lucide.dev, lisensi MIT)

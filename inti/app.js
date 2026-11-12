@@ -302,6 +302,9 @@ async function mulai(){
   gambarDrawer();
   pergiKe('home');
 
+    // Ada data tersimpan di HP → Beranda sudah terisi, splash boleh selesai
+  if (berandaLama && window.splashSiap) splashSiap();
+
   // --- LANGKAH 2: satu panggilan ke server, di belakang layar ---
   try {
     const d = await panggilAPI('pembuka');
@@ -335,6 +338,8 @@ async function mulai(){
     console.error('Pembuka gagal:', e);
     if (!berandaLama) toast('Gagal menghubungi server');
   }
+    // Data dari server sudah datang (atau gagal) → splash boleh selesai
+  if (window.splashSiap) splashSiap();
 }
 
 /* ---------- PASANG PENDENGAR ---------- */
