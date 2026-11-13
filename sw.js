@@ -9,7 +9,7 @@
    Mengubah kode modul biasa TIDAK perlu menaikkan versi.
    ================================================================= */
 
-const VERSI = 'siwarga-v2';
+const VERSI = 'siwarga-v3';
 const BATAS_TUNGGU = 4000;   // ms; lewat dari ini & ada salinan → pakai salinan
 
 const SIMPAN_AWAL = [
