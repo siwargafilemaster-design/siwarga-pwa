@@ -1,0 +1,180 @@
+<style>
+/* ===== DATABASE RUMAH — gaya khusus modul ===== */
+.rm-alat{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.rm-cari{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;padding:11px 14px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.rm-chips{display:flex;gap:7px;}
+.rm-chip{font:inherit;font-size:.74rem;font-weight:600;padding:7px 13px;border-radius:999px;
+  border:1.5px solid var(--line);background:var(--card);color:var(--muted);}
+.rm-chip.on{border-color:var(--hero-1);background:var(--hero-1);color:#fff;}
+
+.rm-kartu{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;
+  background:var(--card);border:none;border-radius:var(--r-lg);padding:12px 14px;margin-bottom:9px;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);color:var(--ink);}
+.rm-no{min-width:46px;height:46px;border-radius:12px;background:var(--bg);display:flex;
+  align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0;padding:0 4px;}
+.rm-isi{flex:1;min-width:0;}
+.rm-isi b{display:block;font-size:.86rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rm-isi b.kosong{color:var(--muted);font-weight:500;font-style:italic;}
+.rm-isi small{display:block;font-size:.7rem;color:var(--muted);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.rm-st{font-size:.56rem;font-weight:700;letter-spacing:.04em;padding:4px 9px;border-radius:999px;
+  white-space:nowrap;flex-shrink:0;}
+.st-milik{background:var(--sage-soft);color:var(--sage);}
+.st-kontrak{background:var(--gold-soft);color:var(--gold-ink);}
+.st-numpang{background:var(--bg);color:var(--hero-2);}
+.st-sewa{background:var(--red-soft);color:var(--red);}
+.st-kosong{background:var(--bg);color:var(--muted);}
+
+.rm-info{background:var(--bg);border-radius:var(--r-md);padding:6px 14px;margin-bottom:14px;}
+.rm-baris{display:flex;justify-content:space-between;gap:14px;font-size:.78rem;padding:8px 0;
+  border-bottom:1px solid var(--line);}
+.rm-baris:last-child{border-bottom:none;}
+.rm-baris span{color:var(--muted);flex-shrink:0;}
+.rm-baris b{text-align:right;font-weight:600;word-break:break-word;}
+.rm-baris a{color:var(--hero-1);font-weight:700;}
+.rm-judul{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:4px 0 8px;}
+.rm-anggota{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:9px 0;border-bottom:1px solid var(--line);font-size:.8rem;}
+.rm-anggota:last-child{border-bottom:none;}
+.rm-anggota small{display:block;color:var(--muted);font-size:.68rem;margin-top:1px;}
+.rm-anggota.mati{opacity:.55;}
+.rm-catatan{font-size:.72rem;line-height:1.5;color:var(--muted);background:var(--gold-soft);
+  border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px;}
+.rm-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
+  padding:10px 12px;margin-top:10px;}
+.rm-galat:empty{display:none;}
+.rm-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Database Rumah</h1>
+    <small id="rmSub">Memuat…</small>
+  </div>
+  <button class="hero-btn rm-sembunyi" id="rmTambah" style="margin-left:auto;"
+          onclick="bukaFormRumah('BARU')" aria-label="Tambah rumah">
+    <svg class="ic"><use href="#i-plus"/></svg>
+  </button>
+  <button class="hero-btn" id="rmSegar" onclick="muatRumah()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div class="rm-alat">
+    <input class="rm-cari" id="rmCari" type="search" placeholder="Cari nomor rumah atau nama…"
+           oninput="Rmh.cari = this.value; gambarRumah();" autocomplete="off">
+    <div class="rm-chips">
+      <button class="rm-chip on" data-f="semua"  onclick="setFilterRumah('semua')">Semua</button>
+      <button class="rm-chip"    data-f="dihuni" onclick="setFilterRumah('dihuni')">Dihuni</button>
+      <button class="rm-chip"    data-f="kosong" onclick="setFilterRumah('kosong')">Tidak dihuni</button>
+    </div>
+  </div>
+  <div id="rmDaftar"><div class="memuat">Memuat…</div></div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: DETAIL RUMAH ============ -->
+<div class="lembar" id="lembarRumah">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="rdJudul">Rumah</h2>
+      <button onclick="tutupLembar('lembarRumah')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan" id="rdIsi"><div class="memuat">Memuat…</div></div>
+    <div class="lembar-bawah rm-sembunyi" id="rdBawah">
+      <button class="btn btn-utama" onclick="ubahRumahIni()">Ubah Data Rumah</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: FORM RUMAH ============ -->
+<div class="lembar" id="lembarFormRumah">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="rfJudul">Tambah Rumah</h2>
+      <button onclick="tutupLembar('lembarFormRumah')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="rm-judul">RUMAH & PEMILIK</div>
+      <div class="field">
+        <label for="rfNo">Nomor rumah / blok</label>
+        <input id="rfNo" maxlength="12" placeholder="Contoh: A10" autocomplete="off"
+               oninput="this.value = this.value.toUpperCase()">
+      </div>
+      <div class="field">
+        <label for="rfPemilik">Nama pemilik</label>
+        <input id="rfPemilik" maxlength="80" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="rfHpPemilik">HP pemilik</label>
+        <input id="rfHpPemilik" inputmode="numeric" maxlength="15" autocomplete="off"
+               oninput="this.value = this.value.replace(/\D/g,'')">
+      </div>
+      <div class="field">
+        <label for="rfNikPemilik">NIK pemilik</label>
+        <input id="rfNikPemilik" inputmode="numeric" maxlength="16" autocomplete="off"
+               oninput="this.value = this.value.replace(/\D/g,'')">
+      </div>
+
+      <div class="rm-judul" style="margin-top:8px;">PENGHUNI</div>
+      <div class="field">
+        <label for="rfStatus">Status hunian</label>
+        <select id="rfStatus" onchange="aturAreaPenghuni()">
+          <option value="MILIK SENDIRI">Milik sendiri</option>
+          <option value="PENGONTRAK">Pengontrak / sewa</option>
+          <option value="MENUMPANG">Menumpang</option>
+          <option value="KOSONG">Rumah kosong</option>
+          <option value="BELUM DIHUNI">Belum dihuni</option>
+          <option value="DISEWAKAN">Disewakan (belum ada penyewa)</option>
+        </select>
+      </div>
+
+      <div id="rfCatatanKosong" class="rm-catatan rm-sembunyi">
+        Data penghuni di Database Rumah akan dikosongkan.<br>
+        <b>Tagihan bulanan tidak ikut berhenti</b> dari sini. Kalau keluarga pindah,
+        isi <b>tanggal pindah</b> setiap anggotanya di Data Pokok.
+      </div>
+
+      <div id="rfAreaPenghuni">
+        <div class="field">
+          <label for="rfPenghuni">Nama Kepala Keluarga</label>
+          <input id="rfPenghuni" maxlength="80" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="rfKK">No KK</label>
+          <input id="rfKK" inputmode="numeric" maxlength="16" autocomplete="off"
+                 oninput="this.value = this.value.replace(/\D/g,'')">
+        </div>
+        <div class="field">
+          <label for="rfNik">NIK Kepala Keluarga</label>
+          <input id="rfNik" inputmode="numeric" maxlength="16" autocomplete="off"
+                 oninput="this.value = this.value.replace(/\D/g,'')">
+        </div>
+        <div class="field">
+          <label for="rfHp">HP / WhatsApp</label>
+          <input id="rfHp" inputmode="numeric" maxlength="15" autocomplete="off"
+                 oninput="this.value = this.value.replace(/\D/g,'')">
+        </div>
+        <div class="field">
+          <label for="rfJml">Jumlah anggota keluarga</label>
+          <input id="rfJml" type="number" min="1" max="30" value="1">
+          <small style="font-size:.66rem;color:var(--muted);">Otomatis dihitung dari Data Pokok bila anggotanya sudah diinput.</small>
+        </div>
+      </div>
+
+      <div class="rm-galat" id="rfGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnSimpanRumah" onclick="simpanRumah()">Simpan</button>
+    </div>
+  </div>
+</div>
