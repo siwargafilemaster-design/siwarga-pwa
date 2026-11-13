@@ -1,0 +1,227 @@
+<style>
+/* ===== DATA POKOK — gaya khusus modul ===== */
+.pk-alat{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.pk-cari{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;padding:11px 14px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.pk-chips{display:flex;gap:7px;flex-wrap:wrap;}
+.pk-chip{font:inherit;font-size:.74rem;font-weight:600;padding:7px 13px;border-radius:999px;
+  border:1.5px solid var(--line);background:var(--card);color:var(--muted);}
+.pk-chip.on{border-color:var(--hero-1);background:var(--hero-1);color:#fff;}
+
+.pk-grup{background:var(--card);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.pk-grup-kepala{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);
+  font-size:.74rem;font-weight:700;color:var(--muted);}
+.pk-grup-kepala b{color:var(--ink);font-size:.82rem;}
+.pk-orang{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;
+  background:none;border:none;border-top:1px solid var(--line);padding:10px 14px;color:var(--ink);}
+.pk-orang:first-of-type{border-top:none;}
+.pk-orang .isi{flex:1;min-width:0;}
+.pk-orang b{display:block;font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pk-orang small{display:block;font-size:.68rem;color:var(--muted);margin-top:1px;}
+.pk-orang.mati{opacity:.55;}
+.pk-tag{font-size:.56rem;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:999px;
+  background:var(--bg);color:var(--muted);white-space:nowrap;}
+.pk-tag.kk{background:var(--sage-soft);color:var(--sage);}
+
+.pk-info{background:var(--bg);border-radius:var(--r-md);padding:6px 14px;margin-bottom:12px;}
+.pk-baris{display:flex;justify-content:space-between;gap:14px;font-size:.78rem;padding:8px 0;
+  border-bottom:1px solid var(--line);}
+.pk-baris:last-child{border-bottom:none;}
+.pk-baris span{color:var(--muted);flex-shrink:0;}
+.pk-baris b{text-align:right;font-weight:600;word-break:break-word;}
+
+.pk-judul{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:10px 0 8px;}
+.pk-dua{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pk-progres{font-size:.72rem;font-weight:700;color:var(--hero-1);background:var(--bg);
+  border-radius:999px;padding:5px 12px;display:inline-block;margin-bottom:10px;}
+.pk-catatan{font-size:.72rem;line-height:1.5;color:var(--gold-ink);background:var(--gold-soft);
+  border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px;}
+.pk-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
+  padding:10px 12px;margin-top:10px;}
+.pk-galat:empty{display:none;}
+.pk-pil{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;font-size:.82rem;
+  padding:12px 14px;margin-bottom:8px;border:1.5px solid var(--line);border-radius:var(--r-md);
+  background:#fff;color:var(--ink);}
+.pk-pil small{display:block;font-size:.68rem;color:var(--muted);}
+.pk-pil.on{border-color:var(--hero-1);background:var(--bg);}
+.pk-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Data Pokok Warga</h1>
+    <small id="pkSub">Memuat…</small>
+  </div>
+  <button class="hero-btn pk-sembunyi" id="pkTambah" style="margin-left:auto;"
+          onclick="mulaiInputKeluarga()" aria-label="Input keluarga">
+    <svg class="ic"><use href="#i-plus"/></svg>
+  </button>
+  <button class="hero-btn" onclick="muatPokok()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div class="pk-alat">
+    <input class="pk-cari" id="pkCari" type="search" placeholder="Cari nama atau nomor rumah…"
+           oninput="Pk.cari = this.value; gambarPokok();" autocomplete="off">
+    <div class="pk-chips">
+      <button class="pk-chip on" data-f="aktif" onclick="setFilterPokok('aktif')">Aktif</button>
+      <button class="pk-chip"    data-f="non"   onclick="setFilterPokok('non')">Non aktif</button>
+      <button class="pk-chip"    data-f="semua" onclick="setFilterPokok('semua')">Semua</button>
+    </div>
+  </div>
+  <div id="pkDaftar"><div class="memuat">Memuat…</div></div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: DETAIL WARGA ============ -->
+<div class="lembar" id="lembarWarga">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="pdJudul">Warga</h2>
+      <button onclick="tutupLembar('lembarWarga')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan" id="pdIsi"></div>
+    <div class="lembar-bawah pk-sembunyi" id="pdBawah">
+      <button class="btn btn-utama" onclick="ubahWargaIni()">Ubah / Catat Pindah</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: PERSIAPAN INPUT KELUARGA ============ -->
+<div class="lembar" id="lembarSiapInput">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Input Keluarga</h2>
+      <button onclick="tutupLembar('lembarSiapInput')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="field">
+        <label for="psRumah">Rumah</label>
+        <select id="psRumah" onchange="cekRumahInput()"><option value="">Memuat…</option></select>
+      </div>
+      <div id="psInfo" class="pk-catatan pk-sembunyi"></div>
+      <div class="field">
+        <label for="psJumlah">Jumlah anggota yang akan diinput sekarang</label>
+        <input id="psJumlah" type="number" min="1" max="15" value="1">
+      </div>
+      <div class="pk-galat" id="psGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnLanjutInput" onclick="lanjutInputKeluarga()">Lanjut ke Pengisian</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: FORM ANGGOTA (input & ubah) ============ -->
+<div class="lembar" id="lembarAnggota">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="pfJudul">Input Anggota</h2>
+      <button onclick="batalFormAnggota()"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <span class="pk-progres" id="pfProgres">Anggota 1 dari 1</span>
+
+      <div class="pk-judul">IDENTITAS</div>
+      <div class="field"><label for="pfNama">Nama lengkap (sesuai KTP)</label>
+        <input id="pfNama" maxlength="80" autocomplete="off" oninput="cerminNamaKK()"></div>
+      <div class="field"><label for="pfNik">NIK (16 digit)</label>
+        <input id="pfNik" inputmode="numeric" maxlength="16" autocomplete="off"
+               oninput="this.value=this.value.replace(/\D/g,'')"></div>
+      <div class="field"><label for="pfKK">No KK (16 digit)</label>
+        <input id="pfKK" inputmode="numeric" maxlength="16" autocomplete="off"
+               oninput="this.value=this.value.replace(/\D/g,'')"></div>
+      <div class="field"><label for="pfHub">Hubungan dalam keluarga</label>
+        <select id="pfHub" onchange="cerminNamaKK()"></select></div>
+      <div class="pk-dua">
+        <div class="field"><label for="pfJk">Jenis kelamin</label><select id="pfJk"></select></div>
+        <div class="field"><label for="pfAgama">Agama</label><select id="pfAgama"></select></div>
+      </div>
+      <div class="field"><label for="pfKawin">Status perkawinan</label><select id="pfKawin"></select></div>
+
+      <div class="pk-judul">KELAHIRAN & KONTAK</div>
+      <div class="pk-dua">
+        <div class="field"><label for="pfTempat">Tempat lahir</label>
+          <input id="pfTempat" maxlength="60" autocomplete="off"></div>
+        <div class="field"><label for="pfTglLahir">Tanggal lahir</label>
+          <input id="pfTglLahir" type="date"></div>
+      </div>
+      <div class="field"><label for="pfHp">HP / WhatsApp</label>
+        <input id="pfHp" inputmode="numeric" maxlength="15" autocomplete="off"
+               oninput="this.value=this.value.replace(/\D/g,'')"></div>
+      <div class="field"><label for="pfNamaKK">Nama Kepala Keluarga (sesuai KK)</label>
+        <input id="pfNamaKK" maxlength="80" autocomplete="off"></div>
+
+      <div class="pk-judul">ALAMAT & DOMISILI</div>
+      <div class="field"><label for="pfAlamat">Alamat (jalan / blok)</label>
+        <input id="pfAlamat" maxlength="200" autocomplete="off"></div>
+      <div class="pk-dua">
+        <div class="field"><label for="pfRt">RT</label><input id="pfRt" maxlength="5"></div>
+        <div class="field"><label for="pfRw">RW</label><input id="pfRw" maxlength="5"></div>
+      </div>
+      <div class="field"><label for="pfKel">Kelurahan / Desa</label><input id="pfKel" maxlength="60"></div>
+      <div class="pk-dua">
+        <div class="field"><label for="pfKec">Kecamatan</label><input id="pfKec" maxlength="60"></div>
+        <div class="field"><label for="pfKab">Kabupaten / Kota</label><input id="pfKab" maxlength="60"></div>
+      </div>
+      <div class="pk-dua">
+        <div class="field"><label for="pfTinggal">Status tempat tinggal</label><select id="pfTinggal"></select></div>
+        <div class="field"><label for="pfDomisili">Status domisili</label><select id="pfDomisili"></select></div>
+      </div>
+      <div class="field"><label for="pfTglMasuk">Tanggal mulai tinggal</label>
+        <input id="pfTglMasuk" type="date"></div>
+
+      <div id="pfAreaMutasi" class="pk-sembunyi">
+        <div class="pk-judul">MUTASI (PINDAH / MENINGGAL)</div>
+        <div class="pk-catatan">Mengisi tanggal ini membuat warga <b>Non Aktif</b>. Tagihan rumah dihitung
+          berdasarkan tanggal ini. Kalau yang keluar adalah Kepala Keluarga, Bapak/Ibu akan diminta memilih langkah berikutnya.</div>
+        <div class="field"><label for="pfTglPindah">Tanggal pindah / meninggal</label>
+          <input id="pfTglPindah" type="date"></div>
+        <div class="field"><label for="pfKet">Keterangan</label>
+          <input id="pfKet" maxlength="200" placeholder="Contoh: Pindah ke Jakarta / Meninggal dunia"></div>
+      </div>
+
+      <div class="pk-galat" id="pfGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="btnSimpanAnggota" onclick="simpanAnggota()">Simpan & Lanjut</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: KEPUTUSAN SAAT KK KELUAR ============ -->
+<div class="lembar" id="lembarKeputusan">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Kepala Keluarga Keluar</h2>
+      <button onclick="tutupLembar('lembarKeputusan')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p id="kpTeks" style="font-size:.8rem;line-height:1.55;margin:0 0 12px;"></p>
+      <div id="kpPilihan"></div>
+      <div id="kpAreaStatus" class="field pk-sembunyi" style="margin-top:6px;">
+        <label for="kpStatus">Status rumah setelah ini</label>
+        <select id="kpStatus">
+          <option value="KOSONG">Rumah kosong</option>
+          <option value="DISEWAKAN">Disewakan (belum ada penyewa)</option>
+          <option value="BELUM DIHUNI">Belum dihuni</option>
+        </select>
+      </div>
+      <div class="pk-galat" id="kpGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" onclick="kirimKeputusan()">Simpan Keputusan</button>
+    </div>
+  </div>
+</div>
