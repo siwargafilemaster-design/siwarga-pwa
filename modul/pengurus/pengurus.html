@@ -1,0 +1,100 @@
+<style>
+/* ===== DAFTAR PENGURUS — gaya khusus modul ===== */
+.pg-tab{display:flex;gap:6px;background:var(--card);border-radius:999px;padding:5px;margin-bottom:14px;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.pg-tab button{flex:1;font:inherit;font-size:.78rem;font-weight:700;padding:9px 6px;border:none;
+  border-radius:999px;background:transparent;color:var(--muted);}
+.pg-tab button.on{background:var(--hero-1);color:#fff;}
+
+.pg-kotak{background:var(--card);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.pg-kepala{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;
+  background:var(--bg);font-size:.8rem;font-weight:700;}
+.pg-orang{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--line);}
+.pg-orang:first-of-type{border-top:none;}
+.pg-orang .isi{flex:1;min-width:0;}
+.pg-orang small{display:block;font-size:.64rem;font-weight:700;letter-spacing:.04em;color:var(--muted);
+  text-transform:uppercase;}
+.pg-orang b{display:block;font-size:.86rem;font-weight:600;margin-top:1px;}
+.pg-orang.ketua{background:linear-gradient(90deg,var(--gold-soft),transparent 70%);}
+.pg-orang.ketua small{color:var(--gold-ink);}
+.pg-wa{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;text-decoration:none;
+  padding:7px 12px;border-radius:999px;background:#1F9D55;color:#fff;flex-shrink:0;}
+.pg-wa .ic{width:14px;height:14px;}
+.pg-tanpa{font-size:.68rem;color:var(--muted);flex-shrink:0;}
+.pg-alat{display:flex;gap:8px;margin-bottom:10px;}
+.pg-btn{font:inherit;font-size:.76rem;font-weight:700;padding:9px 14px;border-radius:999px;border:none;
+  background:var(--bg);color:var(--hero-1);}
+.pg-btn.utama{background:var(--hero-1);color:#fff;}
+.pg-btn.bahaya{background:var(--red-soft);color:var(--red);}
+.pg-kecil{font:inherit;font-size:.68rem;font-weight:700;padding:5px 11px;border-radius:999px;border:none;
+  background:var(--red-soft);color:var(--red);}
+
+/* Editor daftar */
+.pg-edit{border:1.5px solid var(--line);border-radius:var(--r-md);padding:10px;margin-bottom:9px;background:#fff;}
+.pg-edit-atas{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.pg-edit-atas b{flex:1;font-size:.7rem;color:var(--muted);}
+.pg-ikon{width:30px;height:30px;border-radius:9px;border:none;background:var(--bg);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;}
+.pg-ikon .ic{width:15px;height:15px;}
+.pg-ikon.naik .ic{transform:rotate(-90deg);}
+.pg-ikon.turun .ic{transform:rotate(90deg);}
+.pg-ikon.hapus{background:var(--red-soft);color:var(--red);}
+.pg-ikon:disabled{opacity:.3;}
+.pg-edit input{width:100%;box-sizing:border-box;font:inherit;font-size:.84rem;padding:9px 11px;margin-bottom:6px;
+  border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);}
+.pg-edit input:last-child{margin-bottom:0;}
+.pg-tambah{width:100%;font:inherit;font-size:.8rem;font-weight:700;padding:11px;
+  border:1.5px dashed var(--hero-1);background:transparent;color:var(--hero-1);border-radius:var(--r-md);}
+.pg-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
+  padding:10px 12px;margin-top:10px;}
+.pg-galat:empty{display:none;}
+.pg-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Daftar Pengurus</h1>
+    <small id="pgSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="muatPengurus()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div class="pg-tab">
+    <button class="on" data-t="RT"      onclick="pilihTabPengurus('RT')">RT</button>
+    <button           data-t="PKK"     onclick="pilihTabPengurus('PKK')">PKK</button>
+    <button           data-t="PANITIA" onclick="pilihTabPengurus('PANITIA')">Panitia</button>
+  </div>
+  <div id="pgIsi"><div class="memuat">Memuat…</div></div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: EDITOR (pengurus / panitia baru) ============ -->
+<div class="lembar" id="lembarEditPengurus">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="peJudul">Ubah Pengurus</h2>
+      <button onclick="tutupEditPengurus()"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="field pg-sembunyi" id="peAreaAcara">
+        <label for="peAcara">Nama acara / kegiatan</label>
+        <input id="peAcara" maxlength="100" placeholder="Contoh: HUT RI ke-81" autocomplete="off">
+      </div>
+      <div id="peDaftar"></div>
+      <button class="pg-tambah" onclick="tambahBarisPengurus()">+ Tambah orang</button>
+      <div class="pg-galat" id="peGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="peSimpan" onclick="simpanEditPengurus()">Simpan</button>
+    </div>
+  </div>
+</div>
