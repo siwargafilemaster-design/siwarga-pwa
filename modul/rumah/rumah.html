@@ -45,6 +45,18 @@
 .rm-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
   padding:10px 12px;margin-top:10px;}
 .rm-galat:empty{display:none;}
+.rm-chips{flex-wrap:wrap;}
+.rm-no{position:relative;}
+.rm-tanda{position:absolute;top:-5px;right:-5px;width:19px;height:19px;border-radius:50%;
+  background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 2px var(--card);}
+.rm-tanda .ic{width:11px;height:11px;}
+.rm-peringatan{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;
+  background:var(--gold-soft);color:var(--gold-ink);border:none;border-radius:var(--r-md);
+  padding:11px 13px;margin-bottom:12px;font-size:.76rem;font-weight:600;line-height:1.45;}
+.rm-peringatan .ic{flex-shrink:0;}
+.rm-cek{font-size:.74rem;line-height:1.55;color:var(--gold-ink);background:var(--gold-soft);
+  border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px;}
 .rm-sembunyi{display:none !important;}
 </style>
 
@@ -73,8 +85,10 @@
       <button class="rm-chip on" data-f="semua"  onclick="setFilterRumah('semua')">Semua</button>
       <button class="rm-chip"    data-f="dihuni" onclick="setFilterRumah('dihuni')">Dihuni</button>
       <button class="rm-chip"    data-f="kosong" onclick="setFilterRumah('kosong')">Tidak dihuni</button>
+      <button class="rm-chip rm-sembunyi" id="rmChipCek" data-f="cek" onclick="setFilterRumah('cek')">Perlu dilengkapi</button>
     </div>
   </div>
+  <div id="rmPeringatan"></div>
   <div id="rmDaftar"><div class="memuat">Memuat…</div></div>
 </div>
 

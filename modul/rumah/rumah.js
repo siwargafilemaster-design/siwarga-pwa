@@ -5,7 +5,7 @@
    ================================================================= */
 
 const Rmh = { data: [], tingkat: 0, bolehUbah: false, filter: 'semua', cari: '',
-              detail: null, mode: 'BARU', sibuk: false };
+              detail: null, detailCek: '', mode: 'BARU', sibuk: false };
 
 const RM_KELAS_STATUS = {
   'MILIK SENDIRI': 'st-milik', 'PENGONTRAK': 'st-kontrak', 'MENUMPANG': 'st-numpang',
@@ -51,15 +51,32 @@ function gambarRumah(){
   const kotak = document.getElementById('rmDaftar');
   if (!kotak) return;
 
-  const total = Rmh.data.length;
+  const total  = Rmh.data.length;
   const dihuni = Rmh.data.filter(function(r){ return r.dihuni; }).length;
+  const perlu  = Rmh.data.filter(function(r){ return r.cek; }).length;
   document.getElementById('rmSub').textContent = total + ' rumah · ' + dihuni + ' dihuni';
+
+  // Filter "Perlu dilengkapi" hanya ada bila memang ada
+  if (!perlu && Rmh.filter === 'cek') Rmh.filter = 'semua';
+  document.getElementById('rmChipCek').classList.toggle('rm-sembunyi', !perlu);
+  document.querySelectorAll('.rm-chip').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-f') === Rmh.filter);
+  });
+
+  // Spanduk peringatan
+  document.getElementById('rmPeringatan').innerHTML = (perlu && Rmh.filter !== 'cek')
+    ? '<button class="rm-peringatan" onclick="setFilterRumah(\'cek\')">' +
+        '<svg class="ic ic-sm"><use href="#i-alert"/></svg>' +
+        '<span>' + perlu + ' rumah berpenghuni belum lengkap data warganya. Ketuk untuk melihat.</span>' +
+      '</button>'
+    : '';
 
   const q = Rmh.cari.trim().toLowerCase();
   const tampil = [];
   Rmh.data.forEach(function(r, i){
     if (Rmh.filter === 'dihuni' && !r.dihuni) return;
     if (Rmh.filter === 'kosong' && r.dihuni) return;
+    if (Rmh.filter === 'cek' && !r.cek) return;
     if (q){
       const teks = (r.no + ' ' + (r.penghuni || '') + ' ' + (r.pemilik || '')).toLowerCase();
       if (teks.indexOf(q) === -1) return;
@@ -79,11 +96,18 @@ function gambarRumah(){
       ? '<b>' + rmAman(r.penghuni) + '</b>'
       : '<b class="kosong">Tidak dihuni</b>';
     let ket = '';
-    if (r.pemilik && r.pemilik !== r.penghuni) ket = 'Pemilik: ' + r.pemilik;
-    if (r.dihuni && r.jml) ket = (ket ? ket + ' · ' : '') + r.jml + ' jiwa';
+    if (r.cek === 'BELUM_ADA') ket = 'Data warga belum diisi';
+    else if (r.cek === 'TANPA_KK') ket = 'Kepala Keluarga belum ditentukan';
+    else {
+      if (r.pemilik && r.pemilik !== r.penghuni) ket = 'Pemilik: ' + r.pemilik;
+      if (r.dihuni && r.jml) ket = (ket ? ket + ' · ' : '') + r.jml + ' jiwa';
+    }
+    const tanda = r.cek
+      ? '<span class="rm-tanda"><svg class="ic"><use href="#i-alert"/></svg></span>'
+      : '';
 
     return '<button class="rm-kartu" onclick="bukaRumah(' + i + ')">' +
-      '<div class="rm-no">' + rmAman(r.no) + '</div>' +
+      '<div class="rm-no">' + rmAman(r.no) + tanda + '</div>' +
       '<div class="rm-isi">' + nama + (ket ? '<small>' + rmAman(ket) + '</small>' : '') + '</div>' +
       '<span class="rm-st ' + (RM_KELAS_STATUS[r.status] || 'st-kosong') + '">' + rmAman(r.status || '-') + '</span>' +
     '</button>';
@@ -95,6 +119,7 @@ async function bukaRumah(i){
   const r = Rmh.data[i];
   if (!r) return;
   Rmh.detail = null;
+  Rmh.detailCek = r.cek || '';
 
   document.getElementById('rdJudul').textContent = 'Rumah ' + r.no;
   document.getElementById('rdIsi').innerHTML = '<div class="memuat">Memuat detail…</div>';
@@ -115,7 +140,17 @@ async function bukaRumah(i){
 
 function gambarDetail(d){
   const r = d.rumah;
-  let h = '<div class="rm-info">';
+    let h = '';
+  if (Rmh.detailCek === 'BELUM_ADA'){
+    h += '<div class="rm-cek"><b>Data warga belum diisi.</b> Rumah ini dihuni, tapi belum ada anggota ' +
+         'aktif di Data Pokok. Selama belum diisi, tagihan dihitung sebagai <b>rumah tidak dihuni</b> ' +
+         '(hanya jimpitan + kas) dan penerima tagihan jatuh ke pemilik.</div>';
+  } else if (Rmh.detailCek === 'TANPA_KK'){
+    h += '<div class="rm-cek"><b>Kepala Keluarga belum ditentukan.</b> Ada anggota aktif di Data Pokok, ' +
+         'tapi tidak ada yang berstatus Kepala Keluarga. Penerima tagihan jatuh ke pemilik sampai ' +
+         'Kepala Keluarga ditentukan.</div>';
+  }
+  h += '<div class="rm-info">';
   h += rmBaris('Status', r.status || '-');
   h += rmBaris('Pemilik', r.pemilik || '-');
   if ('hpPemilik' in r)  h += rmBaris('HP pemilik', r.hpPemilik || '-');
