@@ -61,6 +61,11 @@
 .dk-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
   padding:10px 12px;margin-top:10px;}
 .dk-galat:empty{display:none;}
+#lembarTopik textarea{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;line-height:1.55;
+  padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);
+  color:var(--ink);resize:none;min-height:88px;overflow-y:hidden;}
+#lembarTopik textarea:focus{outline:none;border-color:var(--hero-1);}
+.dk-topik .dk-sub{border-top:1px dashed var(--line);padding-top:6px;}
 .dk-sembunyi{display:none !important;}
 .dk-link-pdf{display:block;text-align:center;text-decoration:none;}
 </style>
@@ -148,12 +153,15 @@
     <div class="lembar-badan">
       <div class="field"><label for="tpTopik">Topik pembahasan *</label>
         <input id="tpTopik" maxlength="200" placeholder="Judul singkat…"></div>
-      <div class="field"><label for="tpRingkasan">Ringkasan diskusi</label>
-        <textarea id="tpRingkasan" rows="4" maxlength="2000"></textarea></div>
+     <div class="field"><label for="tpRingkasan">Ringkasan diskusi</label>
+        <textarea id="tpRingkasan" rows="4" maxlength="2000" oninput="dkTumbuh(this)"
+                  placeholder="Isi pembahasan…"></textarea></div>
       <div class="field"><label for="tpKeputusan">Keputusan</label>
-        <textarea id="tpKeputusan" rows="2" maxlength="1000"></textarea></div>
+        <textarea id="tpKeputusan" rows="3" maxlength="1000" oninput="dkTumbuh(this)"
+                  placeholder="Hasil akhir yang disepakati…"></textarea></div>
       <div class="field"><label for="tpTindak">Tindak lanjut</label>
-        <textarea id="tpTindak" rows="2" maxlength="1000"></textarea></div>
+        <textarea id="tpTindak" rows="3" maxlength="1000" oninput="dkTumbuh(this)"
+                  placeholder="Langkah berikutnya…"></textarea></div>
       <div class="field"><label for="tpPic">Penanggung jawab (PIC)</label>
         <input id="tpPic" maxlength="100"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">

@@ -175,10 +175,15 @@ function tutupBuatNotulen(){
 function gambarTopik(){
   document.getElementById('nbJmlTopik').textContent = Dk.topik.length + ' topik';
   document.getElementById('nbTopik').innerHTML = Dk.topik.map(function(t, i){
+    const tenggat = [t.tgl, t.jam].filter(Boolean).join(' ');
+    const pic = [t.pic !== '-' ? t.pic : '', tenggat].filter(Boolean).join(' · ');
     return '<div class="dk-topik">' +
       '<div class="dk-topik-atas"><span class="dk-no">' + (i + 1) + '</span><b>' + dkAman(t.topik) + '</b>' +
         (t.isKalender ? '<span class="dk-st Selesai">KALENDER</span>' : '') + '</div>' +
-      (t.keputusan && t.keputusan !== '-' ? dkSub('Keputusan', t.keputusan) : '') +
+      dkSub('Ringkasan', t.ringkasan) +
+      dkSub('Keputusan', t.keputusan) +
+      dkSub('Tindak lanjut', t.tindak) +
+      dkSub('PIC / Tenggat', pic) +
       '<div class="dk-aksi"><button class="ubah" onclick="bukaTopik(' + i + ')">Ubah</button>' +
       '<button class="hapus" onclick="hapusTopik(' + i + ')">Hapus</button></div>' +
     '</div>';
@@ -195,6 +200,11 @@ function bukaTopik(i){
   document.getElementById('tpKalender').checked = !!t.isKalender;
   document.getElementById('tpGalat').textContent = '';
   bukaLembar('lembarTopik');
+
+  // Tinggi kotak menyesuaikan isi (setelah lembar tampil, supaya ukurannya terbaca)
+  setTimeout(function(){
+    ['tpRingkasan', 'tpKeputusan', 'tpTindak'].forEach(function(id){ dkTumbuh(document.getElementById(id)); });
+  }, 60);
 }
 
 function simpanTopik(){
@@ -305,4 +315,10 @@ function dkSub(label, nilai){
 function dkHariIni(){
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+/** Kotak tulisan memanjang mengikuti isi, sehingga semua tulisan selalu terlihat. */
+function dkTumbuh(el){
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = Math.max(88, el.scrollHeight + 2) + 'px';
 }

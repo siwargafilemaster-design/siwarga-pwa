@@ -275,34 +275,68 @@ function bukaUbahStatus(indeks){
   const k = Beranda.kalender[indeks];
   if (!k) return;
 
-  Beranda.kegAktif = { indeks: indeks, data: k };
+  const sekarang = String(k.status || '').trim().toLowerCase();
+  Beranda.kegAktif = { indeks: indeks, data: k, pilih: '' };
 
   document.getElementById('statAcara').textContent = k.acara || '—';
   document.getElementById('statInfo').textContent =
     [k.tgl, k.jam, k.pic].filter(Boolean).join(' · ');
 
-  const sekarang = String(k.status || '').trim().toLowerCase();
   const kotak = document.getElementById('statDaftar');
   kotak.innerHTML = '';
 
   STATUS_PILIHAN.forEach(function(s){
+    const kini = s.nilai.toLowerCase() === sekarang;
     const b = document.createElement('button');
-    b.className = 'status-opsi' + (s.nilai.toLowerCase() === sekarang ? ' on' : '');
-    b.innerHTML = '<i style="background:' + s.warna + '"></i>' + s.label;
-    b.onclick = function(){ simpanStatus(s.nilai); };
+    b.className = 'status-opsi' + (kini ? ' on' : '');
+    b.setAttribute('data-nilai', s.nilai);
+    b.innerHTML = '<i style="background:' + s.warna + '"></i>' + s.label +
+      (kini ? '<small style="margin-left:auto;font-size:.66rem;font-weight:600;color:var(--muted);">saat ini</small>' : '');
+    b.onclick = function(){ pilihStatus(s.nilai); };
     kotak.appendChild(b);
   });
+
+  // Tombol simpan: baru aktif setelah memilih status yang berbeda
+  const simpan = document.createElement('button');
+  simpan.id = 'statSimpan';
+  simpan.className = 'btn btn-utama';
+  simpan.style.marginTop = '12px';
+  simpan.disabled = true;
+  simpan.textContent = 'Pilih status baru';
+  simpan.onclick = simpanStatus;
+  kotak.appendChild(simpan);
 
   bukaLembar('lembarStatus');
 }
 
-async function simpanStatus(statusBaru){
+function pilihStatus(nilai){
   const aktif = Beranda.kegAktif;
   if (!aktif) return;
+  aktif.pilih = nilai;
 
+  document.querySelectorAll('#statDaftar .status-opsi').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-nilai') === nilai);
+  });
+
+  const sama = nilai.toLowerCase() === String(aktif.data.status || '').trim().toLowerCase();
+  const s = STATUS_PILIHAN.filter(function(x){ return x.nilai === nilai; })[0];
+  const tombol = document.getElementById('statSimpan');
+  tombol.disabled = sama;
+  tombol.textContent = sama ? 'Status ini sedang berlaku' : 'Simpan: ' + (s ? s.label : nilai);
+}
+
+async function simpanStatus(){
+  const aktif = Beranda.kegAktif;
+  if (!aktif || !aktif.pilih) return;
+
+  const statusBaru = aktif.pilih;
   const k = aktif.data;
-  const tombolSemua = document.querySelectorAll('#statDaftar .status-opsi');
+  const tombolSemua = document.querySelectorAll('#statDaftar button');
+  const tombol = document.getElementById('statSimpan');
+  const teksAsli = tombol.textContent;
+
   tombolSemua.forEach(function(b){ b.disabled = true; });
+  tombol.textContent = 'Menyimpan…';
 
   try {
     await panggilAPI('ubahStatusKeg', k.id, statusBaru, String(k.org || 'RT').toUpperCase());
@@ -316,8 +350,8 @@ async function simpanStatus(statusBaru){
 
   } catch (e) {
     toast('Gagal: ' + e.message);
-  } finally {
     tombolSemua.forEach(function(b){ b.disabled = false; });
+    tombol.textContent = teksAsli;
   }
 }
 
