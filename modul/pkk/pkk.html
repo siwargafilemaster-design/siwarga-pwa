@@ -1,0 +1,150 @@
+<style>
+/* ===== DATABASE PKK — gaya khusus modul ===== */
+.pkk-stat{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px;}
+.pkk-kotak{background:var(--card);border-radius:var(--r-lg);padding:12px 14px;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.pkk-kotak b{display:block;font-size:1.3rem;font-weight:700;color:var(--hero-1);line-height:1.2;}
+.pkk-kotak small{display:block;font-size:.66rem;font-weight:600;color:var(--muted);margin-top:2px;}
+.pkk-ket{font-size:.68rem;color:var(--muted);margin:0 2px 18px;line-height:1.5;}
+
+.pkk-judul{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 10px;}
+.pkk-judul h2{font-size:.92rem;margin:0;}
+.pkk-sheet{font:inherit;font-size:.72rem;font-weight:700;padding:7px 12px;border-radius:999px;border:none;
+  background:var(--card);color:var(--hero-1);display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.pkk-sheet .ic{width:14px;height:14px;}
+.pkk-cari{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;padding:11px 14px;margin-bottom:10px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.pkk-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.pkk-chip{font:inherit;font-size:.72rem;font-weight:600;padding:7px 12px;border-radius:999px;
+  border:1.5px solid var(--line);background:var(--card);color:var(--muted);}
+.pkk-chip.on{border-color:var(--hero-1);background:var(--hero-1);color:#fff;}
+.pkk-chip i{font-style:normal;opacity:.75;margin-left:3px;}
+
+.pkk-grup{background:var(--card);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.pkk-grup-kepala{padding:10px 14px;background:var(--bg);font-size:.74rem;font-weight:700;color:var(--muted);}
+.pkk-grup-kepala b{color:var(--ink);font-size:.82rem;margin-right:8px;}
+.pkk-orang{display:block;width:100%;text-align:left;font:inherit;background:none;border:none;
+  border-top:1px solid var(--line);padding:10px 14px;color:var(--ink);}
+.pkk-orang:first-of-type{border-top:none;}
+.pkk-orang b{display:block;font-size:.84rem;font-weight:600;}
+.pkk-orang small{display:block;font-size:.68rem;color:var(--muted);margin-top:1px;}
+.pkk-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+.pkk-tag{font-size:.56rem;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:999px;
+  background:var(--bg);color:var(--muted);}
+.pkk-tag.hijau{background:var(--sage-soft);color:var(--sage);}
+.pkk-tag.emas{background:var(--gold-soft);color:var(--gold-ink);}
+.pkk-tag.merah{background:var(--red-soft);color:var(--red);}
+
+/* form dasa wisma */
+.pkk-info{font-size:.76rem;color:var(--muted);background:var(--bg);border-radius:var(--r-md);
+  padding:10px 12px;margin-bottom:6px;line-height:1.5;}
+.pkk-info b{color:var(--ink);}
+.pkk-bagian{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:16px 0 8px;}
+.pkk-label{font-size:.74rem;font-weight:600;margin:0 0 6px;}
+.pkk-pil{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+.pkk-pil button{font:inherit;font-size:.76rem;font-weight:600;padding:8px 13px;border-radius:999px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);}
+.pkk-pil button.on{border-color:var(--hero-1);background:var(--hero-1);color:#fff;}
+.pkk-catatan{font-size:.72rem;line-height:1.5;color:var(--gold-ink);background:var(--gold-soft);
+  border-radius:var(--r-md);padding:9px 12px;margin-bottom:10px;}
+.pkk-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
+  padding:10px 12px;margin-top:10px;}
+.pkk-galat:empty{display:none;}
+.pkk-bawah2{display:grid;grid-template-columns:1fr 1.6fr;gap:8px;}
+.pkk-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Database PKK</h1>
+    <small id="pkkSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="muatPKK()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div id="pkkStat" class="pkk-stat"><div class="memuat" style="grid-column:span 2;">Memuat statistik…</div></div>
+  <p class="pkk-ket" id="pkkKet"></p>
+
+  <div id="pkkKelola" class="pkk-sembunyi">
+    <div class="pkk-judul">
+      <h2>Data Dasa Wisma</h2>
+      <a class="pkk-sheet pkk-sembunyi" id="pkkSheet" href="#" target="_blank" rel="noopener">
+        <svg class="ic"><use href="#i-berkas"/></svg> Spreadsheet
+      </a>
+    </div>
+    <input class="pkk-cari" id="pkkCari" type="search" placeholder="Cari nama atau nomor rumah…"
+           oninput="Pkk.cari = this.value; gambarPKK();" autocomplete="off">
+    <div class="pkk-chips" id="pkkChips"></div>
+    <div id="pkkDaftar"><div class="memuat">Memuat…</div></div>
+  </div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: FORM DASA WISMA ============ -->
+<div class="lembar" id="lembarDawis">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="dwJudul">Dasa Wisma</h2>
+      <button onclick="tutupDawis()"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan" id="dwBadan">
+      <div class="pkk-info" id="dwInfo"></div>
+
+      <div class="pkk-bagian">1. KONDISI & KESEHATAN</div>
+      <div class="pkk-label">Kondisi khusus <span style="color:var(--muted);font-weight:400;">(boleh lebih dari satu)</span></div>
+      <div class="pkk-pil" id="dwKondisi" data-mode="multi"></div>
+
+      <div class="pkk-label">Peserta KB aktif?</div>
+      <div class="pkk-pil" id="dwKB" data-mode="wajib"></div>
+      <div class="field pkk-sembunyi" id="dwAreaJenisKB">
+        <label for="dwJenisKB">Metode KB</label>
+        <select id="dwJenisKB"></select>
+      </div>
+
+      <div class="pkk-label">Ikut Posyandu?</div>
+      <div class="pkk-pil" id="dwPosyandu" data-mode="wajib"></div>
+
+      <div id="dwBlokRT">
+        <div class="pkk-bagian">2. RUMAH TANGGA (KHUSUS KEPALA KELUARGA)</div>
+        <div class="pkk-label">Pemanfaatan pekarangan (RTH)</div>
+        <div class="pkk-pil" id="dwRth" data-mode="multi"></div>
+        <div class="field">
+          <label for="dwUsaha">Usaha rumah tangga (UP2K)</label>
+          <select id="dwUsaha" onchange="cekUsahaDawis()"></select>
+        </div>
+        <div class="field pkk-sembunyi" id="dwAreaDetail">
+          <label for="dwDetail">Keterangan usaha</label>
+          <input id="dwDetail" maxlength="100" autocomplete="off" placeholder="Contoh: Katering, jahit">
+        </div>
+        <div class="pkk-label">Nasabah bank sampah?</div>
+        <div class="pkk-pil" id="dwSampah" data-mode="wajib"></div>
+      </div>
+
+      <div class="pkk-bagian">3. PARTISIPASI & JAMINAN SOSIAL</div>
+      <div class="pkk-label">Status kegiatan PKK <span style="color:var(--muted);font-weight:400;">(ketuk lagi untuk mengosongkan)</span></div>
+      <div class="pkk-catatan pkk-sembunyi" id="dwCatatanAG"></div>
+      <div class="pkk-pil" id="dwKegiatan" data-mode="single"></div>
+
+      <div class="pkk-label">Jaminan sosial</div>
+      <div class="pkk-pil" id="dwBansos" data-mode="multi"></div>
+      <div class="field">
+        <label for="dwBansosLain">Lainnya (pisahkan dengan koma)</label>
+        <input id="dwBansosLain" maxlength="200" autocomplete="off" placeholder="Contoh: Bedah Rumah, Sembako CSR">
+      </div>
+
+      <div class="pkk-galat" id="dwGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <div id="dwBawah"></div>
+    </div>
+  </div>
+</div>
