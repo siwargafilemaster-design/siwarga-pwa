@@ -1,0 +1,154 @@
+<style>
+/* ===== KEUANGAN PKK — gaya khusus modul ===== */
+.kp-judul{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:2px 2px 8px;}
+.kp-tiga{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.kp-kotak{background:var(--card);border-radius:var(--r-lg);padding:11px 10px;box-shadow:0 2px 12px rgba(31,41,51,.06);min-width:0;}
+.kp-kotak small{display:block;font-size:.6rem;font-weight:700;letter-spacing:.03em;color:var(--muted);}
+.kp-kotak b{display:block;font-size:.84rem;font-weight:700;margin-top:3px;overflow-wrap:anywhere;}
+.kp-kotak.utama{background:var(--hero-1);}
+.kp-kotak.utama small,.kp-kotak.utama b{color:#fff;}
+.kp-cek{font-size:.7rem;line-height:1.5;border-radius:var(--r-md);padding:9px 12px;margin:-4px 0 10px;
+  background:var(--red-soft);color:var(--red);}
+.kp-cek.ok{background:var(--sage-soft);color:var(--sage);}
+.kp-tarif{font-size:.7rem;color:var(--muted);margin:0 2px 16px;line-height:1.5;}
+
+.kp-tab{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card);border-radius:999px;padding:4px;
+  margin-bottom:14px;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.kp-tab button{font:inherit;font-size:.78rem;font-weight:700;padding:9px;border:none;border-radius:999px;
+  background:none;color:var(--muted);}
+.kp-tab button.on{background:var(--hero-1);color:#fff;}
+
+.kp-cari{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;padding:11px 14px;margin-bottom:10px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.kp-chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.kp-chip{font:inherit;font-size:.72rem;font-weight:600;padding:7px 12px;border-radius:999px;
+  border:1.5px solid var(--line);background:var(--card);color:var(--muted);}
+.kp-chip.on{border-color:var(--hero-1);background:var(--hero-1);color:#fff;}
+.kp-chip i{font-style:normal;opacity:.75;margin-left:3px;}
+
+.kp-daftar{background:var(--card);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.kp-orang{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;background:none;border:none;
+  border-top:1px solid var(--line);padding:11px 14px;color:var(--ink);}
+.kp-orang:first-child{border-top:none;}
+.kp-orang .isi{flex:1;min-width:0;}
+.kp-orang b{display:block;font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kp-orang small{display:block;font-size:.68rem;color:var(--muted);margin-top:1px;}
+.kp-pil{font-size:.6rem;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;
+  background:var(--bg);color:var(--muted);}
+.kp-pil.merah{background:var(--red-soft);color:var(--red);}
+.kp-pil.hijau{background:var(--sage-soft);color:var(--sage);}
+
+.kp-bulan{width:100%;box-sizing:border-box;font:inherit;font-size:.84rem;padding:10px 12px;margin-bottom:10px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.kp-total{display:flex;gap:8px;margin-bottom:12px;}
+.kp-total div{flex:1;background:var(--card);border-radius:var(--r-md);padding:9px 12px;font-size:.66rem;color:var(--muted);
+  font-weight:700;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.kp-total b{display:block;font-size:.84rem;color:var(--ink);margin-top:2px;}
+.kp-trx{background:var(--card);border-radius:var(--r-lg);padding:12px 14px;margin-bottom:8px;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.kp-trx .atas{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+.kp-trx .atas b{font-size:.82rem;font-weight:600;line-height:1.35;flex:1;min-width:0;overflow-wrap:anywhere;}
+.kp-trx .atas span{font-size:.82rem;font-weight:700;white-space:nowrap;}
+.kp-trx .meta{font-size:.68rem;color:var(--muted);margin-top:4px;}
+.kp-plus{color:var(--sage);} .kp-minus{color:var(--red);}
+
+/* kartu iuran */
+.kk-info{font-size:.76rem;background:var(--bg);border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px;line-height:1.55;}
+.kk-info b{font-weight:700;}
+.kk-tahun{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.kk-tahun b{font-size:.92rem;}
+.kk-tahun button{font:inherit;font-size:1.1rem;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);
+  background:var(--card);color:var(--ink);}
+.kk-tahun button:disabled{opacity:.3;}
+.kk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+.kk-kotak{font:inherit;font-size:.74rem;font-weight:700;padding:13px 4px;border-radius:var(--r-md);border:1.5px solid transparent;}
+.kk-kotak.lunas{background:var(--sage-soft);color:var(--sage);}
+.kk-kotak.nunggak{background:var(--red-soft);color:var(--red);}
+.kk-kotak.belum{background:var(--card);color:var(--muted);border-color:var(--line);}
+.kk-kotak.luar{background:var(--bg);color:var(--muted);opacity:.45;}
+.kk-kotak.pilih{border-color:var(--ink);}
+.kk-legenda{display:flex;flex-wrap:wrap;gap:10px;font-size:.64rem;color:var(--muted);margin-bottom:10px;}
+.kk-legenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.kk-detail{font-size:.76rem;min-height:1.4em;padding:8px 2px;color:var(--ink);}
+.kp-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Keuangan PKK</h1>
+    <small id="kpSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="muatKeuPKK()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div class="kp-judul">POSISI KAS</div>
+  <div class="kp-tiga">
+    <div class="kp-kotak"><small>TUNAI</small><b id="kpTunai">-</b></div>
+    <div class="kp-kotak"><small>BANK</small><b id="kpBank">-</b></div>
+    <div class="kp-kotak utama"><small>TOTAL</small><b id="kpTotal">-</b></div>
+  </div>
+
+  <div class="kp-judul">ALOKASI DANA</div>
+  <div class="kp-tiga">
+    <div class="kp-kotak"><small>KAS</small><b id="kpKas">-</b></div>
+    <div class="kp-kotak"><small>SOSIAL</small><b id="kpSosial">-</b></div>
+    <div class="kp-kotak"><small>KONSUMSI</small><b id="kpKonsumsi">-</b></div>
+  </div>
+  <div class="kp-cek kp-sembunyi" id="kpCek"></div>
+  <p class="kp-tarif" id="kpTarif"></p>
+
+  <div class="kp-tab">
+    <button id="kpTabAnggota" onclick="pilihTabKp('anggota')">Kartu Iuran</button>
+    <button id="kpTabJurnal" onclick="pilihTabKp('jurnal')">Jurnal</button>
+  </div>
+
+  <div id="kpPanelAnggota">
+    <input class="kp-cari" type="search" placeholder="Cari nama atau nomor rumah…" autocomplete="off"
+           oninput="Kp.cari = this.value; gambarAnggotaKp();">
+    <div class="kp-chips" id="kpChips"></div>
+    <div id="kpAnggota"><div class="memuat">Memuat…</div></div>
+  </div>
+
+  <div id="kpPanelJurnal" class="kp-sembunyi">
+    <select class="kp-bulan" id="kpBulan" onchange="muatKeuPKK(this.value)"></select>
+    <div class="kp-total">
+      <div>MASUK<b class="kp-plus" id="kpMasuk">-</b></div>
+      <div>KELUAR<b class="kp-minus" id="kpKeluar">-</b></div>
+    </div>
+    <div id="kpJurnal"></div>
+  </div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: KARTU IURAN ============ -->
+<div class="lembar" id="lembarKartuKp">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="kkJudul">Kartu Iuran</h2>
+      <button onclick="tutupLembar('lembarKartuKp')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="kk-info" id="kkInfo"></div>
+      <div class="kk-tahun">
+        <button id="kkKiri" onclick="geserTahunKp(-1)" aria-label="Tahun sebelumnya">‹</button>
+        <b id="kkTahun">-</b>
+        <button id="kkKanan" onclick="geserTahunKp(1)" aria-label="Tahun berikutnya">›</button>
+      </div>
+      <div class="kk-grid" id="kkGrid"></div>
+      <div class="kk-legenda">
+        <span><i style="background:var(--sage-soft)"></i>Lunas</span>
+        <span><i style="background:var(--red-soft)"></i>Nunggak</span>
+        <span><i style="background:var(--card);border:1px solid var(--line)"></i>Belum jatuh tempo</span>
+        <span><i style="background:var(--bg)"></i>Di luar masa anggota</span>
+      </div>
+      <div class="kk-detail" id="kkDetail">Ketuk bulan untuk melihat rincian.</div>
+    </div>
+  </div>
+</div>
