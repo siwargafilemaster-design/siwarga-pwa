@@ -107,9 +107,10 @@ function gambarLaporan(){
     const d = Lp.data[i];
     return '<div class="lp-kartu">' +
       '<div class="lp-atas"><b>' + lpAman(d.kegiatan || '(tanpa judul)') + '</b>' +
-        (d.program ? '<span class="lp-tag">' + lpAman(d.program) + '</span>' : '') + '</div>' +
+       (d.program ? '<span class="lp-tag">' + lpAman(d.program.split(' - ')[0]) + '</span>' : '') + '</div>' +
       '<div class="lp-meta">' + lpAman(d.tgl) + ' · ' + lpAman(d.kader || '-') + '</div>' +
       '<div class="lp-detail">' +
+        (d.program ? '<div><span>Program:</span> ' + lpAman(d.program) + '</div>' : '') +
         (d.target ? '<div><span>Sasaran:</span> ' + lpAman(d.target) + '</div>' : '') +
         (d.pemberi ? '<div><span>Pemberi tugas:</span> ' + lpAman(d.pemberi) + '</div>' : '') +
       '</div>' +
