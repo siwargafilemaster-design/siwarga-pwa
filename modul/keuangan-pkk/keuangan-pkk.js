@@ -78,7 +78,7 @@ function gambarRingkasKp(){
   }
 
   kpTeks('kpTarif', 'Iuran per bulan ' + kpRp(t.total) + ' (Kas ' + kpRp(t.kas) + ' · Sosial ' +
-    kpRp(t.sosial) + ' · Konsumsi ' + kpRp(t.konsumsi) + '). Jatuh tempo tanggal 1.');
+   kpRp(t.sosial) + ' · Konsumsi ' + kpRp(t.konsumsi) + '). Jatuh tempo tanggal ' + h.tglTempo + ' setiap bulan.');
 
   const wajib = h.anggota.filter(function(x){ return x.wajib; }).length;
   const nunggak = h.anggota.filter(function(x){ return x.nunggak > 0; }).length;
@@ -127,10 +127,19 @@ function gambarAnggotaKp(){
   }).join('') + '</div>';
 }
 
+/** [kelas, teks] status singkat satu anggota — dipakai di daftar kartu & lembar bayar. */
+function kpStatusSingkat(a){
+  if (a.nunggak > 0) return ['merah', 'Nunggak ' + a.nunggak + ' bln'];
+  if (a.mulai > Kp.data.kini) return ['', 'Mulai ' + kpPeriode(a.mulai, true)];
+  if (!a.lunasSampai) return ['', 'Belum jatuh tempo'];
+  return ['hijau', 'Lunas s.d. ' + kpPeriode(a.lunasSampai, true)];
+}
+
+function kpJatuhTempo(p){ return Kp.data.tglTempo + ' ' + kpPeriode(p); }
+
 function kpPilStatus(a){
-  if (a.nunggak > 0) return '<span class="kp-pil merah">Nunggak ' + a.nunggak + ' bln</span>';
-  if (a.mulai > Kp.data.kini) return '<span class="kp-pil">Mulai ' + kpPeriode(a.mulai, true) + '</span>';
-  return '<span class="kp-pil hijau">Lunas s.d. ' + kpPeriode(a.lunasSampai, true) + '</span>';
+  const s = kpStatusSingkat(a);
+  return '<span class="kp-pil ' + s[0] + '">' + s[1] + '</span>';
 }
 
 /* ---------- KARTU IURAN: DETAIL ---------- */
@@ -149,8 +158,8 @@ function bukaKartuKp(i){
   if (a.nunggak > 0){
     info += '<span class="kp-minus"><b>Nunggak ' + a.nunggak + ' bulan · ' + kpRp(a.nunggakRp) + '</b></span><br>' +
       a.bulanNunggak.map(function(p){ return kpPeriode(p, true); }).join(', ') + (a.nunggak > a.bulanNunggak.length ? ', …' : '');
-  } else if (a.mulai > Kp.data.kini){
-    info += 'Belum ada tagihan. Iuran pertama jatuh tempo 1 ' + kpPeriode(a.mulai) + '.';
+  } else if (a.mulai > Kp.data.kini || !a.lunasSampai){
+    info += 'Belum ada tunggakan. Iuran pertama jatuh tempo <b>' + kpJatuhTempo(a.mulai) + '</b>.';
   } else {
     info += '<span class="kp-plus"><b>Lancar</b></span> · lunas sampai ' + kpPeriode(a.lunasSampai);
   }
@@ -177,7 +186,7 @@ function geserTahunKp(n){
 function kpStatus(a, p){
   if (a.bayar[p]) return 'lunas';
   if (p < a.mulai || (a.akhir && p > a.akhir)) return 'luar';
-  return p <= Kp.data.kini ? 'nunggak' : 'belum';
+  return p <= Kp.data.tempo ? 'nunggak' : 'belum';
 }
 
 function gambarGridKp(){
@@ -204,8 +213,8 @@ function detailKotakKp(p){
   const nama = kpPeriode(p);
   kpTeks('kkDetail', {
     lunas:   nama + ': dibayar pada ' + kpTgl(a.bayar[p]) + '.',
-    nunggak: nama + ': belum dibayar (jatuh tempo 1 ' + nama + ').',
-    belum:   nama + ': belum jatuh tempo.',
+    nunggak: nama + ': belum dibayar (jatuh tempo ' + kpJatuhTempo(p) + ').',
+    belum:   nama + ': belum jatuh tempo (' + kpJatuhTempo(p) + ').',
     luar:    nama + ': di luar masa keanggotaan.'
   }[kpStatus(a, p)]);
 }
@@ -397,8 +406,7 @@ function gambarDaftarBayar(){
   }
   kotak.innerHTML = list.map(function(a){
     const n = Kp.catat.pilih[a.id] || 0;
-    const status = a.nunggak > 0 ? 'Nunggak ' + a.nunggak + ' bln'
-                 : (a.mulai > Kp.data.kini ? 'Mulai ' + kpPeriode(a.mulai, true) : 'Lunas s.d. ' + kpPeriode(a.lunasSampai, true));
+    const status = kpStatusSingkat(a)[1];
     return '<div class="kb-baris' + (n ? ' on' : '') + '" id="kbB_' + a.id + '"><div class="isi">' +
       '<b>' + kpAman(a.nama) + '</b><small>' + kpAman('Rumah ' + a.rumah + ' · ' + status) + '</small>' +
       '<small class="pra" id="kbP_' + a.id + '">' + kpPratinjau(a, n) + '</small></div>' +
