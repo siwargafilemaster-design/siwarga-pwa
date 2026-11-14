@@ -29,6 +29,9 @@ async function init_keuangan_pkk(){
   Kp.lain = { jenis: 'Masuk', metode: 'Tunai' };
   Kp.kelola = KP_PERAN_TULIS.indexOf(App.peran) !== -1;
   document.getElementById('kpCatat').classList.toggle('kp-sembunyi', !Kp.kelola);
+  ['kpTagihSemua', 'kpLaporan', 'kkKirim'].forEach(function(id){
+  document.getElementById(id).classList.toggle('kp-sembunyi', !Kp.kelola);
+  });
   if (Kp.kelola) document.getElementById('kpSegar').style.marginLeft = '0';
   pilihTabKp('anggota');
   await muatKeuPKK();
@@ -508,4 +511,77 @@ function kpAman(t){
   const d = document.createElement('div');
   d.textContent = String(t == null ? '' : t);
   return d.innerHTML.replace(/"/g, '&quot;');
+}
+
+/* =================================================================
+   6C — LAPORAN & WA (PKK + Developer)
+   ================================================================= */
+
+async function laporanKp(){
+  if (Kp.sibuk || !Kp.data) return;
+  Kp.sibuk = true;
+  tunggu('Membuat laporan PDF…', kpPeriode(Kp.bulan));
+  try {
+    const h = await panggilAPI('laporanKeuPKK', Kp.bulan);
+    selesaiTunggu();
+    kpUnduhPdf(h.pdf, h.nama);
+    toast('Laporan ' + kpPeriode(Kp.bulan) + ' diunduh');
+  } catch (e) {
+    selesaiTunggu();
+    toast(e.message);
+  } finally {
+    Kp.sibuk = false;
+  }
+}
+
+async function kirimStatusKp(){
+  const a = Kp.data && Kp.data.anggota[Kp.kartu];
+  if (!a || Kp.sibuk) return;
+  if (!confirm('Kirim status iuran via WA ke ' + a.nama + '?')) return;
+  Kp.sibuk = true;
+  tunggu('Mengirim WA…', a.nama);
+  try {
+    const h = await panggilAPI('kirimStatusPKK', a.id);
+    selesaiTunggu();
+    toast(h.message || 'Terkirim');
+  } catch (e) {
+    selesaiTunggu();
+    toast(e.message);
+  } finally {
+    Kp.sibuk = false;
+  }
+}
+
+async function tagihSemuaKp(){
+  if (Kp.sibuk || !Kp.data) return;
+  const n = Kp.data.anggota.filter(function(a){ return a.nunggak > 0; }).length;
+  if (!n) return toast('Tidak ada anggota yang menunggak.');
+  if (!confirm('Kirim tagihan WA ke ' + n + ' anggota yang menunggak?\n\nHanya bisa dilakukan sekali per jam.')) return;
+  Kp.sibuk = true;
+  tunggu('Mengirim tagihan…', n + ' anggota · mohon tunggu, jangan tutup aplikasi');
+  try {
+    const h = await panggilAPI('tagihPKK');
+    selesaiTunggu();
+    toast(h.message || 'Selesai');
+  } catch (e) {
+    selesaiTunggu();
+    toast(e.message);
+  } finally {
+    Kp.sibuk = false;
+  }
+}
+
+/** Unduh langsung lewat <a download> (window.open sering diblokir browser HP). */
+function kpUnduhPdf(base64, namaBerkas){
+  const biner = atob(base64);
+  const angka = new Uint8Array(biner.length);
+  for (let i = 0; i < biner.length; i++) angka[i] = biner.charCodeAt(i);
+  const url = URL.createObjectURL(new Blob([angka], { type: 'application/pdf' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = namaBerkas;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
 }
