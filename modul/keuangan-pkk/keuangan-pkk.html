@@ -48,7 +48,11 @@
 .kp-trx .atas{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
 .kp-trx .atas b{font-size:.82rem;font-weight:600;line-height:1.35;flex:1;min-width:0;overflow-wrap:anywhere;}
 .kp-trx .atas span{font-size:.82rem;font-weight:700;white-space:nowrap;}
-.kp-trx .meta{font-size:.68rem;color:var(--muted);margin-top:4px;}
+.kp-trx .bawah{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:4px;}
+.kp-trx .meta{font-size:.68rem;color:var(--muted);}
+.kp-buang{font:inherit;border:none;background:var(--red-soft);color:var(--red);border-radius:999px;
+  width:30px;height:30px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.kp-buang .ic{width:14px;height:14px;}
 .kp-plus{color:var(--sage);} .kp-minus{color:var(--red);}
 
 /* kartu iuran */
@@ -69,6 +73,32 @@
 .kk-legenda{display:flex;flex-wrap:wrap;gap:10px;font-size:.64rem;color:var(--muted);margin-bottom:10px;}
 .kk-legenda i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
 .kk-detail{font-size:.76rem;min-height:1.4em;padding:8px 2px;color:var(--ink);}
+
+/* lembar catat */
+.kc-pil{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.kc-pil button{font:inherit;font-size:.78rem;font-weight:600;padding:8px 14px;border-radius:999px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);}
+.kc-pil button.on{border-color:var(--hero-1);background:var(--hero-1);color:#fff;}
+.kc-label{font-size:.74rem;font-weight:600;margin:0 0 6px;}
+.kb-daftar{border:1.5px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-bottom:12px;}
+.kb-baris{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);}
+.kb-baris:first-child{border-top:none;}
+.kb-baris.on{background:var(--bg);}
+.kb-baris .isi{flex:1;min-width:0;}
+.kb-baris b{display:block;font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kb-baris small{display:block;font-size:.66rem;color:var(--muted);margin-top:1px;}
+.kb-baris small.pra{color:var(--hero-1);font-weight:700;}
+.kb-step{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.kb-step button{font:inherit;font-size:1rem;font-weight:700;width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);}
+.kb-step span{min-width:18px;text-align:center;font-size:.86rem;font-weight:700;}
+.kc-cek{display:flex;align-items:center;gap:8px;font-size:.78rem;margin:4px 0 6px;}
+.kc-cek input{width:18px;height:18px;}
+.kc-catatan{font-size:.72rem;line-height:1.5;color:var(--gold-ink);background:var(--gold-soft);
+  border-radius:var(--r-md);padding:9px 12px;margin-bottom:12px;}
+.kc-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
+  padding:10px 12px;margin-top:10px;}
+.kc-galat:empty{display:none;}
 .kp-sembunyi{display:none !important;}
 </style>
 
@@ -80,7 +110,10 @@
     <h1>Keuangan PKK</h1>
     <small id="kpSub">Memuat…</small>
   </div>
-  <button class="hero-btn" style="margin-left:auto;" onclick="muatKeuPKK()" aria-label="Segarkan">
+  <button class="hero-btn kp-sembunyi" id="kpCatat" style="margin-left:auto;" onclick="bukaCatatKp()" aria-label="Catat transaksi">
+    <svg class="ic"><use href="#i-plus"/></svg>
+  </button>
+  <button class="hero-btn" id="kpSegar" style="margin-left:auto;" onclick="muatKeuPKK()" aria-label="Segarkan">
     <svg class="ic"><use href="#i-segar"/></svg>
   </button>
 </div>
@@ -149,6 +182,76 @@
         <span><i style="background:var(--bg)"></i>Di luar masa anggota</span>
       </div>
       <div class="kk-detail" id="kkDetail">Ketuk bulan untuk melihat rincian.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: CATAT TRANSAKSI ============ -->
+<div class="lembar" id="lembarCatatKp">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Catat Transaksi</h2>
+      <button onclick="tutupLembar('lembarCatatKp')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan" id="kcBadan">
+      <div class="kp-tab">
+        <button id="kcTabIuran" onclick="pilihTabCatat('iuran')">Bayar Iuran</button>
+        <button id="kcTabLain" onclick="pilihTabCatat('lain')">Transaksi Lain</button>
+      </div>
+
+      <div class="field">
+        <label for="kcTanggal">Tanggal</label>
+        <input id="kcTanggal" type="date">
+      </div>
+
+      <!-- ===== BAYAR IURAN ===== -->
+      <div id="kcPanelIuran">
+        <div class="kc-label">Diterima lewat</div>
+        <div class="kc-pil" id="kbMetode"></div>
+        <div class="kc-catatan">Bulan diisi otomatis dari <b>tunggakan tertua</b>, lalu ke bulan berikutnya (bayar di muka).
+          Tidak ada cicilan, kelebihan uang dikembalikan sebagai kembalian.</div>
+        <input class="kp-cari" type="search" placeholder="Cari anggota…" autocomplete="off"
+               oninput="Kp.catat.cari = this.value; gambarDaftarBayar();">
+        <div class="kb-daftar" id="kbDaftar"></div>
+        <label class="kc-cek"><input type="checkbox" id="kbStruk" checked> Kirim struk WA ke anggota</label>
+      </div>
+
+      <!-- ===== TRANSAKSI LAIN ===== -->
+      <div id="kcPanelLain" class="kp-sembunyi">
+        <div class="kc-label">Jenis</div>
+        <div class="kc-pil" id="ktJenis"></div>
+        <div class="field">
+          <label for="ktKategori" id="ktLabelKategori">Kategori</label>
+          <select id="ktKategori" onchange="cekKategoriLain()"></select>
+        </div>
+        <div class="field" id="ktAreaPos">
+          <label for="ktPos">Masuk ke dana</label>
+          <select id="ktPos">
+            <option value="KAS">Kas</option>
+            <option value="SOSIAL">Sosial</option>
+            <option value="KONSUMSI">Konsumsi</option>
+          </select>
+        </div>
+        <div class="kc-catatan kp-sembunyi" id="ktInfoPos"></div>
+        <div id="ktAreaMetode">
+          <div class="kc-label">Lewat</div>
+          <div class="kc-pil" id="ktMetode"></div>
+        </div>
+        <div class="field">
+          <label for="ktNominal">Nominal (Rp)</label>
+          <input id="ktNominal" type="number" inputmode="numeric" min="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label for="ktUraian" id="ktLabelUraian">Uraian</label>
+          <input id="ktUraian" maxlength="150" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="kc-galat" id="kcGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="kcSimpan" onclick="simpanCatatKp()">Simpan</button>
     </div>
   </div>
 </div>

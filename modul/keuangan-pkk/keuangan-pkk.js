@@ -1,18 +1,35 @@
 /* =================================================================
-   MODUL KEUANGAN PKK (Tahap 6A — baca)
-   Satu panggilan: posisi kas, alokasi, kartu iuran, jurnal bulan.
+   MODUL KEUANGAN PKK (Tahap 6A baca + 6B transaksi)
    ================================================================= */
 
-const Kp = { data: null, bulan: '', tab: 'anggota', filter: 'semua', cari: '', kartu: -1, tahun: 0, pilih: '' };
+const Kp = {
+  data: null, bulan: '', tab: 'anggota', filter: 'semua', cari: '', kartu: -1, tahun: 0, pilih: '',
+  kelola: false, sibuk: false,
+  catat: { tab: 'iuran', metode: 'Tunai', pilih: {}, cari: '' },
+  lain:  { jenis: 'Masuk', metode: 'Tunai' }
+};
 
+const KP_PERAN_TULIS = ['DEVELOPER', 'PKK'];
 const KP_BULAN  = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
                    'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const KP_PENDEK = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const KP_KATEGORI = {
+  Masuk:  ['Donasi/Sumbangan', 'Penjualan Barang', 'Pemasukan Lainnya'],
+  Keluar: { 'Konsumsi': 'KONSUMSI', 'Sosial': 'SOSIAL', 'ATK & Admin': 'KAS',
+            'Inventaris': 'KAS', 'Operasional': 'KAS', 'Pengeluaran Lainnya': 'KAS' },
+  Mutasi: { 'Tarik Tunai': 'Tarik tunai (Bank → Tunai)', 'Setor Tunai': 'Setor tunai (Tunai → Bank)' }
+};
+const KP_NAMA_POS = { KAS: 'Kas', SOSIAL: 'Sosial', KONSUMSI: 'Konsumsi' };
 
 async function init_keuangan_pkk(){
   // HTML diambil baru tiap kunjungan → buang keadaan lama
   Kp.data = null; Kp.bulan = ''; Kp.tab = 'anggota'; Kp.filter = 'semua'; Kp.cari = '';
-  Kp.kartu = -1; Kp.tahun = 0; Kp.pilih = '';
+  Kp.kartu = -1; Kp.tahun = 0; Kp.pilih = ''; Kp.sibuk = false;
+  Kp.catat = { tab: 'iuran', metode: 'Tunai', pilih: {}, cari: '' };
+  Kp.lain = { jenis: 'Masuk', metode: 'Tunai' };
+  Kp.kelola = KP_PERAN_TULIS.indexOf(App.peran) !== -1;
+  document.getElementById('kpCatat').classList.toggle('kp-sembunyi', !Kp.kelola);
+  if (Kp.kelola) document.getElementById('kpSegar').style.marginLeft = '0';
   pilihTabKp('anggota');
   await muatKeuPKK();
 }
@@ -104,14 +121,16 @@ function gambarAnggotaKp(){
 
   kotak.innerHTML = '<div class="kp-daftar">' + idx.map(function(i){
     const a = semua[i];
-    let pil;
-    if (a.nunggak > 0) pil = '<span class="kp-pil merah">Nunggak ' + a.nunggak + ' bln</span>';
-    else if (a.mulai > Kp.data.kini) pil = '<span class="kp-pil">Mulai ' + kpPeriode(a.mulai, true) + '</span>';
-    else pil = '<span class="kp-pil hijau">Lunas s.d. ' + kpPeriode(a.lunasSampai, true) + '</span>';
-    const sub = 'Rumah ' + a.rumah + (a.wajib ? '' : ' · sudah tidak aktif');
     return '<button class="kp-orang" onclick="bukaKartuKp(' + i + ')"><div class="isi"><b>' + kpAman(a.nama) +
-      '</b><small>' + kpAman(sub) + '</small></div>' + pil + '</button>';
+      '</b><small>' + kpAman('Rumah ' + a.rumah + (a.wajib ? '' : ' · sudah tidak aktif')) + '</small></div>' +
+      kpPilStatus(a) + '</button>';
   }).join('') + '</div>';
+}
+
+function kpPilStatus(a){
+  if (a.nunggak > 0) return '<span class="kp-pil merah">Nunggak ' + a.nunggak + ' bln</span>';
+  if (a.mulai > Kp.data.kini) return '<span class="kp-pil">Mulai ' + kpPeriode(a.mulai, true) + '</span>';
+  return '<span class="kp-pil hijau">Lunas s.d. ' + kpPeriode(a.lunasSampai, true) + '</span>';
 }
 
 /* ---------- KARTU IURAN: DETAIL ---------- */
@@ -182,15 +201,13 @@ function detailKotakKp(p){
   const a = Kp.data.anggota[Kp.kartu];
   Kp.pilih = p;
   gambarGridKp();
-  const st = kpStatus(a, p);
   const nama = kpPeriode(p);
-  const teks = {
+  kpTeks('kkDetail', {
     lunas:   nama + ': dibayar pada ' + kpTgl(a.bayar[p]) + '.',
     nunggak: nama + ': belum dibayar (jatuh tempo 1 ' + nama + ').',
     belum:   nama + ': belum jatuh tempo.',
     luar:    nama + ': di luar masa keanggotaan.'
-  }[st];
-  kpTeks('kkDetail', teks);
+  }[kpStatus(a, p)]);
 }
 
 /* ---------- JURNAL ---------- */
@@ -209,7 +226,7 @@ function gambarJurnalKp(){
     return;
   }
 
-  kotak.innerHTML = h.jurnal.map(function(k){
+  kotak.innerHTML = h.jurnal.map(function(k, i){
     const n = k.tunai + k.bank;
     let nominal, kelas, cara;
     if (k.pos === 'MUTASI'){
@@ -221,14 +238,249 @@ function gambarJurnalKp(){
       cara = k.tunai !== 0 ? 'Tunai' : 'Bank';
     }
     const meta = [kpTgl(k.tgl), k.pos, k.kategori, cara].filter(Boolean).join(' · ');
+    const buang = Kp.kelola
+      ? '<button class="kp-buang" onclick="hapusTrxKp(' + i + ')" aria-label="Hapus"><svg class="ic"><use href="#i-hapus"/></svg></button>'
+      : '';
     return '<div class="kp-trx"><div class="atas"><b>' + kpAman(k.uraian || k.kategori || '-') + '</b>' +
-      '<span class="' + kelas + '">' + nominal + '</span></div><div class="meta">' + kpAman(meta) + '</div></div>';
+      '<span class="' + kelas + '">' + nominal + '</span></div>' +
+      '<div class="bawah"><div class="meta">' + kpAman(meta) + '</div>' + buang + '</div></div>';
   }).join('');
   kpTeks('kpMasuk', kpRp(masuk));
   kpTeks('kpKeluar', kpRp(keluar));
 }
 
+async function hapusTrxKp(i){
+  const k = Kp.data.jurnal[i];
+  if (!k || Kp.sibuk) return;
+  const n = Math.abs(k.pos === 'MUTASI' ? k.tunai : k.tunai + k.bank);
+  const tambahan = k.pos === 'IURAN' ? '\n\nRincian bulan iurannya ikut terhapus. Struk WA yang sudah terkirim tidak bisa ditarik.' : '';
+  if (!confirm('Hapus transaksi ini?\n\n' + (k.uraian || k.kategori) + '\n' + kpRp(n) + tambahan)) return;
+
+  Kp.sibuk = true;
+  tunggu('Menghapus…', k.uraian || k.kategori);
+  try {
+    const h = await panggilAPI('hapusKasPKK', k.id);
+    selesaiTunggu();
+    toast(h.message || 'Dihapus');
+    await muatKeuPKK();
+  } catch (e) {
+    selesaiTunggu();
+    toast(e.message);
+  } finally {
+    Kp.sibuk = false;
+  }
+}
+
+/* ---------- CATAT: UMUM ---------- */
+function bukaCatatKp(){
+  if (!Kp.data) return toast('Tunggu data selesai dimuat.');
+  Kp.catat = { tab: Kp.catat.tab || 'iuran', metode: 'Tunai', pilih: {}, cari: '' };
+  Kp.lain = { jenis: 'Masuk', metode: 'Tunai' };
+  document.getElementById('kcTanggal').value = kpHariIni();
+  document.getElementById('kcTanggal').max = kpHariIni();
+  document.getElementById('kbStruk').checked = true;
+  document.querySelector('#kcPanelIuran .kp-cari').value = '';
+  document.getElementById('ktNominal').value = '';
+  document.getElementById('ktUraian').value = '';
+  kpIsiPil('kbMetode', ['Tunai', 'Bank'], 'Tunai', function(v){ Kp.catat.metode = v; });
+  kpIsiPil('ktJenis', ['Masuk', 'Keluar', 'Mutasi'], 'Masuk', function(v){ Kp.lain.jenis = v; siapkanLain(); });
+  kpIsiPil('ktMetode', ['Tunai', 'Bank'], 'Tunai', function(v){ Kp.lain.metode = v; });
+  siapkanLain();
+  gambarDaftarBayar();
+  pilihTabCatat(Kp.catat.tab);
+  bukaLembar('lembarCatatKp');
+}
+
+function pilihTabCatat(t){
+  Kp.catat.tab = t;
+  document.getElementById('kcTabIuran').classList.toggle('on', t === 'iuran');
+  document.getElementById('kcTabLain').classList.toggle('on', t === 'lain');
+  document.getElementById('kcPanelIuran').classList.toggle('kp-sembunyi', t !== 'iuran');
+  document.getElementById('kcPanelLain').classList.toggle('kp-sembunyi', t !== 'lain');
+  document.getElementById('kcGalat').textContent = '';
+  perbaruiTombolCatat();
+}
+
+function perbaruiTombolCatat(){
+  const b = document.getElementById('kcSimpan');
+  if (Kp.catat.tab === 'lain'){ b.textContent = 'Simpan Transaksi'; b.disabled = false; return; }
+  const r = kpRingkasPilihan();
+  b.disabled = !r.orang;
+  b.textContent = r.orang ? 'Simpan ' + r.orang + ' anggota · ' + kpRp(r.total) : 'Pilih anggota dulu';
+}
+
+async function simpanCatatKp(){
+  if (Kp.sibuk) return;
+  const galat = document.getElementById('kcGalat');
+  galat.textContent = '';
+  const tanggal = document.getElementById('kcTanggal').value;
+  if (!tanggal) return (galat.textContent = 'Tanggal wajib diisi.');
+
+  let aksi, data, judul;
+  if (Kp.catat.tab === 'iuran'){
+    const item = Object.keys(Kp.catat.pilih).filter(function(id){ return Kp.catat.pilih[id] > 0; })
+      .map(function(id){ return { id: id, bulan: Kp.catat.pilih[id] }; });
+    if (!item.length) return (galat.textContent = 'Pilih minimal satu anggota.');
+    aksi = 'bayarIuranPKK'; judul = 'Mencatat iuran…';
+    data = { tanggal: tanggal, metode: Kp.catat.metode, item: item, struk: document.getElementById('kbStruk').checked };
+  } else {
+    const nominal = Number(document.getElementById('ktNominal').value);
+    if (!(nominal > 0)) return (galat.textContent = 'Nominal wajib diisi.');
+    const uraian = document.getElementById('ktUraian').value.trim();
+    if (Kp.lain.jenis === 'Keluar' && !uraian) return (galat.textContent = 'Uraian pengeluaran wajib diisi.');
+    aksi = 'simpanKasPKK'; judul = 'Menyimpan transaksi…';
+    data = { tanggal: tanggal, jenis: Kp.lain.jenis, kategori: document.getElementById('ktKategori').value,
+             pos: document.getElementById('ktPos').value, metode: Kp.lain.metode, nominal: nominal, uraian: uraian };
+  }
+
+  Kp.sibuk = true;
+  tunggu(judul, aksi === 'bayarIuranPKK' && data.struk ? 'Struk WA dikirim sesudah tersimpan' : '');
+  try {
+    const h = await panggilAPI(aksi, data);
+    selesaiTunggu();
+    let pesan = h.message || 'Tersimpan';
+    if (h.struk) pesan += ' · struk WA ' + h.struk.terkirim + '/' + h.struk.dari;
+    toast(pesan);
+    tutupLembar('lembarCatatKp');
+    await muatKeuPKK();
+  } catch (e) {
+    selesaiTunggu();
+    galat.textContent = e.message;
+  } finally {
+    Kp.sibuk = false;
+  }
+}
+
+/* ---------- CATAT: BAYAR IURAN ---------- */
+function kpWajib(){ return Kp.data.anggota.filter(function(a){ return a.wajib; }); }
+
+function kpTarifUntuk(p){
+  let t = Kp.data.daftarTarif[0];
+  Kp.data.daftarTarif.forEach(function(x){ if (x.mulai <= p) t = x; });
+  return t.kas + t.sosial + t.konsumsi;
+}
+
+/** Sama dengan _periodeBayar di server: tunggakan tertua dulu, lalu ke depan. */
+function kpPeriodeBayar(a, n){
+  const hasil = [];
+  let p = a.mulai;
+  for (let i = 0; hasil.length < n && i < 600; i++){
+    if (a.akhir && p > a.akhir) break;
+    if (!a.bayar[p]) hasil.push(p);
+    p = kpGeser(p, 1);
+  }
+  return hasil;
+}
+
+function kpRingkasPilihan(){
+  let orang = 0, total = 0;
+  kpWajib().forEach(function(a){
+    const n = Kp.catat.pilih[a.id] || 0;
+    if (!n) return;
+    orang++;
+    kpPeriodeBayar(a, n).forEach(function(p){ total += kpTarifUntuk(p); });
+  });
+  return { orang: orang, total: total };
+}
+
+function gambarDaftarBayar(){
+  const kotak = document.getElementById('kbDaftar');
+  const q = Kp.catat.cari.trim().toLowerCase();
+  const list = kpWajib().filter(function(a){
+    return !q || (a.rumah + ' ' + a.nama).toLowerCase().indexOf(q) !== -1;
+  });
+  if (!list.length){
+    kotak.innerHTML = '<div style="padding:16px;font-size:.78rem;color:var(--muted);text-align:center;">' +
+      (kpWajib().length ? 'Tidak ada yang cocok.' : 'Belum ada anggota wajib iuran.') + '</div>';
+    perbaruiTombolCatat();
+    return;
+  }
+  kotak.innerHTML = list.map(function(a){
+    const n = Kp.catat.pilih[a.id] || 0;
+    const status = a.nunggak > 0 ? 'Nunggak ' + a.nunggak + ' bln'
+                 : (a.mulai > Kp.data.kini ? 'Mulai ' + kpPeriode(a.mulai, true) : 'Lunas s.d. ' + kpPeriode(a.lunasSampai, true));
+    return '<div class="kb-baris' + (n ? ' on' : '') + '" id="kbB_' + a.id + '"><div class="isi">' +
+      '<b>' + kpAman(a.nama) + '</b><small>' + kpAman('Rumah ' + a.rumah + ' · ' + status) + '</small>' +
+      '<small class="pra" id="kbP_' + a.id + '">' + kpPratinjau(a, n) + '</small></div>' +
+      '<div class="kb-step"><button type="button" onclick="ubahBulanKb(\'' + a.id + '\',-1)">−</button>' +
+      '<span id="kbN_' + a.id + '">' + n + '</span>' +
+      '<button type="button" onclick="ubahBulanKb(\'' + a.id + '\',1)">＋</button></div></div>';
+  }).join('');
+  perbaruiTombolCatat();
+}
+
+function kpPratinjau(a, n){
+  if (!n) return '';
+  const per = kpPeriodeBayar(a, n);
+  let total = 0;
+  per.forEach(function(p){ total += kpTarifUntuk(p); });
+  const rentang = per.length === 1 ? kpPeriode(per[0], true)
+                : kpPeriode(per[0], true) + ' – ' + kpPeriode(per[per.length - 1], true);
+  return kpAman(rentang + ' · ' + kpRp(total));
+}
+
+function ubahBulanKb(id, d){
+  const a = kpWajib().filter(function(x){ return x.id === id; })[0];
+  if (!a) return;
+  const n = Math.max(0, Math.min(12, (Kp.catat.pilih[id] || 0) + d));
+  Kp.catat.pilih[id] = n;
+  kpTeks('kbN_' + id, String(n));
+  document.getElementById('kbP_' + id).innerHTML = kpPratinjau(a, n);
+  document.getElementById('kbB_' + id).classList.toggle('on', n > 0);
+  perbaruiTombolCatat();
+}
+
+/* ---------- CATAT: TRANSAKSI LAIN ---------- */
+function siapkanLain(){
+  const j = Kp.lain.jenis;
+  const sel = document.getElementById('ktKategori');
+  if (j === 'Masuk'){
+    sel.innerHTML = KP_KATEGORI.Masuk.map(function(k){ return '<option value="' + k + '">' + k + '</option>'; }).join('');
+  } else if (j === 'Keluar'){
+    sel.innerHTML = Object.keys(KP_KATEGORI.Keluar).map(function(k){ return '<option value="' + k + '">' + k + '</option>'; }).join('');
+  } else {
+    sel.innerHTML = Object.keys(KP_KATEGORI.Mutasi).map(function(k){
+      return '<option value="' + k + '">' + KP_KATEGORI.Mutasi[k] + '</option>';
+    }).join('');
+  }
+  kpTeks('ktLabelKategori', j === 'Mutasi' ? 'Arah mutasi' : 'Kategori');
+  kpTeks('ktLabelUraian', j === 'Keluar' ? 'Uraian (wajib)' : 'Uraian (boleh kosong)');
+  document.getElementById('ktAreaPos').classList.toggle('kp-sembunyi', j !== 'Masuk');
+  document.getElementById('ktAreaMetode').classList.toggle('kp-sembunyi', j === 'Mutasi');
+  cekKategoriLain();
+}
+
+function cekKategoriLain(){
+  const info = document.getElementById('ktInfoPos');
+  if (Kp.lain.jenis !== 'Keluar'){ info.classList.add('kp-sembunyi'); return; }
+  const pos = KP_KATEGORI.Keluar[document.getElementById('ktKategori').value];
+  const sisa = Kp.data.ringkas.alokasi[pos.toLowerCase()];
+  info.innerHTML = 'Diambil dari dana <b>' + KP_NAMA_POS[pos] + '</b> · sisa ' + kpRp(sisa);
+  info.classList.remove('kp-sembunyi');
+}
+
 /* ---------- ALAT ---------- */
+function kpIsiPil(id, daftar, awal, saatPilih){
+  const box = document.getElementById(id);
+  box.innerHTML = daftar.map(function(v){
+    return '<button type="button" data-v="' + v + '"' + (v === awal ? ' class="on"' : '') + '>' + v + '</button>';
+  }).join('');
+  box.querySelectorAll('button').forEach(function(b){
+    b.onclick = function(){
+      box.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      saatPilih(b.getAttribute('data-v'));
+    };
+  });
+}
+function kpGeser(p, n){
+  const t = Number(p.slice(0, 4)) * 12 + Number(p.slice(5, 7)) - 1 + n;
+  return Math.floor(t / 12) + '-' + ('0' + (t % 12 + 1)).slice(-2);
+}
+function kpHariIni(){
+  const d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
 function kpRp(n){
   n = Number(n) || 0;
   return (n < 0 ? '−' : '') + 'Rp ' + Math.abs(n).toLocaleString('id-ID');
