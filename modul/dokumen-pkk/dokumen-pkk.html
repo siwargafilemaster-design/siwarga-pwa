@@ -1,0 +1,178 @@
+<style>
+/* ===== DOKUMEN RAPAT RT — gaya khusus modul ===== */
+.dk-kartu{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;
+  background:var(--card);border:none;border-radius:var(--r-lg);padding:13px 14px;margin-bottom:9px;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);color:var(--ink);}
+.dk-ikon{width:42px;height:42px;border-radius:12px;background:var(--bg);color:var(--hero-1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dk-kartu .isi{flex:1;min-width:0;}
+.dk-kartu b{display:block;font-size:.86rem;font-weight:600;}
+.dk-kartu small{display:block;font-size:.68rem;color:var(--muted);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.dk-info{background:var(--bg);border-radius:var(--r-md);padding:6px 14px;margin-bottom:14px;}
+.dk-baris{display:flex;justify-content:space-between;gap:14px;font-size:.78rem;padding:8px 0;
+  border-bottom:1px solid var(--line);}
+.dk-baris:last-child{border-bottom:none;}
+.dk-baris span{color:var(--muted);flex-shrink:0;}
+.dk-baris b{text-align:right;font-weight:600;word-break:break-word;}
+.dk-judul{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:14px 0 8px;
+  display:flex;justify-content:space-between;align-items:center;}
+
+.dk-topik{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-md);
+  padding:12px 13px;margin-bottom:9px;}
+.dk-topik-atas{display:flex;align-items:flex-start;gap:9px;margin-bottom:6px;}
+.dk-no{min-width:22px;height:22px;border-radius:50%;background:var(--hero-1);color:#fff;
+  font-size:.66rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dk-topik-atas b{flex:1;font-size:.84rem;line-height:1.35;}
+.dk-st{font-size:.56rem;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:999px;
+  white-space:nowrap;background:var(--bg);color:var(--muted);}
+.dk-st.Selesai{background:var(--sage-soft);color:var(--sage);}
+.dk-st.Proses{background:var(--gold-soft);color:var(--gold-ink);}
+.dk-st.Batal{background:var(--red-soft);color:var(--red);}
+.dk-sub{font-size:.74rem;line-height:1.5;margin-top:5px;white-space:pre-line;}
+.dk-sub span{display:block;font-size:.62rem;font-weight:700;letter-spacing:.04em;color:var(--muted);}
+
+.dk-hadir-chip{display:inline-block;font-size:.7rem;background:var(--bg);border-radius:999px;
+  padding:4px 10px;margin:0 5px 6px 0;}
+.dk-hadir-chip b{color:var(--hero-1);margin-right:4px;}
+
+.dk-tambah{width:100%;font:inherit;font-size:.8rem;font-weight:700;padding:11px;
+  border:1.5px dashed var(--hero-1);background:transparent;color:var(--hero-1);border-radius:var(--r-md);}
+.dk-topik.bisa{cursor:pointer;}
+.dk-aksi{display:flex;gap:8px;margin-top:8px;}
+.dk-aksi button{font:inherit;font-size:.7rem;font-weight:700;padding:6px 12px;border-radius:999px;border:none;}
+.dk-aksi .ubah{background:var(--bg);color:var(--hero-1);}
+.dk-aksi .hapus{background:var(--red-soft);color:var(--red);}
+
+.dk-cari{width:100%;box-sizing:border-box;font:inherit;font-size:.82rem;padding:10px 13px;margin-bottom:8px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.dk-daftar-hadir{max-height:300px;overflow-y:auto;border:1.5px solid var(--line);border-radius:var(--r-md);}
+.dk-orang{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);
+  font-size:.8rem;}
+.dk-orang:last-child{border-bottom:none;}
+.dk-orang input{width:18px;height:18px;flex-shrink:0;}
+.dk-orang .blok{min-width:38px;font-size:.66rem;font-weight:700;color:var(--muted);}
+.dk-hitung{font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:999px;
+  background:var(--gold-soft);color:var(--gold-ink);}
+.dk-centang{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--line);
+  border-radius:var(--r-md);font-size:.8rem;font-weight:600;}
+.dk-centang input{width:20px;height:20px;}
+.dk-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);
+  padding:10px 12px;margin-top:10px;}
+.dk-galat:empty{display:none;}
+#lembarTopik textarea{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;line-height:1.55;
+  padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);
+  color:var(--ink);resize:none;min-height:88px;overflow-y:hidden;}
+#lembarTopik textarea:focus{outline:none;border-color:var(--hero-1);}
+.dk-topik .dk-sub{border-top:1px dashed var(--line);padding-top:6px;}
+.dk-sembunyi{display:none !important;}
+.dk-link-pdf{display:block;text-align:center;text-decoration:none;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1 id="dkJudulHalaman">Dokumen Rapat</h1>
+    <small id="dkSub">Memuat…</small>
+  </div>
+  <button class="hero-btn dk-sembunyi" id="dkBuat" style="margin-left:auto;"
+          onclick="mulaiBuatNotulen()" aria-label="Buat notulen">
+    <svg class="ic"><use href="#i-plus"/></svg>
+  </button>
+  <button class="hero-btn" onclick="muatArsip()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div id="dkDaftar"><div class="memuat">Memuat…</div></div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: BACA NOTULEN ============ -->
+<div class="lembar" id="lembarNotulen">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="dkJudul">Notulen</h2>
+      <button onclick="tutupLembar('lembarNotulen')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan" id="dkIsi"></div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="dkBtnPdf" onclick="siapkanPdf()">Siapkan PDF</button>
+      <a class="btn btn-utama dk-link-pdf dk-sembunyi" id="dkLinkPdf" href="#">Simpan PDF</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: BUAT NOTULEN ============ -->
+<div class="lembar" id="lembarBuatNotulen">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="nbJudul">Notulen Rapat</h2>
+      <button onclick="tutupBuatNotulen()"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="dk-judul" style="margin-top:0;">A. INFO RAPAT</div>
+      <div class="field"><label for="nbTgl">Tanggal</label><input id="nbTgl" type="date"></div>
+      <div class="field"><label for="nbWaktu">Waktu</label><input id="nbWaktu" maxlength="100"></div>
+      <div class="field"><label for="nbTempat">Tempat</label><input id="nbTempat" maxlength="100"></div>
+      <div class="field"><label for="nbPemimpin">Pemimpin rapat</label><input id="nbPemimpin" maxlength="100"></div>
+      <div class="field"><label for="nbNotulis">Notulis</label><input id="nbNotulis" maxlength="100"></div>
+
+      <div class="dk-judul">B. TOPIK PEMBAHASAN <span class="dk-hitung" id="nbJmlTopik">0 topik</span></div>
+      <div id="nbTopik"></div>
+      <button class="dk-tambah" onclick="bukaTopik(-1)">+ Tambah topik</button>
+
+      <div class="dk-judul"><span id="nbJudulHadir">C. DAFTAR HADIR</span> <span class="dk-hitung" id="nbJmlHadir">0 orang</span></div>
+      <input class="dk-cari" id="nbCariHadir" type="search" placeholder="Cari nama atau blok…"
+             oninput="Dk.cariHadir = this.value; gambarHadir();" autocomplete="off">
+      <div class="dk-daftar-hadir" id="nbHadir"><div class="memuat">Memuat…</div></div>
+
+      <div class="dk-galat" id="nbGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" onclick="simpanNotulen()">Simpan Notulen</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: TOPIK ============ -->
+<div class="lembar" id="lembarTopik">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="tpJudulLembar">Tambah Topik</h2>
+      <button onclick="tutupLembar('lembarTopik')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <div class="field"><label for="tpTopik">Topik pembahasan *</label>
+        <input id="tpTopik" maxlength="200" placeholder="Judul singkat…"></div>
+      <div class="field"><label for="tpRingkasan">Ringkasan diskusi</label>
+        <textarea id="tpRingkasan" rows="4" maxlength="2000" oninput="dkTumbuh(this)"
+                  placeholder="Isi pembahasan…"></textarea></div>
+      <div class="field"><label for="tpKeputusan">Keputusan</label>
+        <textarea id="tpKeputusan" rows="3" maxlength="1000" oninput="dkTumbuh(this)"
+                  placeholder="Hasil akhir yang disepakati…"></textarea></div>
+      <div class="field"><label for="tpTindak">Tindak lanjut</label>
+        <textarea id="tpTindak" rows="3" maxlength="1000" oninput="dkTumbuh(this)"
+                  placeholder="Langkah berikutnya…"></textarea></div>
+      <div class="field"><label for="tpPic">Penanggung jawab (PIC)</label>
+        <input id="tpPic" maxlength="100"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label for="tpTgl">Tenggat (tanggal)</label><input id="tpTgl" type="date"></div>
+        <div class="field"><label for="tpJam">Jam</label><input id="tpJam" type="time"></div>
+      </div>
+      <label class="dk-centang"><input type="checkbox" id="tpKalender"> Masukkan ke Kalender Kegiatan (Beranda)</label>
+      <div class="dk-galat" id="tpGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" onclick="simpanTopik()">Simpan Topik</button>
+    </div>
+  </div>
+</div>

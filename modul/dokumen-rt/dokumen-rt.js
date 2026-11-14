@@ -1,6 +1,9 @@
 /* =================================================================
-   MODUL DOKUMEN RAPAT RT (Tahap 5C)
-   Arsip terbuka untuk umum; membuat notulen khusus RT/Sekretaris.
+   MESIN DOKUMEN RAPAT — dipakai RT (Tahap 5C) & PKK (Tahap 5E)
+   Arsip terbuka untuk umum; membuat notulen hanya pengurus berhak.
+
+   Berkas ini dimuat SEKALI per sesi. Modul PKK (dokumen-pkk.js)
+   memuat berkas ini juga, lalu memanggil mulaiDokumen('PKK').
    ================================================================= */
 
 const Dk = {
@@ -10,13 +13,35 @@ const Dk = {
   sibuk: false
 };
 
-const DK_BAWAAN = {
-  waktu: '19.30 WIB - Selesai', tempat: 'Balai Pertemuan Warga',
-  pemimpin: 'Ketua RT', notulis: 'Sekretaris RT'
+// Pengaturan per organisasi
+const DK_ORG = {
+  RT: {
+    judul: 'Dokumen Rapat RT', judulBuat: 'Notulen Rapat RT',
+    judulHadir: 'C. DAFTAR HADIR (KEPALA KELUARGA)', aksiHadir: 'daftarHadirRT',
+    aksiSimpan: 'simpanNotulen', kosongHadir: 'Belum ada Kepala Keluarga aktif.',
+    muatHadir: 'Memuat daftar Kepala Keluarga…',
+    bawaan: { waktu: '19.30 WIB - Selesai', tempat: 'Balai Pertemuan Warga',
+              pemimpin: 'Ketua RT', notulis: 'Sekretaris RT' }
+  },
+  PKK: {
+    judul: 'Dokumen Rapat PKK', judulBuat: 'Notulen Rapat PKK',
+    judulHadir: 'C. DAFTAR HADIR (ANGGOTA PKK)', aksiHadir: 'daftarHadirPKK',
+    aksiSimpan: 'simpanNotulenPKK', kosongHadir: 'Belum ada anggota PKK aktif.',
+    muatHadir: 'Memuat daftar anggota PKK…',
+    bawaan: { waktu: '16.00 WIB - Selesai', tempat: 'Balai Pertemuan Warga',
+              pemimpin: 'Ketua PKK', notulis: 'Sekretaris PKK' }
+  }
 };
 
-async function init_dokumen_rt(){
+async function init_dokumen_rt(){ await mulaiDokumen('RT'); }
+
+async function mulaiDokumen(org){
   // HTML diambil baru tiap kunjungan → buang keadaan lama
+  Dk.org = DK_ORG[org] ? org : 'RT';
+  const cfg = DK_ORG[Dk.org];
+  document.getElementById('dkJudulHalaman').textContent = cfg.judul;
+  document.getElementById('nbJudul').textContent = cfg.judulBuat;
+  document.getElementById('nbJudulHadir').textContent = cfg.judulHadir;
   dkBuangPdf();
   Dk.arsip = []; Dk.bolehBuat = false; Dk.aktif = null;
   Dk.topik = []; Dk.edIdx = -1;
@@ -47,7 +72,7 @@ function gambarArsip(){
   document.getElementById('dkSub').textContent = Dk.arsip.length + ' notulen';
 
   if (!Dk.arsip.length){
-    kotak.innerHTML = '<div class="kosong"><h2>Belum ada notulen</h2><p>Notulen rapat RT yang disimpan akan muncul di sini.</p></div>';
+    kotak.innerHTML = '<div class="kosong"><h2>Belum ada notulen</h2><p>Notulen rapat ' + Dk.org + ' yang disimpan akan muncul di sini.</p></div>';
     return;
   }
 
@@ -153,10 +178,10 @@ function dkBuangPdf(){
 /* ---------- BUAT NOTULEN ---------- */
 function mulaiBuatNotulen(){
   document.getElementById('nbTgl').value = dkHariIni();
-  document.getElementById('nbWaktu').value = DK_BAWAAN.waktu;
-  document.getElementById('nbTempat').value = DK_BAWAAN.tempat;
-  document.getElementById('nbPemimpin').value = DK_BAWAAN.pemimpin;
-  document.getElementById('nbNotulis').value = DK_BAWAAN.notulis;
+  document.getElementById('nbWaktu').value = DK_ORG[Dk.org].bawaan.waktu;
+  document.getElementById('nbTempat').value = DK_ORG[Dk.org].bawaan.tempat;
+  document.getElementById('nbPemimpin').value = DK_ORG[Dk.org].bawaan.pemimpin;
+  document.getElementById('nbNotulis').value = DK_ORG[Dk.org].bawaan.notulis;
   document.getElementById('nbGalat').textContent = '';
   document.getElementById('nbCariHadir').value = '';
   Dk.topik = []; Dk.pilih = {}; Dk.cariHadir = '';
@@ -233,9 +258,9 @@ function hapusTopik(i){
 async function muatHadir(){
   const kotak = document.getElementById('nbHadir');
   if (Dk.hadirDimuat){ gambarHadir(); return; }
-  kotak.innerHTML = '<div class="memuat">Memuat daftar Kepala Keluarga…</div>';
+  kotak.innerHTML = '<div class="memuat">' + DK_ORG[Dk.org].muatHadir + '</div>';
   try {
-    Dk.hadir = (await panggilAPI('daftarHadirRT')) || [];
+    Dk.hadir = (await panggilAPI(DK_ORG[Dk.org].aksiHadir)) || [];
     Dk.hadirDimuat = true;
     gambarHadir();
   } catch (e) {
@@ -254,7 +279,7 @@ function gambarHadir(){
       dkAman(a.nama) + '</label>');
   });
   kotak.innerHTML = baris.length ? baris.join('') :
-    '<div class="kosong"><p>' + (Dk.hadir.length ? 'Tidak ada yang cocok.' : 'Belum ada Kepala Keluarga aktif.') + '</p></div>';
+    '<div class="kosong"><p>' + (Dk.hadir.length ? 'Tidak ada yang cocok.' : DK_ORG[Dk.org].kosongHadir) + '</p></div>';
   document.getElementById('nbJmlHadir').textContent = Object.keys(Dk.pilih).length + ' orang';
 }
 
@@ -280,7 +305,7 @@ async function simpanNotulen(){
   Dk.sibuk = true;
   tunggu('Menyimpan notulen…', 'Membuat dokumen dari template dan mencatat ke kalender.');
   try {
-    const h = await panggilAPI('simpanNotulen', {
+    const h = await panggilAPI(DK_ORG[Dk.org].aksiSimpan, {
       tgl: v('nbTgl'), waktu: v('nbWaktu'), tempat: v('nbTempat'),
       pemimpin: v('nbPemimpin'), notulis: v('nbNotulis'),
       topik: Dk.topik, hadir: hadir
@@ -299,6 +324,13 @@ async function simpanNotulen(){
 }
 
 /* ---------- ALAT ---------- */
+/** Kotak tulisan memanjang mengikuti isi, sehingga semua tulisan selalu terlihat. */
+function dkTumbuh(el){
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = Math.max(88, el.scrollHeight + 2) + 'px';
+}
+
 function dkAman(t){
   const d = document.createElement('div');
   d.textContent = String(t == null ? '' : t);
@@ -315,10 +347,4 @@ function dkSub(label, nilai){
 function dkHariIni(){
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
-/** Kotak tulisan memanjang mengikuti isi, sehingga semua tulisan selalu terlihat. */
-function dkTumbuh(el){
-  if (!el) return;
-  el.style.height = 'auto';
-  el.style.height = Math.max(88, el.scrollHeight + 2) + 'px';
 }

@@ -75,7 +75,7 @@
     <svg class="ic"><use href="#i-menu"/></svg>
   </button>
   <div>
-    <h1>Dokumen Rapat RT</h1>
+    <h1 id="dkJudulHalaman">Dokumen Rapat</h1>
     <small id="dkSub">Memuat…</small>
   </div>
   <button class="hero-btn dk-sembunyi" id="dkBuat" style="margin-left:auto;"
@@ -114,7 +114,7 @@
 <div class="lembar" id="lembarBuatNotulen">
   <div class="lembar-isi">
     <div class="lembar-atas">
-      <h2>Notulen Rapat RT</h2>
+      <h2 id="nbJudul">Notulen Rapat</h2>
       <button onclick="tutupBuatNotulen()"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
     </div>
     <div class="lembar-badan">
@@ -129,7 +129,7 @@
       <div id="nbTopik"></div>
       <button class="dk-tambah" onclick="bukaTopik(-1)">+ Tambah topik</button>
 
-      <div class="dk-judul">C. DAFTAR HADIR (KEPALA KELUARGA) <span class="dk-hitung" id="nbJmlHadir">0 orang</span></div>
+      <div class="dk-judul"><span id="nbJudulHadir">C. DAFTAR HADIR</span> <span class="dk-hitung" id="nbJmlHadir">0 orang</span></div>
       <input class="dk-cari" id="nbCariHadir" type="search" placeholder="Cari nama atau blok…"
              oninput="Dk.cariHadir = this.value; gambarHadir();" autocomplete="off">
       <div class="dk-daftar-hadir" id="nbHadir"><div class="memuat">Memuat…</div></div>
@@ -153,7 +153,7 @@
     <div class="lembar-badan">
       <div class="field"><label for="tpTopik">Topik pembahasan *</label>
         <input id="tpTopik" maxlength="200" placeholder="Judul singkat…"></div>
-     <div class="field"><label for="tpRingkasan">Ringkasan diskusi</label>
+      <div class="field"><label for="tpRingkasan">Ringkasan diskusi</label>
         <textarea id="tpRingkasan" rows="4" maxlength="2000" oninput="dkTumbuh(this)"
                   placeholder="Isi pembahasan…"></textarea></div>
       <div class="field"><label for="tpKeputusan">Keputusan</label>
