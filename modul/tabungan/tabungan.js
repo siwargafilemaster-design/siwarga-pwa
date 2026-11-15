@@ -230,13 +230,14 @@ function gambarRiwayatTb(){
   document.getElementById('trBulan').innerHTML = r.daftarBulan.map(function(p){
     return '<option value="' + p + '"' + (p === r.bulan ? ' selected' : '') + '>' + tbPeriode(p) + '</option>';
   }).join('');
+    const selisih = r.hari.setor + r.hari.tarik;
   document.getElementById('trHari').innerHTML = '<b>Hari ini</b> · setor ' + tbRp(r.hari.setor) +
     ' · tarik ' + tbRp(Math.abs(r.hari.tarik)) +
-    (r.hari.koreksi ? ' · koreksi ' + tbRp(r.hari.koreksi) : '') +
-    '<br>Uang di kotak bertambah <b>' + tbRp(r.hari.setor + r.hari.tarik + r.hari.koreksi) + '</b> hari ini.';
+    (r.hari.batal ? ' · ' + r.hari.batal + ' transaksi dibatalkan (tidak dihitung)' : '') +
+    '<br>Uang di kotak ' + (selisih >= 0 ? 'bertambah' : 'berkurang') + ' <b>' + tbRp(Math.abs(selisih)) + '</b> hari ini.';
   tbTeks('trSetor', tbRp(r.ringkas.setor));
   tbTeks('trTarik', tbRp(Math.abs(r.ringkas.tarik)));
-  tbTeks('trBersih', tbRp(r.ringkas.setor + r.ringkas.tarik + r.ringkas.koreksi));
+  tbTeks('trBersih', tbRp(r.ringkas.setor + r.ringkas.tarik));
 
   const kotak = document.getElementById('trDaftar');
   if (!r.baris.length){
