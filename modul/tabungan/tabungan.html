@@ -1,0 +1,176 @@
+<style>
+/* ===== BANK PKK — gaya khusus modul ===== */
+.tb-total{background:var(--hero-1);color:#fff;border-radius:var(--r-lg);padding:16px 18px;margin-bottom:8px;
+  box-shadow:0 2px 12px rgba(31,41,51,.10);}
+.tb-total small{display:block;font-size:.62rem;font-weight:700;letter-spacing:.05em;opacity:.85;}
+.tb-total b{display:block;font-size:1.5rem;font-weight:700;margin:4px 0 2px;overflow-wrap:anywhere;}
+.tb-total span{font-size:.72rem;opacity:.85;}
+.tb-ket{font-size:.7rem;color:var(--muted);line-height:1.5;margin:0 2px 14px;}
+.tb-cari{width:100%;box-sizing:border-box;font:inherit;font-size:.86rem;padding:11px 14px;margin-bottom:10px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.tb-daftar{background:var(--card);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.tb-orang{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;background:none;border:none;
+  border-top:1px solid var(--line);padding:11px 14px;color:var(--ink);}
+.tb-orang:first-child{border-top:none;}
+.tb-orang .isi{flex:1;min-width:0;}
+.tb-orang b{display:block;font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-orang small{display:block;font-size:.66rem;color:var(--muted);margin-top:1px;}
+.tb-orang .uang{font-size:.82rem;font-weight:700;white-space:nowrap;}
+.tb-tag{font-size:.56rem;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--gold-soft);color:var(--gold-ink);margin-left:4px;}
+
+.tb-kartu{background:linear-gradient(135deg,var(--hero-1),#2c6e63);color:#fff;border-radius:var(--r-lg);
+  padding:16px 18px;margin-bottom:12px;}
+.tb-kartu small{display:block;font-size:.66rem;opacity:.85;}
+.tb-kartu .rek{font-family:monospace;font-size:.8rem;font-weight:700;opacity:.95;}
+.tb-kartu b{display:block;font-size:1.6rem;font-weight:700;margin-top:10px;overflow-wrap:anywhere;}
+.tb-dua{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.tb-dua button{font:inherit;font-size:.84rem;font-weight:700;padding:12px;border-radius:var(--r-md);border:none;}
+.tb-setor{background:var(--sage-soft);color:var(--sage);}
+.tb-tarik{background:var(--gold-soft);color:var(--gold-ink);}
+.tb-dua button:disabled{opacity:.4;}
+
+.tb-form{background:var(--bg);border-radius:var(--r-md);padding:12px;margin-bottom:14px;}
+.tb-form h3{font-size:.86rem;margin:0 0 10px;}
+.tb-cepat{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px;}
+.tb-cepat button{font:inherit;font-size:.72rem;font-weight:600;padding:6px 11px;border-radius:999px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);}
+.tb-cek{display:flex;align-items:center;gap:8px;font-size:.78rem;margin:2px 0 10px;}
+.tb-cek input{width:18px;height:18px;}
+.tb-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);padding:10px 12px;margin:8px 0;}
+.tb-galat:empty{display:none;}
+
+.tb-judul{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:4px 2px 8px;}
+.tb-mut{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-top:1px solid var(--line);}
+.tb-mut:first-child{border-top:none;}
+.tb-mut .isi{flex:1;min-width:0;}
+.tb-mut b{display:block;font-size:.8rem;font-weight:600;}
+.tb-mut small{display:block;font-size:.66rem;color:var(--muted);margin-top:2px;overflow-wrap:anywhere;}
+.tb-mut .kanan{text-align:right;flex-shrink:0;}
+.tb-mut .kanan span{display:block;font-size:.82rem;font-weight:700;white-space:nowrap;}
+.tb-koreksi{font:inherit;font-size:.62rem;font-weight:700;margin-top:4px;padding:3px 8px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:var(--muted);}
+.tb-coret{text-decoration:line-through;opacity:.55;}
+.tb-plus{color:var(--sage);} .tb-minus{color:var(--red);}
+
+.tb-masuk{background:var(--card);border-radius:var(--r-lg);padding:18px;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.tb-masuk h2{font-size:1rem;margin:0 0 4px;}
+.tb-masuk p{font-size:.74rem;color:var(--muted);margin:0 0 14px;line-height:1.5;}
+.tb-baris{display:flex;gap:8px;margin-bottom:12px;}
+.tb-baris button{flex:1;}
+.tb-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Bank PKK</h1>
+    <small id="tbSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="segarkanTb()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+
+  <!-- ===== LAYAR TELLER ===== -->
+  <div id="tbTeller" class="tb-sembunyi">
+    <div class="tb-total">
+      <small>TOTAL TABUNGAN NASABAH</small>
+      <b id="tbTotal">-</b>
+      <span id="tbTotalKet">-</span>
+    </div>
+    <p class="tb-ket">Cocokkan angka ini dengan uang fisik di kotak tabungan. Nasabah otomatis dari Database PKK
+      (status Aktif atau Pasif), tanpa perlu sinkronisasi.</p>
+    <input class="tb-cari" type="search" placeholder="Cari nama, rumah, atau no. rekening…" autocomplete="off"
+           oninput="Tb.cari = this.value; gambarNasabahTb();">
+    <div id="tbDaftar"><div class="memuat">Memuat…</div></div>
+  </div>
+
+  <!-- ===== LAYAR NASABAH ===== -->
+  <div id="tbNasabah" class="tb-sembunyi">
+    <div id="tbMasuk" class="tb-masuk">
+      <h2>Cek Saldo Tabungan</h2>
+      <p>Masukkan NIK dan tanggal lahir Ibu. Data hanya tampil di HP ini dan tidak disimpan.</p>
+      <div class="field">
+        <label for="tbNik">NIK (16 angka)</label>
+        <input id="tbNik" inputmode="numeric" maxlength="16" autocomplete="off" placeholder="3313…">
+      </div>
+      <div class="field">
+        <label for="tbLahir">Tanggal lahir</label>
+        <input id="tbLahir" type="date">
+      </div>
+      <div class="tb-galat" id="tbGalatMasuk"></div>
+      <button class="btn btn-utama" onclick="masukTb()">Lihat Saldo</button>
+    </div>
+
+    <div id="tbAkun" class="tb-sembunyi">
+      <div class="tb-kartu">
+        <small id="tbAkunNama">-</small>
+        <div class="rek" id="tbAkunRek">-</div>
+        <b id="tbAkunSaldo">-</b>
+        <small id="tbAkunKet">Saldo terkini</small>
+      </div>
+      <div class="tb-baris">
+        <button class="btn btn-halus" onclick="keluarTb()">Keluar</button>
+        <button class="btn btn-utama" onclick="masukTb(true)">Segarkan</button>
+      </div>
+      <div class="tb-judul">RIWAYAT TRANSAKSI</div>
+      <div class="tb-daftar" style="padding:2px 14px;" id="tbAkunMutasi"></div>
+    </div>
+  </div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: NASABAH (TELLER) ============ -->
+<div class="lembar" id="lembarNasabahTb">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="tnJudul">Nasabah</h2>
+      <button onclick="tutupLembar('lembarNasabahTb')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan" id="tnBadan">
+      <div class="tb-kartu">
+        <small id="tnRumah">-</small>
+        <div class="rek" id="tnRek">-</div>
+        <b id="tnSaldo">-</b>
+        <small id="tnKet">Saldo terkini</small>
+      </div>
+      <div class="tb-dua">
+        <button class="tb-setor" id="tnTombolSetor" onclick="bukaFormTb('SETOR')">↓ SETOR</button>
+        <button class="tb-tarik" id="tnTombolTarik" onclick="bukaFormTb('TARIK')">↑ TARIK</button>
+      </div>
+
+      <div class="tb-form tb-sembunyi" id="tnForm">
+        <h3 id="tnFormJudul">Setor</h3>
+        <div class="field">
+          <label for="tnNominal">Nominal (Rp)</label>
+          <input id="tnNominal" type="number" inputmode="numeric" min="1" placeholder="0">
+        </div>
+        <div class="tb-cepat">
+          <button type="button" onclick="isiCepatTb(10000)">10.000</button>
+          <button type="button" onclick="isiCepatTb(20000)">20.000</button>
+          <button type="button" onclick="isiCepatTb(50000)">50.000</button>
+          <button type="button" onclick="isiCepatTb(100000)">100.000</button>
+        </div>
+        <div class="field">
+          <label for="tnKetInput">Keterangan (boleh kosong)</label>
+          <input id="tnKetInput" maxlength="100" autocomplete="off">
+        </div>
+        <label class="tb-cek"><input type="checkbox" id="tnStruk" checked> Kirim struk WA ke nasabah</label>
+        <div class="tb-galat" id="tnGalat"></div>
+        <div class="tb-baris" style="margin-bottom:0;">
+          <button class="btn btn-halus" onclick="tutupFormTb()">Batal</button>
+          <button class="btn btn-utama" id="tnSimpan" onclick="simpanTrxTb()">Simpan</button>
+        </div>
+      </div>
+
+      <div class="tb-judul">RIWAYAT TRANSAKSI</div>
+      <div id="tnMutasi"><div class="memuat">Memuat…</div></div>
+    </div>
+  </div>
+</div>
