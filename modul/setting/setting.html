@@ -1,0 +1,172 @@
+<style>
+/* ===== PENGATURAN — gaya khusus modul ===== */
+.st-pin{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;border:none;
+  background:var(--card);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:16px;color:var(--ink);
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.st-pin .ic{width:20px;height:20px;color:var(--hero-1);}
+.st-pin b{display:block;font-size:.86rem;}
+.st-pin small{display:block;font-size:.68rem;color:var(--muted);margin-top:1px;}
+.st-grup{margin-bottom:16px;}
+.st-grup h2{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--muted);margin:0 2px 6px;text-transform:uppercase;}
+.st-grup p{font-size:.68rem;color:var(--muted);margin:0 2px 8px;line-height:1.5;}
+.st-kartu{background:var(--card);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.st-baris{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;background:none;border:none;
+  border-top:1px solid var(--line);padding:12px 14px;color:var(--ink);}
+.st-baris:first-child{border-top:none;}
+.st-baris .lbl{flex:1;min-width:0;font-size:.8rem;font-weight:600;}
+.st-baris .val{max-width:52%;font-size:.76rem;color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.st-baris .val img{height:26px;max-width:90px;object-fit:contain;}
+.st-baris .chev{color:var(--muted);font-size:.9rem;}
+.st-baris:disabled{opacity:1;}
+.st-titik{width:14px;height:14px;border-radius:50%;border:1px solid var(--line);flex-shrink:0;}
+.st-gembok{font-size:.7rem;}
+.st-tarif-isi{padding:12px 14px;font-size:.78rem;line-height:1.6;}
+.st-tarif-isi b{font-size:.92rem;}
+.st-riwayat{border-top:1px solid var(--line);padding:10px 14px;font-size:.7rem;color:var(--muted);line-height:1.7;}
+.st-tombol{width:100%;font:inherit;font-size:.78rem;font-weight:700;padding:11px;border:none;border-top:1px solid var(--line);
+  background:none;color:var(--hero-1);}
+
+.se-warna{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px;}
+.se-warna button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);}
+.se-logo{text-align:center;background:var(--bg);border-radius:var(--r-md);padding:14px;margin-bottom:12px;}
+.se-logo img{max-width:100%;max-height:140px;object-fit:contain;display:block;margin:0 auto 10px;}
+.se-logo small{display:block;font-size:.68rem;color:var(--muted);margin-top:6px;line-height:1.5;}
+.se-ket{font-size:.72rem;color:var(--muted);line-height:1.5;margin:0 0 12px;}
+.se-pin{background:var(--gold-soft);border-radius:var(--r-md);padding:10px 12px 2px;margin-top:4px;}
+.se-galat{font-size:.76rem;color:var(--red);background:var(--red-soft);border-radius:var(--r-md);padding:10px 12px;margin-top:8px;}
+.se-galat:empty{display:none;}
+.se-total{font-size:.8rem;margin:-2px 0 12px;}
+.st-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Pengaturan</h1>
+    <small id="stSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="muatSetting()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap" style="margin-top:16px;">
+  <div id="stTamu" class="kosong st-sembunyi">
+    <h2>Khusus pengurus</h2>
+    <p>Login dengan peran Anda untuk mengganti PIN atau mengubah pengaturan.</p>
+  </div>
+
+  <button class="st-pin st-sembunyi" id="stPinBtn" onclick="bukaGantiPin()">
+    <svg class="ic"><use href="#i-shield"/></svg>
+    <div><b>Ganti PIN Saya</b><small id="stPinPeran">-</small></div>
+  </button>
+
+  <div id="stTarif"></div>
+  <div id="stIsi"></div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: UBAH SATU PENGATURAN ============ -->
+<div class="lembar" id="lembarSet">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="seJudul">Ubah</h2>
+      <button onclick="tutupLembar('lembarSet')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p class="se-ket" id="seKet"></p>
+
+      <div class="field" id="seAreaTeks">
+        <label for="seNilai" id="seLabel">Nilai baru</label>
+        <input id="seNilai" autocomplete="off">
+      </div>
+
+      <div id="seAreaWarna" class="st-sembunyi">
+        <div class="field">
+          <label for="seWarna">Warna tema</label>
+          <input id="seWarna" type="color" style="height:46px;padding:4px;">
+        </div>
+        <div class="se-warna">
+          <button type="button" style="background:#22303F" onclick="pilihWarnaSe('#22303F')"></button>
+          <button type="button" style="background:#2C3E50" onclick="pilihWarnaSe('#2C3E50')"></button>
+          <button type="button" style="background:#16A085" onclick="pilihWarnaSe('#16A085')"></button>
+          <button type="button" style="background:#8E44AD" onclick="pilihWarnaSe('#8E44AD')"></button>
+          <button type="button" style="background:#C0392B" onclick="pilihWarnaSe('#C0392B')"></button>
+          <button type="button" style="background:#2D3436" onclick="pilihWarnaSe('#2D3436')"></button>
+        </div>
+      </div>
+
+      <div id="seAreaLogo" class="st-sembunyi">
+        <div class="se-logo">
+          <img id="seLogoPratinjau" alt="" class="st-sembunyi">
+          <input id="seLogoFile" type="file" accept="image/png,image/jpeg" onchange="siapkanLogoSe(this)">
+          <small>PNG dengan latar transparan paling bagus. Gambar dirapikan ke lebar maksimal 600 piksel
+            (tetap tajam) dan disimpan di Google Drive.</small>
+        </div>
+      </div>
+
+      <div class="se-pin st-sembunyi" id="seAreaPin">
+        <div class="field">
+          <label for="sePin">PIN Anda (konfirmasi perubahan sensitif)</label>
+          <input id="sePin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+        </div>
+      </div>
+      <div class="se-galat" id="seGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="seSimpan" onclick="simpanSe()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: TARIF PKK ============ -->
+<div class="lembar" id="lembarTarifPKK">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Tarif Iuran PKK</h2>
+      <button onclick="tutupLembar('lembarTarifPKK')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p class="se-ket">Bulan-bulan sebelum tanggal berlaku tetap memakai tarif lama. Iuran yang sudah dibayar tidak berubah.</p>
+      <div class="field">
+        <label for="tpMulai">Berlaku mulai</label>
+        <select id="tpMulai"></select>
+      </div>
+      <div class="field"><label for="tpKas">Kas (Rp)</label><input id="tpKas" type="number" inputmode="numeric" oninput="hitungTarifSe()"></div>
+      <div class="field"><label for="tpSosial">Sosial (Rp)</label><input id="tpSosial" type="number" inputmode="numeric" oninput="hitungTarifSe()"></div>
+      <div class="field"><label for="tpKonsumsi">Konsumsi (Rp)</label><input id="tpKonsumsi" type="number" inputmode="numeric" oninput="hitungTarifSe()"></div>
+      <div class="se-total" id="tpTotal"></div>
+      <div class="se-galat" id="tpGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" onclick="simpanTarifSe()">Simpan Tarif</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: GANTI PIN ============ -->
+<div class="lembar" id="lembarGantiPin">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Ganti PIN Saya</h2>
+      <button onclick="tutupLembar('lembarGantiPin')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p class="se-ket">Setelah PIN diganti, semua HP yang login dengan peran ini akan keluar, termasuk HP ini.</p>
+      <div class="field"><label for="gpLama">PIN lama</label><input id="gpLama" type="password" inputmode="numeric" maxlength="8"></div>
+      <div class="field"><label for="gpBaru">PIN baru (4–8 angka)</label><input id="gpBaru" type="password" inputmode="numeric" maxlength="8"></div>
+      <div class="field"><label for="gpUlang">Ulangi PIN baru</label><input id="gpUlang" type="password" inputmode="numeric" maxlength="8"></div>
+      <div class="se-galat" id="gpGalat"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" onclick="simpanGantiPin()">Ganti PIN</button>
+    </div>
+  </div>
+</div>
