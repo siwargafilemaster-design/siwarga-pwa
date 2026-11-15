@@ -1,24 +1,38 @@
 /* =================================================================
    MODUL BANK PKK (Tahap 6D)
    Teller & Developer → layar teller. Lainnya → cek saldo (NIK + tgl lahir).
+   Layar teller punya 3 tampilan dari bottom nav (App.aksi):
+     ''        → total + daftar nasabah   (Bank PKK)
+     'catat'   → pilih nasabah, form setor langsung terbuka
+     'riwayat' → semua transaksi per bulan + ringkasan hari ini
    ================================================================= */
 
-const Tb = { mode: '', data: null, cari: '', aktif: -1, jenis: '', mutasi: [], sibuk: false, nik: '', lahir: '' };
+const Tb = { mode: '', view: '', data: null, riwayat: null, bulanR: '', cari: '', aktif: -1, jenis: '', mutasi: [],
+             sibuk: false, nik: '', lahir: '' };
 const TB_PERAN = ['DEVELOPER', 'TELLER'];
 const TB_BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
                   'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 async function init_tabungan(){
   // HTML diambil baru tiap kunjungan → buang keadaan lama
-  Tb.data = null; Tb.cari = ''; Tb.aktif = -1; Tb.jenis = ''; Tb.mutasi = [];
+  Tb.data = null; Tb.riwayat = null; Tb.bulanR = ''; Tb.cari = ''; Tb.aktif = -1; Tb.jenis = ''; Tb.mutasi = [];
   Tb.sibuk = false; Tb.nik = ''; Tb.lahir = '';
   Tb.mode = TB_PERAN.indexOf(App.peran) !== -1 ? 'teller' : 'nasabah';
+  Tb.view = Tb.mode === 'teller' ? ({ catat: 'catat', riwayat: 'riwayat' }[App.aksi] || 'daftar') : '';
   document.getElementById('tbTeller').classList.toggle('tb-sembunyi', Tb.mode !== 'teller');
   document.getElementById('tbNasabah').classList.toggle('tb-sembunyi', Tb.mode !== 'nasabah');
 
   if (Tb.mode === 'teller'){
-    tbTeks('tbSub', 'Layar Teller');
-    await muatTellerTb();
+    document.getElementById('tbViewDaftar').classList.toggle('tb-sembunyi', Tb.view === 'riwayat');
+    document.getElementById('tbViewRiwayat').classList.toggle('tb-sembunyi', Tb.view !== 'riwayat');
+    document.getElementById('tbBlokTotal').classList.toggle('tb-sembunyi', Tb.view === 'catat');
+    document.getElementById('tbPetunjuk').classList.toggle('tb-sembunyi', Tb.view !== 'catat');
+    tbTeks('tbSub', { daftar: 'Layar Teller', catat: 'Catat setor / tarik', riwayat: 'Riwayat transaksi' }[Tb.view]);
+    if (Tb.view === 'riwayat') await Promise.all([muatTellerTb(), muatRiwayatTb()]);
+    else {
+      await muatTellerTb();
+      if (Tb.view === 'catat') document.getElementById('tbCari').focus();
+    }
   } else {
     tbTeks('tbSub', 'Cek saldo tabungan');
     document.getElementById('tbLahir').max = tbHariIni();
@@ -26,7 +40,9 @@ async function init_tabungan(){
 }
 
 function segarkanTb(){
-  if (Tb.mode === 'teller') return muatTellerTb();
+  if (Tb.mode === 'teller'){
+    return Tb.view === 'riwayat' ? Promise.all([muatTellerTb(), muatRiwayatTb(Tb.bulanR)]) : muatTellerTb();
+  }
   if (Tb.nik) return masukTb(true);
 }
 
@@ -85,6 +101,7 @@ function bukaNasabahTb(i){
   document.getElementById('tnBadan').scrollTop = 0;
   bukaLembar('lembarNasabahTb');
   muatMutasiTb();
+  if (Tb.view === 'catat' && n.boleh) bukaFormTb('SETOR');   // Catat: form setor langsung terbuka
 }
 
 function tbIsiKartuTeller(){
@@ -191,6 +208,60 @@ function tbPerbaruiSaldo(n, saldoBaru){
   tbIsiKartuTeller();
   gambarTotalTb();
   gambarNasabahTb();
+  if (Tb.view === 'riwayat') muatRiwayatTb(Tb.bulanR);
+}
+
+/* ---------- RIWAYAT SEMUA TRANSAKSI ---------- */
+async function muatRiwayatTb(bulan){
+  const kotak = document.getElementById('trDaftar');
+  if (!kotak) return;
+  if (bulan !== undefined) Tb.bulanR = bulan;
+  try {
+    Tb.riwayat = await panggilAPI('riwayatTab', Tb.bulanR);
+    Tb.bulanR = Tb.riwayat.bulan;
+    gambarRiwayatTb();
+  } catch (e) {
+    kotak.innerHTML = '<div class="kosong"><h2>Gagal memuat</h2><p>' + tbAman(e.message) + '</p></div>';
+  }
+}
+
+function gambarRiwayatTb(){
+  const r = Tb.riwayat;
+  document.getElementById('trBulan').innerHTML = r.daftarBulan.map(function(p){
+    return '<option value="' + p + '"' + (p === r.bulan ? ' selected' : '') + '>' + tbPeriode(p) + '</option>';
+  }).join('');
+  document.getElementById('trHari').innerHTML = '<b>Hari ini</b> · setor ' + tbRp(r.hari.setor) +
+    ' · tarik ' + tbRp(Math.abs(r.hari.tarik)) +
+    (r.hari.koreksi ? ' · koreksi ' + tbRp(r.hari.koreksi) : '') +
+    '<br>Uang di kotak bertambah <b>' + tbRp(r.hari.setor + r.hari.tarik + r.hari.koreksi) + '</b> hari ini.';
+  tbTeks('trSetor', tbRp(r.ringkas.setor));
+  tbTeks('trTarik', tbRp(Math.abs(r.ringkas.tarik)));
+  tbTeks('trBersih', tbRp(r.ringkas.setor + r.ringkas.tarik + r.ringkas.koreksi));
+
+  const kotak = document.getElementById('trDaftar');
+  if (!r.baris.length){
+    kotak.innerHTML = '<div class="kosong"><h2>Belum ada transaksi</h2><p>Tidak ada transaksi di ' +
+      tbAman(tbPeriode(r.bulan)) + '.</p></div>';
+    return;
+  }
+  kotak.innerHTML = '<div class="tb-daftar">' + r.baris.map(function(t, i){
+    const plus = t.nominal >= 0;
+    const judul = ({ SETOR: 'Setor', TARIK: 'Tarik', KOREKSI: 'Koreksi' }[t.jenis] || t.jenis) +
+                  (t.dikoreksi ? ' (dibatalkan)' : '') + ' · ' + t.nama;
+    return '<button class="tb-rw' + (t.dikoreksi ? ' tb-coret' : '') + '" onclick="bukaDariRiwayatTb(' + i + ')">' +
+      '<div class="isi"><b>' + tbAman(judul) + '</b><small>' +
+      tbAman(t.waktu + ' · Rumah ' + t.rumah + (t.petugas ? ' · ' + t.petugas : '')) + '</small></div>' +
+      '<span class="' + (plus ? 'tb-plus' : 'tb-minus') + '">' + (plus ? '+' : '−') + tbRp(Math.abs(t.nominal)) +
+      '</span></button>';
+  }).join('') + '</div>';
+}
+
+function bukaDariRiwayatTb(i){
+  const t = Tb.riwayat.baris[i];
+  if (!t || !Tb.data) return;
+  const idx = Tb.data.nasabah.findIndex(function(n){ return n.id === t.nasabah; });
+  if (idx === -1) return toast('Nasabah ini tidak ada di daftar.');
+  bukaNasabahTb(idx);
 }
 
 function tbTeksStruk(s){
@@ -263,6 +334,7 @@ function tbRp(n){
   n = Number(n) || 0;
   return (n < 0 ? '−' : '') + 'Rp ' + Math.abs(n).toLocaleString('id-ID');
 }
+function tbPeriode(p){ return TB_BULAN[Number(p.slice(5, 7)) - 1] + ' ' + p.slice(0, 4); }
 function tbHariIni(){
   const d = new Date();
   return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);

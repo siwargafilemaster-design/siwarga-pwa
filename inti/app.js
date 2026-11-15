@@ -44,7 +44,9 @@ const NAV_PERAN = {
   BENDAHARA:  ['home','keuangan','verifikasi','rumah'],
   PKK:        ['home','pkk','keuangan-pkk','laporan-pkk'],
   HUMAS:      ['home','humas','rumah','peta'],
-  TELLER:     ['home','tabungan','keuangan-pkk','pkk'],
+  TELLER:     ['home', 'tabungan',
+               { key:'tabungan', aksi:'catat',   label:'Catat',   ikon:'i-plus', menonjol:true },
+               { key:'tabungan', aksi:'riwayat', label:'Riwayat', ikon:'i-jam' }],
   DEVELOPER:  ['home','keuangan','rumah','setting']
 };
 
@@ -152,16 +154,24 @@ function gambarBnav(){
   const nav = $('bnav');
   nav.innerHTML = '';
 
-  (NAV_PERAN[App.peran] || NAV_PERAN.GUEST).forEach(key => {
-    const item = cariMenu(key);
+  (NAV_PERAN[App.peran] || NAV_PERAN.GUEST).forEach(entri => {
+    // entri: 'kunci' biasa, atau { key, aksi, label, ikon, menonjol } = pintasan ke bagian tertentu sebuah halaman
+    const p = (typeof entri === 'string') ? { key: entri } : entri;
+    const item = cariMenu(p.key);
     if (!item) return;
 
     const b = document.createElement('button');
-    b.dataset.key = key;
-    if (key === App.halaman) b.classList.add('on');
-    b.innerHTML = '<svg class="ic"><use href="#' + item.ikon + '"/></svg>' +
-                  '<span>' + (LABEL_PENDEK[key] || item.label) + '</span>';
-    b.onclick = () => pergiKe(key);
+    b.dataset.key = p.key;
+    if (p.key === App.halaman && (p.aksi || '') === (App.aksi || '')) b.classList.add('on');
+    const ikon = '<svg class="ic"><use href="#' + (p.ikon || item.ikon) + '"/></svg>';
+    if (p.menonjol){
+      b.classList.add('menonjol');
+      b.innerHTML = '<i class="bulat">' + ikon + '</i>';
+    } else {
+      b.innerHTML = ikon;
+    }
+    b.innerHTML += '<span>' + (p.label || LABEL_PENDEK[p.key] || item.label) + '</span>';
+    b.onclick = () => pergiKe(p.key, p.aksi);
     nav.appendChild(b);
   });
 
@@ -172,7 +182,7 @@ function gambarBnav(){
 }
 
 /* ---------- PERPINDAHAN HALAMAN ---------- */
-async function pergiKe(key){
+async function pergiKe(key, aksi){
   const item = cariMenu(key);
   if (!item) return;
 
@@ -182,6 +192,7 @@ async function pergiKe(key){
   }
 
   App.halaman = key;
+  App.aksi = aksi || '';
   $('btnSos').classList.toggle('sembunyi', key !== 'home');
   gambarBnav();
   gambarDrawer();

@@ -57,6 +57,23 @@
 .tb-masuk p{font-size:.74rem;color:var(--muted);margin:0 0 14px;line-height:1.5;}
 .tb-baris{display:flex;gap:8px;margin-bottom:12px;}
 .tb-baris button{flex:1;}
+.tb-petunjuk{font-size:.76rem;line-height:1.5;background:var(--sage-soft);color:var(--sage);
+  border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px;}
+.tb-bulan{width:100%;box-sizing:border-box;font:inherit;font-size:.84rem;padding:10px 12px;margin-bottom:10px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:var(--card);color:var(--ink);}
+.tb-hari{font-size:.74rem;background:var(--card);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);line-height:1.5;}
+.tb-tiga{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.tb-tiga div{background:var(--card);border-radius:var(--r-md);padding:9px 10px;font-size:.6rem;font-weight:700;
+  color:var(--muted);box-shadow:0 2px 12px rgba(31,41,51,.06);min-width:0;}
+.tb-tiga b{display:block;font-size:.8rem;color:var(--ink);margin-top:2px;overflow-wrap:anywhere;}
+.tb-rw{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;font:inherit;background:none;
+  border:none;border-top:1px solid var(--line);padding:10px 14px;color:var(--ink);}
+.tb-rw:first-child{border-top:none;}
+.tb-rw .isi{flex:1;min-width:0;}
+.tb-rw b{display:block;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-rw small{display:block;font-size:.64rem;color:var(--muted);margin-top:2px;}
+.tb-rw span{font-size:.8rem;font-weight:700;white-space:nowrap;}
 .tb-sembunyi{display:none !important;}
 </style>
 
@@ -77,16 +94,35 @@
 
   <!-- ===== LAYAR TELLER ===== -->
   <div id="tbTeller" class="tb-sembunyi">
-    <div class="tb-total">
-      <small>TOTAL TABUNGAN NASABAH</small>
-      <b id="tbTotal">-</b>
-      <span id="tbTotalKet">-</span>
+
+    <!-- Daftar nasabah (Bank PKK) & Catat -->
+    <div id="tbViewDaftar">
+      <div id="tbBlokTotal">
+        <div class="tb-total">
+          <small>TOTAL TABUNGAN NASABAH</small>
+          <b id="tbTotal">-</b>
+          <span id="tbTotalKet">-</span>
+        </div>
+        <p class="tb-ket">Cocokkan angka ini dengan uang fisik di kotak tabungan. Nasabah otomatis dari Database PKK
+          (status Aktif atau Pasif), tanpa perlu sinkronisasi.</p>
+      </div>
+      <div class="tb-petunjuk tb-sembunyi" id="tbPetunjuk">Pilih nasabah untuk mencatat <b>setor</b> atau <b>tarik</b>.</div>
+      <input class="tb-cari" id="tbCari" type="search" placeholder="Cari nama, rumah, atau no. rekening…" autocomplete="off"
+             oninput="Tb.cari = this.value; gambarNasabahTb();">
+      <div id="tbDaftar"><div class="memuat">Memuat…</div></div>
     </div>
-    <p class="tb-ket">Cocokkan angka ini dengan uang fisik di kotak tabungan. Nasabah otomatis dari Database PKK
-      (status Aktif atau Pasif), tanpa perlu sinkronisasi.</p>
-    <input class="tb-cari" type="search" placeholder="Cari nama, rumah, atau no. rekening…" autocomplete="off"
-           oninput="Tb.cari = this.value; gambarNasabahTb();">
-    <div id="tbDaftar"><div class="memuat">Memuat…</div></div>
+
+    <!-- Riwayat semua transaksi -->
+    <div id="tbViewRiwayat" class="tb-sembunyi">
+      <div class="tb-hari" id="trHari">-</div>
+      <select class="tb-bulan" id="trBulan" onchange="muatRiwayatTb(this.value)"></select>
+      <div class="tb-tiga">
+        <div>SETOR<b class="tb-plus" id="trSetor">-</b></div>
+        <div>TARIK<b class="tb-minus" id="trTarik">-</b></div>
+        <div>BERSIH<b id="trBersih">-</b></div>
+      </div>
+      <div id="trDaftar"><div class="memuat">Memuat…</div></div>
+    </div>
   </div>
 
   <!-- ===== LAYAR NASABAH ===== -->

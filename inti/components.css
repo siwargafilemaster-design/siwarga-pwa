@@ -174,6 +174,13 @@
 .bnav button .ic{width:19px;height:19px;}
 .bnav button.on{color:var(--hero-1);font-weight:600;}
 .bnav button.on .ic{stroke-width:2.1;}
+/* Tombol tengah menonjol (mis. "Catat" untuk Teller) */
+.bnav button.menonjol{justify-content:flex-end;padding-bottom:7px;}
+.bnav button .bulat{display:flex;align-items:center;justify-content:center;width:52px;height:52px;
+  border-radius:50%;background:var(--hero-1);color:#fff;margin-top:-28px;margin-bottom:2px;
+  border:4px solid #fff;box-shadow:0 6px 16px rgba(31,41,51,.25);font-style:normal;}
+.bnav button .bulat .ic{width:22px;height:22px;stroke-width:2.2;}
+.bnav button.menonjol.on{color:var(--hero-1);}
 
 
 /* ============ DRAWER ============ */
