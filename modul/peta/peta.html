@@ -1,0 +1,114 @@
+<style>
+/* ===== DENAH LINGKUNGAN — gaya khusus modul ===== */
+.pt-alat{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0 10px;}
+.pt-leg{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:600;color:var(--muted);
+  background:var(--card);border-radius:999px;padding:5px 10px;box-shadow:0 2px 10px rgba(31,41,51,.06);}
+.pt-leg i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.pt-atur{font:inherit;font-size:.7rem;font-weight:700;margin-left:auto;padding:6px 12px;border-radius:999px;border:none;
+  background:var(--hero-1);color:#fff;}
+.pt-atur.on{background:var(--gold-soft);color:var(--gold-ink);}
+
+.pt-jendela{position:relative;overflow:hidden;background:#2b2f33;border-radius:var(--r-lg);touch-action:none;
+  box-shadow:0 2px 12px rgba(31,41,51,.10);}
+.pt-peta{position:absolute;top:0;left:0;width:1000px;}
+.pt-peta img{display:block;width:1000px;height:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+.pt-lapis{position:absolute;inset:0;}
+.pt-jendela.atur .pt-peta{cursor:crosshair;}
+
+/* pin rumah: ukuran tetap di layar walau peta di-zoom (--inv = 1/skala) */
+.pt-pin{position:absolute;display:flex;flex-direction:column;align-items:center;
+  transform:translate(-50%,-100%) scale(var(--inv,1));transform-origin:50% 100%;}
+.pt-no{font-size:9px;font-weight:700;color:#fff;background:rgba(20,24,28,.8);border-radius:4px;padding:0 3px;
+  line-height:1.4;margin-bottom:1px;white-space:nowrap;}
+.pt-tetes{width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;
+  background:var(--c,#777);box-shadow:0 2px 4px rgba(0,0,0,.5);}
+.pt-milik{--c:#22c55e;} .pt-kontrak{--c:#facc15;} .pt-numpang{--c:#22d3ee;}
+.pt-kosong{--c:#6b7280;} .pt-lain{--c:#ec4899;} .pt-tanpa{--c:#9ca3af;opacity:.7;}
+.pt-pin.pilih .pt-tetes{border-color:#ff3b30;animation:ptDenyut 1s infinite;}
+@keyframes ptDenyut{50%{box-shadow:0 0 0 6px rgba(255,59,48,.35);}}
+
+.pt-label{position:absolute;transform:translate(-50%,-50%) rotate(var(--r,0deg));white-space:nowrap;pointer-events:none;
+  font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase;opacity:.95;
+  text-shadow:0 0 5px rgba(0,0,0,.5),0 0 10px rgba(255,255,255,.8),0 0 20px rgba(255,255,255,.6);}
+.pt-fasum{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;
+  animation:ptMelayang 3s infinite ease-in-out;}
+.pt-fasum span{display:block;transform:rotate(var(--r,0deg));filter:drop-shadow(0 4px 4px rgba(0,0,0,.5));line-height:1;}
+.pt-fasum i{width:20px;height:5px;background:rgba(0,0,0,.3);border-radius:50%;margin-top:4px;filter:blur(2px);}
+@keyframes ptMelayang{50%{transform:translate(-50%,-62%);}}
+
+.pt-zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:5;}
+.pt-zoom button{width:38px;height:38px;border-radius:12px;border:none;background:rgba(255,255,255,.92);color:#1f2933;
+  font:inherit;font-size:1.2rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+
+.pt-panel{position:fixed;left:12px;right:12px;bottom:calc(var(--navh) + 12px);z-index:40;background:var(--card);
+  border-radius:var(--r-lg);padding:12px;box-shadow:0 8px 30px rgba(31,41,51,.25);}
+.pt-panel select{width:100%;box-sizing:border-box;font:inherit;font-size:.84rem;padding:9px 10px;margin-bottom:8px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);background:#fff;color:var(--ink);}
+.pt-panel p{font-size:.72rem;color:var(--muted);margin:0 0 8px;line-height:1.5;}
+.pt-panel .baris{display:flex;gap:8px;}
+.pt-panel .baris button{flex:1;}
+
+.pt-info{font-size:.82rem;line-height:1.7;}
+.pt-info b{font-weight:700;}
+.pt-badge{display:inline-block;font-size:.66rem;font-weight:700;padding:2px 9px;border-radius:999px;color:#1f2933;background:var(--c);}
+.pt-sembunyi{display:none !important;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Denah Lingkungan</h1>
+    <small id="ptSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="muatPeta()" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<div class="wrap">
+  <div class="pt-alat">
+    <span class="pt-leg"><i style="background:#22c55e"></i>Milik <b id="ptNMilik">0</b></span>
+    <span class="pt-leg"><i style="background:#facc15"></i>Kontrak <b id="ptNKontrak">0</b></span>
+    <span class="pt-leg"><i style="background:#22d3ee"></i>Numpang <b id="ptNNumpang">0</b></span>
+    <span class="pt-leg"><i style="background:#6b7280"></i>Kosong <b id="ptNKosong">0</b></span>
+    <button class="pt-atur pt-sembunyi" id="ptTombolAtur" onclick="aturPeta()">Atur pin</button>
+  </div>
+
+  <div class="pt-jendela" id="ptJendela">
+    <div class="pt-peta" id="ptPeta">
+      <img id="ptGambar" src="aset/peta-dasar.jpg" alt="Denah lingkungan" draggable="false">
+      <div class="pt-lapis" id="ptLabel"></div>
+      <div class="pt-lapis" id="ptRumah"></div>
+      <div class="pt-lapis" id="ptFasum"></div>
+    </div>
+    <div class="pt-zoom">
+      <button onclick="Pt.pz && Pt.pz.zoomIn()" aria-label="Perbesar">＋</button>
+      <button onclick="Pt.pz && Pt.pz.zoomOut()" aria-label="Perkecil">−</button>
+      <button onclick="pasPeta()" aria-label="Pas layar">⤢</button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel atur pin (Admin Lingkungan) -->
+<div class="pt-panel pt-sembunyi" id="ptPanel">
+  <select id="ptPilih" onchange="pilihRumahPeta(this.value)"></select>
+  <p id="ptPetunjuk">Pilih rumah, lalu ketuk lokasinya di peta.</p>
+  <div class="baris">
+    <button class="btn btn-halus" id="ptHapus" onclick="hapusPinPeta()">Hapus pin</button>
+    <button class="btn btn-utama" onclick="aturPeta()">Selesai</button>
+  </div>
+</div>
+
+
+<!-- ============ LEMBAR: INFO RUMAH ============ -->
+<div class="lembar" id="lembarRumahPeta">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="prJudul">Rumah</h2>
+      <button onclick="tutupLembar('lembarRumahPeta')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan pt-info" id="prIsi"></div>
+  </div>
+</div>
