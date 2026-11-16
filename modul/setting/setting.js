@@ -53,6 +53,7 @@ function gambarSetting(){
 
 function stTampil(it){
   if (it.jenis === 'rahasia' || it.jenis === 'pin') return it.terisi ? '•••••• terisi' : '<i>kosong</i>';
+  if (it.jenis === 'gambar') return it.terisi ? '✓ terisi' : '<i>belum diunggah</i>';
   if (!it.nilai) return '<i>belum diisi</i>';
   if (it.jenis === 'rupiah') return 'Rp ' + Number(it.nilai).toLocaleString('id-ID');
   if (it.jenis === 'warna') return '<span class="st-titik" style="background:' + stAman(it.nilai) + '"></span>' + stAman(it.nilai);
@@ -75,18 +76,19 @@ function bukaSe(gi, ii){
     rahasia: 'Nilai lama tidak ditampilkan demi keamanan. Isi nilai baru untuk menggantinya.',
     pin: 'Isi PIN baru (4–8 angka). Semua HP yang login dengan peran itu akan dikeluarkan.',
     hp: 'Awali dengan 08 atau 62.', tanggal: 'Angka 1–28.', bulan: 'Angka 1–12.', url: 'Diawali https://'
-  }[it.jenis] || '';
+    }[it.jenis] || (it.jenis === 'gambar' ? stKetGambar(it.k) : '');
   stTeks('seKet', ket);
 
   if (it.jenis === 'warna'){
     document.getElementById('seWarna').value = /^#[0-9a-f]{6}$/i.test(it.nilai) ? it.nilai : '#22303F';
     document.getElementById('seAreaWarna').classList.remove('st-sembunyi');
-  } else if (it.jenis === 'logo'){
+  } else if (it.jenis === 'logo' || it.jenis === 'gambar'){
     const img = document.getElementById('seLogoPratinjau');
     document.getElementById('seLogoFile').value = '';
     img.classList.toggle('st-sembunyi', !it.nilai);
     if (it.nilai) img.src = it.nilai;
     document.getElementById('seAreaLogo').classList.remove('st-sembunyi');
+    document.getElementById('seLogoKet').classList.toggle('st-sembunyi', it.jenis !== 'logo');
   } else {
     const inp = document.getElementById('seNilai');
     const angka = ['rupiah', 'angka', 'tanggal', 'bulan', 'tahun', 'pin'].indexOf(it.jenis) !== -1;
@@ -102,21 +104,29 @@ function bukaSe(gi, ii){
 function pilihWarnaSe(h){ document.getElementById('seWarna').value = h; }
 
 /** Rapikan logo ke lebar maks 600 px; PNG tetap PNG (transparan), JPG tetap JPG. */
+/** Rapikan gambar sebelum diunggah.
+ *  Logo: lebar maks 600 px. TTD & stempel: 900 px, PNG tetap PNG (transparan).
+ *  Kop: 1800 px dan selalu JPG (satu halaman penuh, tidak perlu transparan, ukurannya jadi kecil). */
 function siapkanLogoSe(input){
   const f = input.files && input.files[0];
   if (!f) return;
-  if (f.size > 8 * 1024 * 1024) return stTeks('seGalat', 'File terlalu besar (maks 8 MB sebelum dirapikan).');
-  const png = f.type === 'image/png';
+  const it = St.item || {};
+  const kop = it.k === 'KOP_SURAT';
+  const maks = it.jenis === 'gambar' ? (kop ? 1800 : 900) : 600;
+  if (f.size > 15 * 1024 * 1024) return stTeks('seGalat', 'File terlalu besar (maks 15 MB sebelum dirapikan).');
+  const png = f.type === 'image/png' && !kop;
   const baca = new FileReader();
   baca.onload = function(e){
     const img = new Image();
     img.onload = function(){
-      const skala = Math.min(1, 600 / img.width);
+      const skala = Math.min(1, maks / img.width);
       const c = document.createElement('canvas');
       c.width = Math.round(img.width * skala);
       c.height = Math.round(img.height * skala);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      St.logo = png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92);
+      const g = c.getContext('2d');
+      if (!png){ g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); }
+      g.drawImage(img, 0, 0, c.width, c.height);
+      St.logo = png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.9);
       const p = document.getElementById('seLogoPratinjau');
       p.src = St.logo;
       p.classList.remove('st-sembunyi');
@@ -127,14 +137,27 @@ function siapkanLogoSe(input){
   baca.readAsDataURL(f);
 }
 
+function stKetGambar(k){
+  return ({
+    KOP_SURAT: 'Gambar kop satu halaman penuh (A4 tegak), termasuk garis atau hiasan bawah bila ada. Isi surat mulai ditulis sekitar 3,5 cm dari atas.',
+    TTD_DIGITAL: 'Hanya coretan tanda tangan, PNG berlatar transparan, dipotong rapat. Jabatan dan nama ditulis otomatis.',
+    STEMPEL_DIGITAL: 'Stempel RT, PNG berlatar transparan, dipotong rapat di sekeliling stempel.'
+  }[k] || '') + ' Disimpan privat di Google Drive.';
+}
+
 async function simpanSe(){
   const it = St.item;
   if (!it || St.sibuk) return;
   stTeks('seGalat', '');
   let aksi, data;
-  if (it.jenis === 'logo'){
+    if (it.jenis === 'logo'){
     if (!St.logo) return stTeks('seGalat', 'Pilih gambar logo dulu.');
     aksi = 'unggahLogo'; data = { data: St.logo };
+  } else if (it.jenis === 'gambar'){
+    const pin = document.getElementById('sePin').value.trim();
+    if (!St.logo) return stTeks('seGalat', 'Pilih gambarnya dulu.');
+    if (!pin) return stTeks('seGalat', 'Masukkan PIN Anda untuk mengganti gambar ini.');
+    aksi = 'unggahGambarSurat'; data = { k: it.k, data: St.logo, pin: pin };
   } else {
     const nilai = it.jenis === 'warna' ? document.getElementById('seWarna').value : document.getElementById('seNilai').value.trim();
     const pin = document.getElementById('sePin').value.trim();
@@ -143,7 +166,7 @@ async function simpanSe(){
   }
 
   St.sibuk = true;
-  tunggu(it.jenis === 'logo' ? 'Mengunggah logo…' : 'Menyimpan…', it.label);
+    tunggu(it.jenis === 'logo' || it.jenis === 'gambar' ? 'Mengunggah gambar…' : 'Menyimpan…', it.label);
   try {
     const h = await panggilAPI(aksi, data);
     selesaiTunggu();
@@ -151,6 +174,7 @@ async function simpanSe(){
     tutupLembar('lembarSet');
     if (h.keluarSendiri) return prosesLogout();
     stTerapkanIdentitas(it, data, h);
+    if (it.jenis === 'gambar' && typeof Sr !== 'undefined') Sr.aset = null;
     await muatSetting();
   } catch (e) {
     selesaiTunggu();

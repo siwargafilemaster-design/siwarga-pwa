@@ -1,0 +1,277 @@
+<style>
+/* ===== LAYANAN SURAT — gaya khusus modul ===== */
+.sr-seg{display:flex;gap:4px;margin:14px 0 12px;background:var(--card);padding:4px;border-radius:999px;
+  box-shadow:0 2px 10px rgba(31,41,51,.06);}
+.sr-seg button{flex:1;border:none;background:transparent;font:inherit;font-size:.74rem;font-weight:700;
+  padding:9px 4px;border-radius:999px;color:var(--muted);}
+.sr-seg button.on{background:var(--hero-1);color:#fff;}
+.sr-kartu{background:var(--card);border-radius:var(--r-lg);padding:14px;margin-bottom:12px;
+  box-shadow:0 2px 12px rgba(31,41,51,.06);}
+.sr-kartu .field textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);
+  border-radius:var(--r-md);font:inherit;font-size:.86rem;resize:vertical;background:#fff;color:var(--ink);}
+.sr-pilih{width:100%;box-sizing:border-box;text-align:left;padding:12px;border:1px solid var(--line);
+  border-radius:var(--r-md);background:#fff;font:inherit;font-size:.86rem;color:var(--ink);}
+.sr-pilih small{display:block;font-size:.7rem;color:var(--muted);margin-top:2px;}
+.sr-dua{display:flex;gap:10px;} .sr-dua .field{flex:1;}
+.sr-ket{font-size:.72rem;color:var(--muted);line-height:1.5;margin:6px 2px;}
+.sr-kurang{font-size:.74rem;line-height:1.5;background:var(--gold-soft);color:var(--gold-ink);
+  padding:10px 12px;border-radius:var(--r-md);margin:14px 0 0;}
+
+.sr-atas{display:flex;align-items:center;gap:10px;margin-top:14px;}
+.sr-atas div{flex:1;min-width:0;}
+.sr-atas small{display:block;font-size:.66rem;color:var(--muted);}
+.sr-atas b{font-size:.92rem;word-break:break-all;}
+.sr-atas select{font:inherit;font-size:.76rem;padding:8px;border:1px solid var(--line);border-radius:var(--r-md);
+  background:#fff;color:var(--ink);max-width:48%;}
+.sr-bingkai{position:relative;overflow:hidden;border-radius:var(--r-md);background:#cfd4da;
+  box-shadow:0 2px 12px rgba(31,41,51,.15);}
+#srKertasIsi{transform-origin:0 0;width:max-content;}
+.sr-aksi{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.sr-btn-wa{background:#25D366;color:#fff;}
+
+.sr-item{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:11px 4px;
+  border:none;border-bottom:1px solid var(--line);background:transparent;font:inherit;font-size:.84rem;
+  color:var(--ink);text-align:left;}
+.sr-item small{display:block;font-size:.7rem;color:var(--muted);margin-top:1px;}
+.sr-item input{width:20px;height:20px;flex:none;}
+.sr-item.mati{opacity:.45;}
+.sr-item[disabled]{opacity:.5;}
+.sr-no{flex:none;min-width:44px;font-size:.7rem;font-weight:700;text-align:center;padding:3px 6px;
+  border-radius:8px;background:var(--bg);color:var(--muted);}
+.sr-jenis{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);}
+.sr-cari{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r-md);
+  font:inherit;font-size:.86rem;margin-bottom:8px;}
+.sr-tombol-kecil{display:flex;gap:8px;margin-bottom:6px;}
+.sr-tombol-kecil button{flex:1;font:inherit;font-size:.72rem;font-weight:600;padding:7px;border-radius:999px;
+  border:1px solid var(--line);background:#fff;color:var(--ink);}
+.sr-sembunyi{display:none !important;}
+
+/* ===== KERTAS (ukuran asli dalam mm; pratinjau diperkecil dengan transform) ===== */
+.sr-pdf{position:fixed;left:-10000px;top:0;}
+.sr-hal{position:relative;box-sizing:border-box;overflow:hidden;background-color:#fff;
+  font-family:'Times New Roman',Times,serif;color:#000;page-break-after:always;page-break-inside:avoid;}
+.sr-hal:last-child{page-break-after:auto;}
+.sr-kop{background-repeat:no-repeat;background-position:center;background-size:100% 100%;}
+.sr-a4{width:210mm;height:296mm;}
+.sr-f4{width:215mm;height:329mm;}
+.sr-penuh{padding:35mm 25mm 40mm 25mm;font-size:11pt;line-height:1.5;}
+.sr-separuh{position:relative;box-sizing:border-box;width:100%;height:164mm;overflow:hidden;
+  padding:30mm 15mm 5mm 15mm;font-size:9pt;line-height:1.15;}
+.sr-potong{position:absolute;left:0;right:0;top:164mm;border-top:1px dashed #000;}
+.sr-hal p{margin:0 0 .6em;}
+.sr-separuh p{margin:0 0 4px;}
+.sr-hal table{border-collapse:collapse;font-size:inherit;}
+.sr-hal td{vertical-align:top;padding:0 4px 0 0;}
+.sr-hal td.t{width:4mm;}
+.sr-tgl{margin:0 0 4px;}
+.sr-kepala{margin:0 0 8px;} .sr-kepala td.l{width:16mm;}
+.sr-kepada{margin:0 0 8px;}
+.sr-rata{text-align:justify;}
+.sr-detail{margin:0 0 8px;} .sr-detail td.l{width:28mm;} .sr-penuh .sr-detail td{padding-bottom:5px;}
+.sr-geser{margin-left:4mm;}
+.sr-separuh .sr-kepala td.l{width:13mm;} .sr-separuh .sr-detail td.l{width:20mm;}
+.sr-separuh .sr-detail{margin-bottom:5px;}
+.sr-ttd{display:flex;justify-content:flex-end;margin-top:22px;padding-right:12px;}
+.sr-ttd-kotak{width:64mm;text-align:center;}
+.sr-ttd-gbr{position:relative;height:24mm;}
+.sr-ttd-gbr img{position:absolute;object-fit:contain;}
+.sr-ttd-gbr img.ttd{left:50%;top:0;height:100%;max-width:100%;transform:translateX(-50%);}
+.sr-ttd-gbr img.stempel{left:0;top:50%;height:30mm;transform:translateY(-50%);opacity:.85;}
+.sr-ttd-nama{font-weight:bold;text-decoration:underline;}
+.sr-separuh .sr-ttd{margin-top:8px;padding-right:4px;}
+.sr-separuh .sr-ttd-kotak{width:52mm;}
+.sr-separuh .sr-ttd-gbr{height:17mm;}
+.sr-separuh .sr-ttd-gbr img.stempel{height:21mm;}
+</style>
+
+<div class="plain-head">
+  <button class="hero-btn" onclick="bukaDrawer()">
+    <svg class="ic"><use href="#i-menu"/></svg>
+  </button>
+  <div>
+    <h1>Layanan Surat</h1>
+    <small id="srSub">Memuat…</small>
+  </div>
+  <button class="hero-btn" style="margin-left:auto;" onclick="bukaArsipSr()" aria-label="Arsip surat">
+    <svg class="ic"><use href="#i-folder"/></svg>
+  </button>
+  <button class="hero-btn" onclick="muatSurat(true)" aria-label="Segarkan">
+    <svg class="ic"><use href="#i-segar"/></svg>
+  </button>
+</div>
+
+<!-- ============ TAMPILAN: BUAT SURAT ============ -->
+<div class="wrap" id="srBuat">
+  <p class="sr-kurang sr-sembunyi" id="srKurang"></p>
+
+  <div class="sr-seg" id="srSeg">
+    <button data-j="PENGANTAR" onclick="pilihJenisSr('PENGANTAR')">Pengantar</button>
+    <button data-j="UNDANGAN" onclick="pilihJenisSr('UNDANGAN')">Undangan</button>
+    <button data-j="BEBAS" onclick="pilihJenisSr('BEBAS')">Surat Bebas</button>
+  </div>
+
+  <div class="sr-kartu" id="srFormPENGANTAR">
+    <div class="field">
+      <label>Warga (status aktif)</label>
+      <button type="button" class="sr-pilih" id="srWargaLbl" onclick="bukaWargaSr()">Pilih warga…</button>
+    </div>
+    <div class="field">
+      <label for="srTujuanP">Tujuan (instansi)</label>
+      <input id="srTujuanP" maxlength="150" placeholder="Bapak Lurah Lalung">
+    </div>
+    <div class="field">
+      <label for="srKeperluan">Keperluan</label>
+      <textarea id="srKeperluan" rows="3" maxlength="300" placeholder="Mengurus pembuatan KTP"></textarea>
+    </div>
+  </div>
+
+  <div class="sr-kartu sr-sembunyi" id="srFormUNDANGAN">
+    <div class="field">
+      <label for="srTarget">Penerima</label>
+      <select id="srTarget" onchange="pilihTargetSr(this.value)">
+        <option value="ALL">Seluruh warga (satu surat umum)</option>
+        <option value="SPECIFIC">Pilih rumah (satu lembar per rumah)</option>
+        <option value="MANUAL">Ketik nama (luar warga)</option>
+      </select>
+    </div>
+    <div class="field sr-sembunyi" id="srAreaPilih">
+      <label>Rumah penerima</label>
+      <button type="button" class="sr-pilih" id="srPenerimaLbl" onclick="bukaRumahSr('PILIH')">Pilih rumah…</button>
+    </div>
+    <div class="field sr-sembunyi" id="srAreaManual">
+      <label for="srManual">Nama penerima (satu per baris)</label>
+      <textarea id="srManual" rows="3" placeholder="Bapak Lurah Lalung&#10;Ketua RW 13"></textarea>
+      <p class="sr-ket">Kosongkan untuk mencetak surat dengan nama yang diisi tangan.</p>
+    </div>
+    <div class="field">
+      <label for="srTgl">Hari, tanggal</label>
+      <input id="srTgl" type="date">
+    </div>
+    <div class="sr-dua">
+      <div class="field">
+        <label for="srJam">Jam mulai</label>
+        <input id="srJam" type="time">
+      </div>
+      <div class="field">
+        <label for="srJamSelesai">Selesai</label>
+        <select id="srJamSelesai">
+          <option>Selesai</option><option>21:00 WIB</option><option>22:00 WIB</option><option>23:00 WIB</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="srTempat">Tempat</label>
+      <input id="srTempat" maxlength="120" placeholder="Balai Warga">
+    </div>
+    <div class="field">
+      <label for="srAcara">Acara</label>
+      <textarea id="srAcara" rows="2" maxlength="300"></textarea>
+    </div>
+  </div>
+
+  <div class="sr-kartu sr-sembunyi" id="srFormBEBAS">
+    <div class="field">
+      <label for="srPerihal">Perihal</label>
+      <input id="srPerihal" maxlength="150">
+    </div>
+    <div class="field">
+      <label for="srTujuanB">Tujuan</label>
+      <input id="srTujuanB" maxlength="150">
+    </div>
+    <div class="field">
+      <label for="srIsiB">Isi surat</label>
+      <textarea id="srIsiB" rows="8" maxlength="4000"></textarea>
+    </div>
+  </div>
+
+  <button class="btn btn-utama" onclick="pratinjauSr()">Pratinjau</button>
+</div>
+
+<!-- ============ TAMPILAN: PRATINJAU / SURAT TERBIT ============ -->
+<div class="wrap sr-sembunyi" id="srLihat">
+  <div class="sr-kartu sr-atas">
+    <div><small>Nomor surat</small><b id="srNomor">-</b></div>
+    <select id="srKertas" onchange="gambarPratinjauSr()" aria-label="Ukuran kertas">
+      <option value="A4">A4</option>
+      <option value="F4">F4</option>
+      <option value="F4_2UP">F4 Hemat (2 per lembar)</option>
+    </select>
+  </div>
+  <div class="sr-bingkai" id="srBingkai"><div id="srKertasIsi"></div></div>
+  <p class="sr-ket" id="srHalInfo"></p>
+  <p class="sr-ket" id="srCatatan"></p>
+  <div class="sr-aksi">
+    <button class="btn btn-utama" id="srBtnTerbit" onclick="terbitkanSr()">Terbitkan Nomor</button>
+    <button class="btn btn-halus" id="srBtnUbah" onclick="srTampil('buat')">Ubah isi</button>
+    <button class="btn btn-utama" id="srBtnPdf" onclick="unduhPdfSr()">Unduh PDF</button>
+    <button class="btn sr-btn-wa" id="srBtnWa" onclick="bukaRumahSr('WA')">Kirim Undangan WA</button>
+    <button class="btn btn-halus" id="srBtnBaru" onclick="suratBaruSr()">Buat surat baru</button>
+  </div>
+</div>
+
+<div class="pad-bot"></div>
+
+
+<!-- ============ LEMBAR: PILIH WARGA (PENGANTAR) ============ -->
+<div class="lembar" id="lembarWargaSr">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Pilih Warga</h2>
+      <button onclick="tutupLembar('lembarWargaSr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <input class="sr-cari" id="swCari" placeholder="Cari nama atau nomor rumah…" oninput="gambarWargaSr()">
+      <div id="swDaftar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: PILIH RUMAH (UNDANGAN / WA) ============ -->
+<div class="lembar" id="lembarRumahSr">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2 id="srJudulRumah">Pilih Penerima</h2>
+      <button onclick="tutupLembar('lembarRumahSr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p class="sr-ket" id="srKetRumah"></p>
+      <input class="sr-cari" id="srCariRumah" placeholder="Cari nama atau nomor rumah…" oninput="gambarRumahSr()">
+      <div class="sr-tombol-kecil">
+        <button type="button" onclick="semuaRumahSr(true)">Pilih semua</button>
+        <button type="button" onclick="semuaRumahSr(false)">Kosongkan</button>
+      </div>
+      <div id="srDaftarRumah"></div>
+    </div>
+    <div class="lembar-bawah">
+      <button class="btn btn-utama" id="srTombolRumah" onclick="selesaiRumahSr()">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: ARSIP ============ -->
+<div class="lembar" id="lembarArsipSr">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Arsip Surat</h2>
+      <button onclick="tutupLembar('lembarArsipSr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <input class="sr-cari" id="saCari" placeholder="Cari nomor, tujuan, atau perihal…" oninput="gambarArsipSr()">
+      <div id="saDaftar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEMBAR: HASIL KIRIM WA ============ -->
+<div class="lembar" id="lembarHasilWaSr">
+  <div class="lembar-isi">
+    <div class="lembar-atas">
+      <h2>Hasil Kirim WA</h2>
+      <button onclick="tutupLembar('lembarHasilWaSr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button>
+    </div>
+    <div class="lembar-badan">
+      <p class="sr-ket" id="hwRingkas"></p>
+      <div id="hwDaftar"></div>
+    </div>
+  </div>
+</div>
