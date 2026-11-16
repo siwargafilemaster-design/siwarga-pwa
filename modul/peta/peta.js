@@ -21,12 +21,9 @@ async function init_peta(){
   jendela.addEventListener('pointerdown', ptPointerTurun, true);
   jendela.addEventListener('pointerup', ptPointerNaik, true);
 
-  try {
-    await Promise.all([ptMuatPanzoom(), ptGambarSiap()]);
-    ptPasangZoom();
-  } catch (e) {
-    toast(e.message);
-  }
+    try { await Promise.all([ptMuatPanzoom(), ptGambarSiap()]); }
+  catch (e) { toast(e.message); }
+  ptPasangZoom();
   await muatPeta();
 }
 
@@ -59,24 +56,22 @@ function ptGambarSiap(){
   });
 }
 
-function ptSkalaPas(){ return document.getElementById('ptJendela').clientWidth / PT_LEBAR; }
-
 function ptPasangZoom(){
-  if (!window.Panzoom) return;
   const peta = document.getElementById('ptPeta');
   const jendela = document.getElementById('ptJendela');
-  const s = ptSkalaPas();
-  Pt.pz = Panzoom(peta, { origin: '0 0', startScale: s, startX: 0, startY: 0,
-                          minScale: s, maxScale: 4, contain: 'outside', cursor: 'grab' });
+  const w = jendela.clientWidth;
+  // Peta selebar jendela. Huruf label & fasilitas diskalakan dari lebar rancangan 1000 px.
+  peta.style.width = w + 'px';
+  peta.style.fontSize = (16 * w / PT_LEBAR) + 'px';
+  if (!window.Panzoom) return;
+  Pt.pz = Panzoom(peta, { minScale: 1, maxScale: 8, contain: 'outside', cursor: 'grab' });
   jendela.addEventListener('wheel', Pt.pz.zoomWithWheel, { passive: false });
   peta.addEventListener('panzoomchange', function(e){ ptSkalaPin(e.detail.scale); });
-  ptSkalaPin(s);
+  ptSkalaPin(1);
 }
 
 function pasPeta(){
-  if (!Pt.pz) return;
-  Pt.pz.zoom(ptSkalaPas(), { animate: true });
-  Pt.pz.pan(0, 0, { animate: true });
+  if (Pt.pz) Pt.pz.reset({ animate: true });
 }
 
 /** Pin & nomor rumah tetap seukuran di layar, berapa pun zoom-nya. */
@@ -126,13 +121,13 @@ function gambarPeta(){
 
   document.getElementById('ptLabel').innerHTML = t.filter(function(p){ return p.jenis === 'LABEL'; }).map(function(p){
     return '<div class="pt-label" style="left:' + p.x + '%;top:' + p.y + '%;--r:' + p.putar + 'deg;font-size:' +
-      (p.ukuran || 1.2) + 'rem">' + ptAman(p.kode) + '</div>';
+      (p.ukuran || 1.2) + 'em">' + ptAman(p.kode) + '</div>';
   }).join('');
 
   document.getElementById('ptFasum').innerHTML = t.filter(function(p){ return p.jenis === 'FASUM'; }).map(function(p){
     jmlFasum++;
     return '<div class="pt-fasum" data-fasum="' + ptAman(p.kode) + '" style="left:' + p.x + '%;top:' + p.y + '%">' +
-      '<span style="font-size:' + (p.ukuran || 2) + 'rem;--r:' + p.putar + 'deg">' + ptAman(p.ikon || '📍') + '</span><i></i></div>';
+      '<span style="font-size:' + (p.ukuran || 2) + 'em;--r:' + p.putar + 'deg">' + ptAman(p.ikon || '📍') + '</span><i></i></div>';
   }).join('');
 
   tbTeksPt('ptNMilik', n['pt-milik']); tbTeksPt('ptNKontrak', n['pt-kontrak']);
