@@ -21,10 +21,11 @@ async function init_peta(){
   jendela.addEventListener('pointerdown', ptPointerTurun, true);
   jendela.addEventListener('pointerup', ptPointerNaik, true);
 
-    try { await Promise.all([ptMuatPanzoom(), ptGambarSiap()]); }
+  const muat = muatPeta();
+  try { await Promise.all([ptMuatPanzoom(), ptGambarSiap()]); }
   catch (e) { toast(e.message); }
   ptPasangZoom();
-  await muatPeta();
+  await muat;
 }
 
 /* ---------- PERSIAPAN ---------- */
@@ -82,26 +83,37 @@ function ptSkalaPin(skala){
 /* ---------- DATA ---------- */
 async function muatPeta(){
   if (!document.getElementById('ptSub')) return;
-  tbTeksPt('ptSub', 'Memuat…');
+  const kunci = 'peta_' + App.peran;            // isi berbeda per peran (mis. tombol Atur pin)
+  const lama = ambilIngatan(kunci);
+  if (lama && !Pt.data) ptPakaiData(lama);      // langsung tampil dari ingatan HP
+  else if (!Pt.data) tbTeksPt('ptSub', 'Memuat…');
+
   try {
-    Pt.data = await panggilAPI('peta');
-    Pt.rumah = {};
-    Pt.data.rumah.forEach(function(r){ Pt.rumah[r.no.replace(/\s/g, '')] = r; });
-    document.getElementById('ptTombolAtur').classList.toggle('pt-sembunyi', !Pt.data.bolehUbah);
-    gambarPeta();
+    const h = await panggilAPI('peta');
+    simpanIngatan(kunci, h);
+    if (!document.getElementById('ptSub')) return;   // pengguna sudah pindah halaman
+    ptPakaiData(h);
   } catch (e) {
-    tbTeksPt('ptSub', 'Gagal memuat');
+    if (!Pt.data) tbTeksPt('ptSub', 'Gagal memuat');
     toast(e.message);
   }
 }
 
+function ptPakaiData(h){
+  Pt.data = h;
+  Pt.rumah = {};
+  h.rumah.forEach(function(r){ Pt.rumah[r.no.replace(/\s/g, '')] = r; });
+  document.getElementById('ptTombolAtur').classList.toggle('pt-sembunyi', !h.bolehUbah);
+  gambarPeta();
+}
+
 function ptKelas(r){
   if (!r) return 'pt-tanpa';
-  const s = String(r.status || '').toUpperCase();
   if (!r.dihuni) return 'pt-kosong';
-  if (s.indexOf('MILIK') !== -1) return 'pt-milik';
-  if (s.indexOf('KONTRAK') !== -1) return 'pt-kontrak';
-  if (s.indexOf('NUMPANG') !== -1) return 'pt-numpang';
+  const s = String(r.status || '').toUpperCase();
+  if (/MILIK|TETAP/.test(s)) return 'pt-milik';
+  if (/KONTRAK|SEWA|PENGONTRAK/.test(s)) return 'pt-kontrak';
+  if (/NUMPANG/.test(s)) return 'pt-numpang';
   return 'pt-lain';
 }
 
