@@ -25,7 +25,7 @@ const MENU = [
   { key:'setting',     folder:'setting',      label:'Pengaturan',           ikon:'i-atur' },
 
   { grup:'Management Property' },
-  { key:'humas',       folder:'humas',        label:'Layanan Hunian',       ikon:'i-shield' },
+  { key:'humas',       folder:'humas',        label:'Layanan Hunian',       ikon:'i-shield', izin:'HUNIAN' },
 
   { grup:'Fitur Extra', extra:true },
   { key:'arisan',      folder:'arisan',       label:'Arisan Warga',         ikon:'i-gift', extra:true },
@@ -34,7 +34,8 @@ const MENU = [
 
 const GRUP_UI = {
   VERIFIKASI: ['DEVELOPER','BENDAHARA'],
-  SURAT:      ['DEVELOPER','RT','SEKRETARIS']
+  SURAT:      ['DEVELOPER','RT','SEKRETARIS'],
+  HUNIAN:     ['DEVELOPER','RT','SEKRETARIS','HUMAS']
 };
 
 const NAV_PERAN = {
@@ -43,7 +44,7 @@ const NAV_PERAN = {
   SEKRETARIS: ['home','datapokok','surat','dokumen-rt'],
   BENDAHARA:  ['home','keuangan','verifikasi','rumah'],
   PKK:        ['home','pkk','keuangan-pkk','laporan-pkk'],
-  HUMAS:      ['home','humas','rumah','peta'],
+  HUMAS:      ['home','humas','datapokok','rumah'],
   TELLER:     ['home', 'tabungan',
                { key:'tabungan', aksi:'catat',   label:'Catat',   ikon:'i-plus', menonjol:true },
                { key:'tabungan', aksi:'riwayat', label:'Riwayat', ikon:'i-jam' }],
