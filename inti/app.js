@@ -48,12 +48,19 @@ const NAV_PERAN = {
   TELLER:     ['home', 'tabungan',
                { key:'tabungan', aksi:'catat',   label:'Catat',   ikon:'i-plus', menonjol:true },
                { key:'tabungan', aksi:'riwayat', label:'Riwayat', ikon:'i-jam' }],
+  ADMIN_ARISAN_RT:  ['home', 'arisan',
+                     { key:'arisan', aksi:'peserta', label:'Peserta', ikon:'i-users' },
+                     { key:'arisan', aksi:'aturan',  label:'Aturan',  ikon:'i-book' }],
+  ADMIN_ARISAN_PKK: ['home', 'arisan',
+                     { key:'arisan', aksi:'peserta', label:'Peserta', ikon:'i-users' },
+                     { key:'arisan', aksi:'aturan',  label:'Aturan',  ikon:'i-book' }],
   DEVELOPER:  ['home','keuangan','rumah','setting']
 };
 
 const LABEL_PERAN = {
   GUEST:'Mode Tamu', RT:'Admin RT', SEKRETARIS:'Sekretaris',
   BENDAHARA:'Bendahara RT', PKK:'Admin PKK', HUMAS:'Admin Humas',
+  ADMIN_ARISAN_RT:'Admin Arisan RT', ADMIN_ARISAN_PKK:'Admin Arisan PKK',
   TELLER:'Admin Bank PKK', DEVELOPER:'Super Admin'
 };
 

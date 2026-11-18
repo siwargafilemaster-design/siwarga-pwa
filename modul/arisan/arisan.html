@@ -1,0 +1,245 @@
+<style>
+/* ===== ARISAN WARGA — "aplikasi di dalam aplikasi" (navy-emas; peserta: teal-emas) ===== */
+.ar{--emas:#cca43b;--emas2:#e6b422;--teks:#e6f1ff;--redup:#a8b2d1;--kaca:rgba(255,255,255,.05);--garis:rgba(204,164,59,.3);
+  background:radial-gradient(circle at 50% 0,#112240 0,#0a192f 45%,#020c1b 100%);color:var(--teks);min-height:100vh;
+  padding-bottom:110px;position:relative;overflow-x:hidden;font-family:inherit;}
+.ar.ar-teal{background:radial-gradient(circle at 50% 0,#173a40 0,#0d2226 45%,#050d0f 100%);}
+.ar-head{display:flex;align-items:center;gap:10px;padding:14px 14px 10px;}
+.ar-head .ar-btn-ikon{width:38px;height:38px;border-radius:12px;border:1px solid var(--garis);background:var(--kaca);color:var(--emas);
+  display:flex;align-items:center;justify-content:center;flex:none;}
+.ar-head .ar-btn-ikon .ic{width:20px;height:20px;}
+.ar-judul{flex:1;min-width:0;}
+.ar-judul b{display:block;font-size:.95rem;letter-spacing:.08em;color:#fff;}
+.ar-judul small{display:block;font-size:.68rem;color:var(--redup);letter-spacing:.06em;}
+.ar-wrap{padding:0 14px;}
+.ar-sembunyi{display:none !important;}
+
+.ar-hero{text-align:center;padding:6px 14px 18px;}
+.ar-cakra{width:74px;height:74px;animation:arPutar 40s linear infinite;}
+@keyframes arPutar{to{transform:rotate(360deg);}}
+.ar-hero h1{margin:8px 0 2px;font-size:1.25rem;letter-spacing:.14em;color:var(--emas);font-weight:800;}
+.ar-hero p{margin:0;font-size:.72rem;color:var(--redup);letter-spacing:.08em;}
+.ar-ticker{margin:14px auto 0;max-width:92%;overflow:hidden;white-space:nowrap;border:1px solid var(--garis);border-radius:999px;
+  padding:7px 0;background:rgba(0,0,0,.25);font-size:.74rem;}
+.ar-ticker span{display:inline-block;padding-left:100%;animation:arJalan 22s linear infinite;}
+@keyframes arJalan{to{transform:translateX(-100%);}}
+
+.ar-kartu{background:var(--kaca);border:1px solid var(--garis);border-radius:16px;padding:14px;margin-bottom:12px;}
+.ar-kartu h3{margin:0 0 6px;font-size:.92rem;color:#fff;}
+.ar-kartu p{margin:0;font-size:.76rem;color:var(--redup);line-height:1.5;}
+.ar-dua{display:flex;gap:8px;margin-top:12px;} .ar-dua > *{flex:1;}
+.ar-btn{box-sizing:border-box;border:none;border-radius:999px;padding:12px 16px;font:inherit;font-size:.82rem;font-weight:700;width:100%;}
+.ar-btn-emas{background:linear-gradient(135deg,#d4af37,#aa771c);color:#1b1304;}
+.ar-btn-garis{background:transparent;border:1px solid var(--garis);color:var(--emas);}
+.ar-btn-merah{background:#b42323;color:#fff;}
+.ar-btn-wa{background:#25D366;color:#fff;display:block;text-align:center;text-decoration:none;}
+.ar-chip{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:999px;
+  background:rgba(204,164,59,.15);color:var(--emas);}
+.ar-chip.hijau{background:rgba(37,211,102,.15);color:#5ee29a;}
+.ar-chip.biru{background:rgba(100,170,255,.15);color:#8fc3ff;}
+.ar-chip.merah{background:rgba(229,72,77,.18);color:#ff9a9d;}
+.ar-chip.abu{background:rgba(255,255,255,.08);color:var(--redup);}
+.ar-angka{display:flex;gap:8px;margin-bottom:12px;}
+.ar-angka div{flex:1;background:var(--kaca);border:1px solid var(--garis);border-radius:14px;padding:10px 6px;text-align:center;}
+.ar-angka b{display:block;font-size:1.05rem;color:#fff;}
+.ar-angka small{font-size:.62rem;color:var(--redup);letter-spacing:.04em;}
+.ar-seg{display:flex;gap:4px;background:rgba(0,0,0,.3);border-radius:999px;padding:4px;margin-bottom:12px;}
+.ar-seg button{flex:1;border:none;background:transparent;color:var(--redup);font:inherit;font-size:.74rem;font-weight:700;padding:9px 4px;border-radius:999px;}
+.ar-seg button.on{background:var(--emas);color:#1b1304;}
+.ar-item{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:12px;margin-bottom:8px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.07);background:var(--kaca);color:var(--teks);font:inherit;font-size:.84rem;text-align:left;}
+.ar-item .isi{flex:1;min-width:0;} .ar-item small{display:block;font-size:.7rem;color:var(--redup);margin-top:2px;}
+.ar-no{flex:none;min-width:42px;text-align:center;font-size:.7rem;font-weight:700;padding:4px 6px;border-radius:8px;background:rgba(0,0,0,.3);color:var(--emas);}
+.ar-ket{font-size:.72rem;color:var(--redup);line-height:1.5;margin:6px 2px;}
+.ar-peringatan{font-size:.74rem;line-height:1.5;background:rgba(229,180,34,.12);color:#f3d27a;border:1px solid rgba(229,180,34,.3);
+  padding:10px 12px;border-radius:12px;margin-bottom:12px;}
+.ar-baris{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem;}
+.ar-baris span{flex:none;width:40%;color:var(--redup);} .ar-baris b{flex:1;font-weight:600;word-break:break-word;}
+.ar .field label{color:var(--redup);}
+.ar .field input,.ar .field select,.ar textarea{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);}
+.ar textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;font:inherit;font-size:.86rem;resize:vertical;}
+.ar .field input::placeholder,.ar textarea::placeholder{color:rgba(255,255,255,.35);}
+.ar .lembar-isi{background:#0f2340;color:var(--teks);}
+.ar.ar-teal .lembar-isi{background:#10282d;}
+.ar .lembar-atas h2{color:#fff;} .ar .lembar-atas button{color:var(--emas);}
+.ar-langkah{font-size:.7rem;color:var(--emas);letter-spacing:.1em;margin:0 2px 8px;font-weight:700;}
+.ar-pilih{display:flex;gap:10px;}
+.ar-pilih button{flex:1;padding:18px 10px;border-radius:16px;border:1px solid var(--garis);background:var(--kaca);color:#fff;font:inherit;}
+.ar-pilih button b{display:block;font-size:1.1rem;color:var(--emas);} .ar-pilih button small{font-size:.7rem;color:var(--redup);}
+.ar-radio{display:flex;align-items:center;gap:10px;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,.1);margin-bottom:6px;font-size:.82rem;}
+.ar-radio input{width:18px;height:18px;flex:none;} .ar-radio.mati{opacity:.45;} .ar-radio small{display:block;color:var(--redup);font-size:.68rem;}
+.ar-aturan h4{margin:14px 0 6px;font-size:.8rem;color:var(--emas);letter-spacing:.06em;}
+.ar-aturan ol{margin:0;padding-left:20px;} .ar-aturan li{font-size:.8rem;line-height:1.55;margin-bottom:6px;color:#dbe4f3;}
+.ar-aturan-kotak{max-height:46vh;overflow:auto;border:1px solid var(--garis);border-radius:12px;padding:4px 12px 10px;background:rgba(0,0,0,.2);}
+.ar-setuju{display:flex;gap:10px;align-items:flex-start;font-size:.78rem;font-weight:600;margin:12px 0;line-height:1.45;}
+.ar-setuju input{width:20px;height:20px;flex:none;margin-top:1px;}
+.ar-kartu-id{border-radius:18px;padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.1);
+  background:linear-gradient(135deg,rgba(14,165,233,.25),rgba(16,185,129,.12) 60%,rgba(15,23,42,.6));}
+.ar-kartu-id.pkk{background:linear-gradient(135deg,rgba(236,72,153,.25),rgba(139,92,246,.15) 60%,rgba(15,23,42,.6));}
+.ar-kartu-id .nm{font-size:1.15rem;font-weight:800;letter-spacing:.04em;color:#fff;margin:10px 0 2px;text-transform:uppercase;}
+.ar-kartu-id .kecil{font-size:.62rem;color:var(--redup);letter-spacing:.1em;}
+.ar-kartu-id .mono{font-family:ui-monospace,monospace;letter-spacing:.12em;color:#fff;font-size:.9rem;}
+</style>
+
+<div class="ar" id="ar">
+  <div class="ar-head">
+    <button class="ar-btn-ikon" onclick="bukaDrawer()" aria-label="Menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+    <div class="ar-judul"><b id="arJudul">ARISAN WARGA</b><small id="arSub">Memuat…</small></div>
+    <button class="ar-btn-ikon ar-sembunyi" id="arTombolKanan" onclick="arAksiKanan()" aria-label="Aksi"><svg class="ic"><use id="arIkonKanan" href="#i-book"/></svg></button>
+  </div>
+
+  <!-- ============ PENGUNJUNG ============ -->
+  <div id="arDepan" class="ar-sembunyi">
+    <div class="ar-hero">
+      <svg class="ar-cakra" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#cca43b" stroke-width="4"/>
+        <circle cx="50" cy="50" r="10" fill="none" stroke="#cca43b" stroke-width="4"/>
+        <g stroke="#cca43b" stroke-width="3"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/>
+          <line x1="22" y1="22" x2="78" y2="78"/><line x1="78" y1="22" x2="22" y2="78"/></g>
+        <g fill="#e6b422"><circle cx="50" cy="6" r="5"/><circle cx="50" cy="94" r="5"/><circle cx="6" cy="50" r="5"/><circle cx="94" cy="50" r="5"/>
+          <circle cx="19" cy="19" r="5"/><circle cx="81" cy="81" r="5"/><circle cx="81" cy="19" r="5"/><circle cx="19" cy="81" r="5"/></g>
+      </svg>
+      <h1>ARISAN WARGA</h1>
+      <p id="arLingkungan">-</p>
+      <div class="ar-ticker"><span id="arTicker">Selamat datang di Arisan Warga Digital, transparan dan akuntabel.</span></div>
+    </div>
+    <div class="ar-wrap">
+      <div id="arDevAdmin" class="ar-kartu ar-sembunyi">
+        <h3>Dasbor admin (Developer)</h3>
+        <div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaAdmin('RT')">Admin RT</button>
+          <button class="ar-btn ar-btn-garis" onclick="arBukaAdmin('PKK')">Admin PKK</button></div>
+      </div>
+      <div id="arKelompokDepan"></div>
+      <button class="ar-btn ar-btn-emas" onclick="arBukaMasuk()">Masuk peserta</button>
+      <p class="ar-ket" style="text-align:center;margin-top:10px;">Peserta masuk dengan NIK dan tanggal lahir.</p>
+    </div>
+  </div>
+
+  <!-- ============ PERATURAN ============ -->
+  <div id="arAturan" class="ar-sembunyi ar-wrap">
+    <div class="ar-seg" id="arSegAturan">
+      <button data-k="RT" onclick="arPilihAturan('RT')">Arisan RT</button>
+      <button data-k="PKK" onclick="arPilihAturan('PKK')">Arisan PKK</button>
+    </div>
+    <div id="arIsiAturan"></div>
+  </div>
+
+  <!-- ============ PENDAFTARAN ============ -->
+  <div id="arDaftar" class="ar-sembunyi ar-wrap">
+    <p class="ar-langkah" id="adLangkah">LANGKAH 1 DARI 4</p>
+    <div class="ar-kartu" id="adL1">
+      <h3>Pilih arisan</h3>
+      <div class="ar-pilih">
+        <button onclick="arDaftarKelompok('RT')"><b>RT</b><small>Bapak-bapak / KK</small></button>
+        <button onclick="arDaftarKelompok('PKK')"><b>PKK</b><small>Ibu-ibu anggota PKK</small></button>
+      </div>
+    </div>
+    <div class="ar-kartu ar-sembunyi" id="adL2">
+      <h3>Cocokkan identitas</h3>
+      <p style="margin-bottom:12px;">Dicocokkan dengan Data Pokok warga. Data tidak ditampilkan sebelum keduanya cocok.</p>
+      <div class="field"><label for="adNik">NIK</label><input id="adNik" inputmode="numeric" maxlength="16" placeholder="16 angka"></div>
+      <div class="field"><label for="adTgl">Tanggal lahir</label><input id="adTgl" type="date"></div>
+    </div>
+    <div class="ar-kartu ar-sembunyi" id="adL3">
+      <h3 id="adHalo">Halo</h3>
+      <div class="field"><label for="adHp">No. WhatsApp</label><input id="adHp" type="tel" maxlength="15" placeholder="08…"></div>
+      <div id="adAreaPenjamin" class="ar-sembunyi">
+        <div class="ar-peringatan">Anda tidak tinggal di rumah milik sendiri, jadi wajib memiliki <b>penjamin</b>. Penjamin <span id="adAturPj"></span>. Satu penjamin paling banyak menjamin 2 peserta.</div>
+        <div class="field"><label for="adRumahPj">Nomor rumah penjamin</label>
+          <div style="display:flex;gap:8px;"><input id="adRumahPj" placeholder="A1" style="flex:1;"><button class="ar-btn ar-btn-garis" style="width:auto;" onclick="arCariPenjamin()">Cari</button></div></div>
+        <div id="adCalon"></div>
+      </div>
+    </div>
+    <div class="ar-kartu ar-sembunyi" id="adL4">
+      <h3>Peraturan arisan</h3>
+      <div class="ar-aturan-kotak ar-aturan" id="adAturan"></div>
+      <label class="ar-setuju"><input type="checkbox" id="adSetuju"><span>Saya telah membaca dan menyetujui seluruh peraturan Arisan <span id="adKSetuju"></span>.</span></label>
+    </div>
+    <div class="ar-dua">
+      <button class="ar-btn ar-btn-garis" id="adKembali" onclick="arLangkah(-1)">Kembali</button>
+      <button class="ar-btn ar-btn-emas ar-sembunyi" id="adLanjut" onclick="arLangkah(1)">Lanjut</button>
+    </div>
+  </div>
+
+  <!-- ============ PESERTA ============ -->
+  <div id="arPeserta" class="ar-sembunyi ar-wrap">
+    <div id="apGanti" class="ar-seg ar-sembunyi"></div>
+    <div class="ar-kartu-id" id="apKartu">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="kecil">ARISAN DIGITAL <b id="apKel" style="color:#fff;">RT</b></span><span class="ar-chip" id="apStatus">-</span>
+      </div>
+      <div class="nm" id="apNama">-</div>
+      <div class="kecil" id="apRumah">-</div>
+      <div style="display:flex;gap:16px;margin-top:12px;">
+        <div><div class="kecil">ID PESERTA</div><div class="mono" id="apId">-</div></div>
+        <div><div class="kecil">NIK</div><div class="mono" id="apNik">-</div></div>
+      </div>
+    </div>
+    <div class="ar-angka">
+      <div><b id="apDeposit">-</b><small>DEPOSIT SAYA</small></div>
+      <div><b id="apIuran">-</b><small>IURAN / BULAN</small></div>
+    </div>
+    <div class="ar-kartu">
+      <h3>Periode</h3><p id="apPeriode">-</p>
+    </div>
+    <div class="ar-kartu">
+      <div class="ar-baris"><span>No. WhatsApp</span><b id="apHp">-</b></div>
+      <div class="ar-baris"><span>Penjamin</span><b id="apPj">-</b></div>
+      <div class="ar-baris"><span>Terdaftar</span><b id="apTgl">-</b></div>
+      <div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaHp()">Ubah No. WA</button>
+        <button class="ar-btn ar-btn-garis" onclick="arBukaAturan(Ar.kSaya)">Peraturan</button></div>
+    </div>
+    <p class="ar-ket">Tagihan per bulan dan kocokan live hadir di pembaruan berikutnya.</p>
+  </div>
+
+  <!-- ============ ADMIN ============ -->
+  <div id="arAdmin" class="ar-sembunyi ar-wrap">
+    <div id="aaPeringatan" class="ar-peringatan ar-sembunyi"></div>
+    <div class="ar-angka">
+      <div><b id="aaN1">0</b><small>VERIFIKASI</small></div>
+      <div><b id="aaN2">0</b><small>TUNGGU DEPOSIT</small></div>
+      <div><b id="aaN3">0</b><small>AKTIF</small></div>
+    </div>
+    <div class="ar-seg" id="aaSeg">
+      <button data-t="BARU" onclick="arTabAdmin('BARU')">Pendaftar</button>
+      <button data-t="SEMUA" onclick="arTabAdmin('SEMUA')">Semua peserta</button>
+    </div>
+    <div id="aaCariWadah" class="field ar-sembunyi"><input id="aaCari" placeholder="Cari nama, rumah, atau ID…" oninput="arGambarAdmin()"></div>
+    <div id="aaDaftar"></div>
+  </div>
+
+
+  <!-- ============ LEMBAR: MASUK PESERTA ============ -->
+  <div class="lembar" id="lembarMasukAr">
+    <div class="lembar-isi">
+      <div class="lembar-atas"><h2>Masuk peserta</h2>
+        <button onclick="tutupLembar('lembarMasukAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
+      <div class="lembar-badan">
+        <div class="field"><label for="amNik">NIK</label><input id="amNik" inputmode="numeric" maxlength="16" placeholder="16 angka"></div>
+        <div class="field"><label for="amTgl">Tanggal lahir</label><input id="amTgl" type="date"></div>
+        <p class="ar-ket">Belum terdaftar? Tutup lembar ini lalu pilih <b>Daftar</b> pada arisan yang ingin diikuti.</p>
+      </div>
+      <div class="lembar-bawah"><button class="ar-btn ar-btn-emas" onclick="arMasuk()">Masuk</button></div>
+    </div>
+  </div>
+
+  <!-- ============ LEMBAR: UBAH HP ============ -->
+  <div class="lembar" id="lembarHpAr">
+    <div class="lembar-isi">
+      <div class="lembar-atas"><h2>Ubah No. WhatsApp</h2>
+        <button onclick="tutupLembar('lembarHpAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
+      <div class="lembar-badan"><div class="field"><label for="ahHp">No. WhatsApp baru</label><input id="ahHp" type="tel" maxlength="15" placeholder="08…"></div>
+        <p class="ar-ket">Nomor ini dipakai untuk tagihan dan pemberitahuan arisan.</p></div>
+      <div class="lembar-bawah"><button class="ar-btn ar-btn-emas" onclick="arSimpanHp()">Simpan</button></div>
+    </div>
+  </div>
+
+  <!-- ============ LEMBAR: DETAIL PESERTA (ADMIN) ============ -->
+  <div class="lembar" id="lembarDetailAr">
+    <div class="lembar-isi">
+      <div class="lembar-atas"><h2 id="adtJudul">Peserta</h2>
+        <button onclick="tutupLembar('lembarDetailAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
+      <div class="lembar-badan"><div id="adtIsi"></div></div>
+    </div>
+  </div>
+</div>
