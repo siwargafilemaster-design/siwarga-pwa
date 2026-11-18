@@ -79,6 +79,37 @@
 .ar-kartu-id .nm{font-size:1.15rem;font-weight:800;letter-spacing:.04em;color:#fff;margin:10px 0 2px;text-transform:uppercase;}
 .ar-kartu-id .kecil{font-size:.62rem;color:var(--redup);letter-spacing:.1em;}
 .ar-kartu-id .mono{font-family:ui-monospace,monospace;letter-spacing:.12em;color:#fff;font-size:.9rem;}
+/* --- 7E-2: periode & iuran --- */
+.ar-hal{margin-bottom:14px;}
+.ar-bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:10px 0 6px;}
+.ar-bar i{display:block;height:100%;background:linear-gradient(90deg,#aa771c,#e6b422);border-radius:999px;}
+.ar-besar{font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:.02em;}
+.ar-kecil{font-size:.7rem;color:var(--redup);}
+.ar-matriks{overflow-x:auto;border:1px solid var(--garis);border-radius:14px;background:rgba(0,0,0,.2);margin-bottom:10px;}
+.ar-matriks table{border-collapse:separate;border-spacing:0;font-size:.74rem;}
+.ar-matriks th,.ar-matriks td{padding:4px;text-align:center;border-bottom:1px solid rgba(255,255,255,.05);}
+.ar-matriks thead th{position:sticky;top:0;background:#0f2340;color:var(--redup);font-weight:700;min-width:40px;}
+.ar-matriks thead th small{display:block;font-weight:400;font-size:.6rem;}
+.ar-matriks thead th.kini{color:var(--emas);}
+.ar-matriks tbody th{position:sticky;left:0;background:#0d1f3a;text-align:left;min-width:112px;max-width:132px;font-weight:600;color:#fff;
+  padding:6px 8px;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ar-matriks thead th:first-child{left:0;z-index:2;text-align:left;padding-left:8px;}
+.ar-matriks tbody th small{display:block;color:var(--redup);font-weight:400;font-size:.62rem;}
+.ar-sel{width:34px;height:30px;border-radius:8px;border:none;font:inherit;font-weight:800;font-size:.8rem;}
+.ar-sel.L{background:rgba(37,211,102,.18);color:#5ee29a;}
+.ar-sel.S{background:rgba(100,170,255,.18);color:#8fc3ff;}
+.ar-sel.B{background:rgba(229,72,77,.2);color:#ff9a9d;}
+.ar-sel.D{background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);}
+.ar-sel.W{outline:2px solid var(--emas);}
+.ar-legenda{display:flex;flex-wrap:wrap;gap:10px;font-size:.66rem;color:var(--redup);margin:4px 2px 12px;}
+.ar-legenda span{display:flex;align-items:center;gap:4px;}
+.ar-legenda .ar-sel{width:18px;height:16px;font-size:.6rem;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-style:normal;}
+.ar-cek{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.1);margin-bottom:6px;font-size:.82rem;}
+.ar-cek input{width:20px;height:20px;flex:none;} .ar-cek small{display:block;color:var(--redup);font-size:.68rem;}
+.ar-tagih{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem;}
+.ar-tagih .isi{flex:1;} .ar-tagih small{color:var(--redup);font-size:.68rem;margin-left:6px;}
+.ar-rincian{background:rgba(0,0,0,.25);border:1px solid var(--garis);border-radius:12px;padding:10px 12px;margin:8px 0;}
+.ar .field input:disabled{opacity:.5;}
 </style>
 
 <div class="ar" id="ar">
@@ -181,7 +212,9 @@
     </div>
     <div class="ar-kartu">
       <h3>Periode</h3><p id="apPeriode">-</p>
+      <div id="apTagihan"></div>
     </div>
+    <div class="ar-kartu ar-sembunyi" id="apRiwayatKartu"><h3>Riwayat transaksi</h3><div id="apRiwayat"></div></div>
     <div class="ar-kartu">
       <div class="ar-baris"><span>No. WhatsApp</span><b id="apHp">-</b></div>
       <div class="ar-baris"><span>Penjamin</span><b id="apPj">-</b></div>
@@ -189,12 +222,20 @@
       <div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaHp()">Ubah No. WA</button>
         <button class="ar-btn ar-btn-garis" onclick="arBukaAturan(Ar.kSaya)">Peraturan</button></div>
     </div>
-    <p class="ar-ket">Tagihan per bulan dan kocokan live hadir di pembaruan berikutnya.</p>
+    <p class="ar-ket">Kocokan live hadir di pembaruan berikutnya.</p>
   </div>
 
   <!-- ============ ADMIN ============ -->
   <div id="arAdmin" class="ar-sembunyi ar-wrap">
+    <div class="ar-seg ar-hal" id="aaHal">
+      <button data-h="BERANDA" onclick="arHalAdmin('BERANDA')">Beranda</button>
+      <button data-h="PESERTA" onclick="arHalAdmin('PESERTA')">Peserta</button>
+      <button data-h="IURAN" onclick="arHalAdmin('IURAN')">Iuran</button>
+    </div>
     <div id="aaPeringatan" class="ar-peringatan ar-sembunyi"></div>
+    <div id="aaBeranda"></div>
+    <div id="aaIuran" class="ar-sembunyi"></div>
+    <div id="aaPeserta" class="ar-sembunyi">
     <div class="ar-angka">
       <div><b id="aaN1">0</b><small>VERIFIKASI</small></div>
       <div><b id="aaN2">0</b><small>TUNGGU DEPOSIT</small></div>
@@ -206,6 +247,7 @@
     </div>
     <div id="aaCariWadah" class="field ar-sembunyi"><input id="aaCari" placeholder="Cari nama, rumah, atau ID…" oninput="arGambarAdmin()"></div>
     <div id="aaDaftar"></div>
+    </div>
   </div>
 
 
@@ -231,6 +273,33 @@
       <div class="lembar-badan"><div class="field"><label for="ahHp">No. WhatsApp baru</label><input id="ahHp" type="tel" maxlength="15" placeholder="08…"></div>
         <p class="ar-ket">Nomor ini dipakai untuk tagihan dan pemberitahuan arisan.</p></div>
       <div class="lembar-bawah"><button class="ar-btn ar-btn-emas" onclick="arSimpanHp()">Simpan</button></div>
+    </div>
+  </div>
+
+  <!-- ============ LEMBAR: PERIODE (ADMIN) ============ -->
+  <div class="lembar" id="lembarPeriodeAr">
+    <div class="lembar-isi">
+      <div class="lembar-atas"><h2 id="apdJudul">Periode</h2>
+        <button onclick="tutupLembar('lembarPeriodeAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
+      <div class="lembar-badan">
+        <div class="field"><label for="apdLabel">Nama periode</label><input id="apdLabel" maxlength="60" placeholder="Periode 1 · 2027"></div>
+        <div class="field"><label for="apdMulai">Bulan putaran pertama</label><input id="apdMulai" type="month"></div>
+        <div class="field"><label for="apdNominal">Iuran per bulan (Rp)</label><input id="apdNominal" inputmode="numeric" placeholder="100000"></div>
+        <div class="field"><label for="apdDeposit">Deposit peserta baru (Rp)</label><input id="apdDeposit" inputmode="numeric" placeholder="100000"></div>
+        <div class="field"><label for="apdBatas">Batas tunggakan iuran lingkungan (bulan)</label><input id="apdBatas" inputmode="numeric" placeholder="2"></div>
+        <p class="ar-ket" id="apdKet"></p>
+      </div>
+      <div class="lembar-bawah"><button class="ar-btn ar-btn-emas" onclick="arSimpanPeriode()">Simpan</button></div>
+    </div>
+  </div>
+
+  <!-- ============ LEMBAR: IURAN (ADMIN) ============ -->
+  <div class="lembar" id="lembarIuranAr">
+    <div class="lembar-isi">
+      <div class="lembar-atas"><h2 id="aiJudul">Iuran</h2>
+        <button onclick="tutupLembar('lembarIuranAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
+      <div class="lembar-badan"><div id="aiIsi"></div></div>
+      <div class="lembar-bawah" id="aiBawah"></div>
     </div>
   </div>
 

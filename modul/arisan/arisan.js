@@ -6,7 +6,8 @@
    ================================================================= */
 
 const Ar = { depan: null, mode: '', kAturan: 'RT', aturanDari: 'depan', langkah: 1,
-             daftar: {}, saya: null, kSaya: '', admin: null, kAdmin: '', tabAdmin: 'BARU', detail: null, sibuk: false };
+             daftar: {}, saya: null, kSaya: '', admin: null, kAdmin: '', tabAdmin: 'BARU', halAdmin: 'BERANDA',
+             detail: null, sel: null, sibuk: false };
 const AR_TOKEN = 'siwarga_arisan_token';
 const AR_ADMIN_PERAN = { ADMIN_ARISAN_RT: 'RT', ADMIN_ARISAN_PKK: 'PKK' };
 const AR_CHIP = { DAFTAR: 'biru', MENUNGGU_DEPOSIT: '', AKTIF: 'hijau', ANTRE: 'biru', MINTA_KELUAR: '', KELUAR: 'abu', DITOLAK: 'merah', BLACKLIST: 'merah' };
@@ -17,7 +18,7 @@ async function init_arisan(){
   if (AR_ADMIN_PERAN[App.peran]) {
     Ar.kAdmin = AR_ADMIN_PERAN[App.peran];
     if (aksi === 'aturan') { Ar.kAturan = Ar.kAdmin; Ar.aturanDari = 'admin'; arTampil('aturan'); return arMuatDepan(); }
-    Ar.tabAdmin = aksi === 'peserta' ? 'SEMUA' : 'BARU';
+    Ar.halAdmin = aksi === 'peserta' ? 'PESERTA' : aksi === 'iuran' ? 'IURAN' : 'BERANDA';
     return arBukaAdmin(Ar.kAdmin);
   }
   if (aksi === 'aturan') { Ar.aturanDari = 'depan'; arTampil('aturan'); return arMuatDepan(); }
@@ -277,9 +278,40 @@ function arGambarSaya(){
   document.getElementById('apPeriode').textContent = h.periode
     ? h.periode.label + (h.periode.status === 'PERSIAPAN' ? ' (persiapan)' : ' (berjalan)')
     : 'Belum ada periode berjalan. Admin Arisan akan mengumumkan jadwal periode berikutnya.';
+  arGambarTagihan(h);
   document.getElementById('apHp').textContent = s.hp ? arHpTampil(s.hp) : '-';
   document.getElementById('apPj').textContent = s.penjamin || 'Tidak perlu (pemilik rumah)';
   document.getElementById('apTgl').textContent = arTgl(s.tglDaftar);
+}
+
+const AR_JENIS = { DEPOSIT: 'Deposit', IURAN: 'Iuran', SUSULAN: 'Susulan', BAGI_SUSULAN: 'Bagian susulan', PENCAIRAN: 'Pencairan pot',
+                  PEMBALIK: 'Pembatalan', TALANGAN: 'Talangan', TALANGAN_KEMBALI: 'Talangan kembali', DEPOSIT_KEMBALI: 'Deposit kembali' };
+
+function arGambarTagihan(h){
+  const t = h.tagihan, s = h.saya, w = document.getElementById('apTagihan');
+  let x = '';
+  if (s.status === 'ANTRE') x = '<div class="ar-peringatan" style="margin:10px 0 0;">Anda terdaftar di antrean dan otomatis ikut periode berikutnya. Bila ingin ikut periode sekarang, hubungi Admin Arisan.</div>';
+  else if (t && t.ikut) {
+    x = '<div class="ar-angka" style="margin:10px 0 6px;"><div><b>' + t.putaranKini + '/' + t.n + '</b><small>PUTARAN · ' + arAman(t.bulanKini).toUpperCase() + '</small></div>' +
+      '<div><b>' + arRp(t.pot) + '</b><small>POT PER PUTARAN</small></div></div>';
+    if (t.menang) x += '<div class="ar-peringatan" style="background:rgba(37,211,102,.12);color:#8ff0b8;border-color:rgba(37,211,102,.3);">🏆 Anda menang di putaran ' + t.menang.putaran +
+      '. Tetap bayar iuran sampai periode selesai ya.</div>';
+    if (t.belum) x += '<div class="ar-peringatan">Ada ' + t.belum + ' iuran yang belum lunas. Peserta yang belum lunas tidak ikut diundi.</div>';
+    x += t.daftar.map(function(d){
+      const chip = { LUNAS: '<span class="ar-chip hijau">Lunas</span>', SUSULAN: '<span class="ar-chip biru">Susulan</span>',
+                     BELUM: '<span class="ar-chip merah">Belum</span>', NANTI: '<span class="ar-chip abu">Nanti</span>' }[d.status];
+      return '<div class="ar-tagih"><span class="isi">Putaran ' + d.putaran + '<small>' + arAman(d.bulan) + '</small></span>' + chip + '</div>';
+    }).join('');
+  }
+  w.innerHTML = x;
+  const r = h.riwayat || [];
+  document.getElementById('apRiwayatKartu').classList.toggle('ar-sembunyi', !r.length);
+  // Dari sisi peserta: nominal kas positif = uang yang ia bayarkan, negatif = uang yang ia terima
+  document.getElementById('apRiwayat').innerHTML = r.map(function(x){
+    return '<div class="ar-tagih"><span class="isi">' + arAman(AR_JENIS[x.jenis] || x.jenis) + (x.putaran ? ' · putaran ' + x.putaran : '') +
+      '<small>' + arTgl(x.waktu) + '</small></span><b style="color:' + (x.nominal < 0 ? '#5ee29a' : '#fff') + ';">' +
+      (x.nominal < 0 ? 'terima ' : 'bayar ') + arRp(Math.abs(x.nominal)) + '</b></div>';
+  }).join('');
 }
 
 function arBukaHp(){ document.getElementById('ahHp').value = Ar.saya ? arHpTampil(Ar.saya.saya.hp) : ''; bukaLembar('lembarHpAr'); }
@@ -327,7 +359,269 @@ function arGambarAdminSemua(){
   const pr = document.getElementById('aaPeringatan');
   pr.innerHTML = a.adaHpAdmin ? '' : 'No. WA Admin Arisan ' + a.kelompok + ' belum diisi di <b>Pengaturan</b>. Pemberitahuan pendaftaran baru tidak akan sampai ke HP Anda.';
   pr.classList.toggle('ar-sembunyi', a.adaHpAdmin);
+  if (Ar.tabAdmin === 'BARU' && !(n.DAFTAR || n.MENUNGGU_DEPOSIT) && Ar.halAdmin === 'PESERTA') Ar.tabAdmin = 'SEMUA';
   arTabAdmin(Ar.tabAdmin);
+  arGambarBeranda();
+  arGambarIuran();
+  arHalAdmin(Ar.halAdmin);
+}
+
+function arHalAdmin(h){
+  Ar.halAdmin = h;
+  document.querySelectorAll('#aaHal button').forEach(function(b){ b.classList.toggle('on', b.dataset.h === h); });
+  document.getElementById('aaBeranda').classList.toggle('ar-sembunyi', h !== 'BERANDA');
+  document.getElementById('aaPeserta').classList.toggle('ar-sembunyi', h !== 'PESERTA');
+  document.getElementById('aaIuran').classList.toggle('ar-sembunyi', h !== 'IURAN');
+}
+
+/* ---------- ADMIN: BERANDA & PERIODE ---------- */
+function arGambarBeranda(){
+  const a = Ar.admin, per = a.periode, w = document.getElementById('aaBeranda');
+  const baru = (a.hitung.DAFTAR || 0) + (a.hitung.MENUNGGU_DEPOSIT || 0);
+  let h = '';
+  if (baru) h += '<button class="ar-item" onclick="Ar.tabAdmin=\'BARU\';arTabAdmin(\'BARU\');arHalAdmin(\'PESERTA\')"><span class="ar-no">' + baru +
+    '</span><span class="isi"><b>Pendaftar menunggu</b><small>Verifikasi data atau terima deposit</small></span><span class="ar-chip biru">Buka</span></button>';
+  if (!per) {
+    h += '<div class="ar-kartu"><h3>Belum ada periode</h3><p>Buat periode untuk menetapkan iuran, deposit, dan bulan mulai. Peserta aktif (' +
+      a.calonIkut + ' orang) otomatis ikut saat periode dimulai.</p><div class="ar-dua"><button class="ar-btn ar-btn-emas" onclick="arBukaPeriode()">Buat periode</button></div></div>';
+  } else if (per.status === 'PERSIAPAN') {
+    h += '<div class="ar-kartu"><div style="display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;">' + arAman(per.label) +
+      '</h3><span class="ar-chip">PERSIAPAN</span></div>' +
+      arBaris('Putaran pertama', arBulanDari(per.mulai)) + arBaris('Iuran', arRp(per.nominal) + ' / bulan') + arBaris('Deposit', arRp(per.deposit)) +
+      arBaris('Batas tunggakan', per.batas + ' bulan') + arBaris('Akan ikut', a.calonIkut + ' peserta (' + a.calonIkut + ' putaran)') +
+      arBaris('Pot per putaran', arRp(per.nominal * a.calonIkut)) +
+      '<div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaPeriode()">Ubah</button>' +
+      '<button class="ar-btn ar-btn-emas" onclick="arMulaiPeriode()">Mulai periode</button></div></div>' +
+      '<p class="ar-ket">Pendaftar yang depositnya diterima sebelum periode dimulai otomatis ikut. Setelah dimulai, peserta baru masuk antrean atau ikut dengan susulan.</p>';
+  } else {
+    const iu = a.iuran, pot = iu.pot, persen = pot.target ? Math.round(pot.terkumpul / pot.target * 100) : 0;
+    h += '<div class="ar-kartu"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="ar-kecil">' + arAman(per.label) +
+      '</span><span class="ar-chip hijau">BERJALAN</span></div>' +
+      (iu.selesai ? '<div class="ar-besar" style="margin-top:6px;">Semua putaran sudah dikocok</div><p>Penutupan periode hadir di pembaruan berikutnya.</p>'
+        : '<div class="ar-besar" style="margin-top:6px;">Putaran ' + iu.putaranKini + ' <span class="ar-kecil">dari ' + iu.n + ' · ' + arAman(iu.bulan[iu.putaranKini - 1]) + '</span></div>' +
+          '<div class="ar-bar"><i style="width:' + persen + '%"></i></div>' +
+          '<div style="display:flex;justify-content:space-between;" class="ar-kecil"><span>Pot terkumpul <b style="color:#fff;">' + arRp(pot.terkumpul) +
+          '</b></span><span>' + pot.lunas + '/' + iu.n + ' lunas · target ' + arRp(pot.target) + '</span></div>') +
+      '</div>';
+    h += '<div class="ar-angka"><div><b>' + arRp(a.saldoDeposit) + '</b><small>KAS DEPOSIT</small></div>' +
+      '<div><b>' + iu.tunggakan + '</b><small>TUNGGAKAN (KALI)</small></div></div>';
+    if (!iu.selesai) {
+      h += '<div class="ar-kartu"><h3>Belum bayar putaran ' + iu.putaranKini + ' (' + iu.belumKini.length + ')</h3>' +
+        (iu.belumKini.length ? iu.belumKini.map(function(b){
+          return '<div class="ar-baris"><span>' + arAman(b.rumah) + '</span><b>' + arAman(b.nama) + (b.adaHp ? '' : ' <span class="ar-chip abu">tanpa WA</span>') + '</b></div>';
+        }).join('') + '<div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arHalAdmin(\'IURAN\')">Catat iuran</button>' +
+          '<button class="ar-btn ar-btn-emas" onclick="arIngatkan()">Ingatkan lewat WA</button></div>'
+        : '<p>Semua peserta sudah lunas. 🎉</p>') + '</div>';
+    }
+    h += '<div class="ar-kartu">' + arBaris('Iuran', arRp(per.nominal) + ' / bulan') + arBaris('Deposit peserta baru', arRp(per.deposit)) +
+      arBaris('Batas tunggakan', per.batas + ' bulan') + arBaris('Mulai', arTgl(per.dibuka)) +
+      '<div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaPeriode()">Ubah nama / batas</button></div></div>';
+  }
+  w.innerHTML = h;
+}
+
+function arBulanDari(m){
+  const x = String(m || '').match(/^(\d{4})-(\d{2})$/);
+  return x ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][Number(x[2]) - 1] + ' ' + x[1] : '-';
+}
+
+function arBukaPeriode(){
+  const per = Ar.admin.periode, jalan = per && per.status === 'BERJALAN';
+  const isi = { apdLabel: per ? per.label : '', apdMulai: per ? per.mulai : '', apdNominal: per ? per.nominal : '',
+                apdDeposit: per ? per.deposit : (Ar.admin.depositSaran || ''), apdBatas: per ? per.batas : 2 };
+  Object.keys(isi).forEach(function(id){ document.getElementById(id).value = isi[id]; });
+  ['apdMulai', 'apdNominal', 'apdDeposit'].forEach(function(id){ document.getElementById(id).disabled = jalan; });
+  document.getElementById('apdJudul').textContent = per ? 'Ubah periode' : 'Periode baru';
+  document.getElementById('apdKet').textContent = jalan
+    ? 'Selama periode berjalan, iuran, deposit, dan bulan mulai dikunci supaya hitungan pot tidak berubah di tengah jalan.'
+    : 'Batas tunggakan: peserta yang menunggak iuran lingkungan sebanyak ini atau lebih tidak ikut diundi saat kocokan.';
+  bukaLembar('lembarPeriodeAr');
+}
+
+async function arSimpanPeriode(){
+  if (Ar.sibuk) return;
+  const v = function(id){ return document.getElementById(id).value; };
+  const form = { kelompok: Ar.kAdmin, label: v('apdLabel').trim(), mulai: v('apdMulai'), nominal: v('apdNominal').replace(/\D/g, ''),
+                 deposit: v('apdDeposit').replace(/\D/g, ''), batas: v('apdBatas').replace(/\D/g, '') };
+  if (!form.label) return toast('Isi nama periode.');
+  Ar.sibuk = true; tunggu('Menyimpan periode…');
+  try {
+    const h = await panggilAPI('arisanSimpanPeriode', form);
+    selesaiTunggu(); toast(h.message); tutupLembar('lembarPeriodeAr'); await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+async function arMulaiPeriode(){
+  const a = Ar.admin, per = a.periode;
+  if (!confirm('Mulai ' + per.label + '?\n\n' + a.calonIkut + ' peserta · ' + a.calonIkut + ' putaran\nIuran ' + arRp(per.nominal) +
+      ' · pot ' + arRp(per.nominal * a.calonIkut) + '\n\nSetelah dimulai, iuran dan bulan mulai tidak bisa diubah. Pengumuman dikirim lewat WA.')) return;
+  Ar.sibuk = true; tunggu('Memulai periode & mengirim WA…');
+  try {
+    const h = await panggilAPI('arisanMulaiPeriode', { kelompok: Ar.kAdmin });
+    selesaiTunggu(); toast(h.message); await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+async function arIngatkan(){
+  const iu = Ar.admin.iuran;
+  if (!confirm('Kirim pengingat WA ke ' + iu.belumKini.length + ' peserta yang belum bayar putaran ' + iu.putaranKini + '?')) return;
+  Ar.sibuk = true; tunggu('Mengirim pengingat…');
+  try { const h = await panggilAPI('arisanIngatkan', { kelompok: Ar.kAdmin }); selesaiTunggu(); toast(h.message); }
+  catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+/* ---------- ADMIN: MATRIKS IURAN ---------- */
+function arGambarIuran(){
+  const a = Ar.admin, iu = a.iuran, w = document.getElementById('aaIuran');
+  if (!iu) {
+    w.innerHTML = '<div class="ar-kartu"><p>' + (a.periode ? 'Iuran bisa dicatat setelah periode dimulai.' : 'Belum ada periode. Buat periode di Beranda.') + '</p></div>';
+    return;
+  }
+  let h = '<div class="ar-dua" style="margin:0 0 10px;"><button class="ar-btn ar-btn-emas" onclick="arBukaMassal()">Bayar massal</button></div>';
+  h += '<div class="ar-matriks"><table><thead><tr><th>Peserta</th>';
+  iu.bulan.forEach(function(b, i){
+    h += '<th class="' + (i + 1 === iu.putaranKini && !iu.selesai ? 'kini' : '') + '">' + (i + 1) + '<small>' + arAman(b.split(' ')[0]) + '</small></th>';
+  });
+  h += '</tr></thead><tbody>';
+  iu.baris.forEach(function(r, ri){
+    h += '<tr><th>' + arAman(r.nama) + '<small>' + arAman(r.rumah) + (r.menang ? ' · 🏆 ' + r.menang : '') + (r.cara === 'SUSULAN' ? ' · susulan' : '') + '</small></th>';
+    r.sel.forEach(function(c, ci){
+      const t = { L: '✓', S: 'S', B: '✗', D: '·' }[c.s];
+      h += '<td><button class="ar-sel ' + c.s + (r.menang === ci + 1 ? ' W' : '') + '" onclick="arSel(' + ri + ',' + ci + ')" aria-label="Putaran ' + (ci + 1) + '">' + t + '</button></td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div class="ar-legenda"><span><i class="ar-sel L">✓</i>lunas</span><span><i class="ar-sel S">S</i>susulan</span>' +
+    '<span><i class="ar-sel B">✗</i>belum</span><span><i class="ar-sel D">·</i>belum jatuh tempo</span><span><i class="ar-sel D W"></i>putaran menang</span></div>';
+  h += '<p class="ar-ket">Ketuk sel untuk mencatat atau melihat pembayaran. Pembayaran yang salah catat bisa dibatalkan selama putarannya belum dikocok.</p>';
+  w.innerHTML = h;
+}
+
+function arSel(ri, ci){
+  const iu = Ar.admin.iuran, r = iu.baris[ri], c = r.sel[ci], k = ci + 1, per = Ar.admin.periode;
+  Ar.sel = { id: r.id, nama: r.nama, putaran: k, kas: c.kas, adaHp: r.adaHp };
+  document.getElementById('aiJudul').textContent = r.nama + ' · putaran ' + k;
+  let isi = arBaris('Bulan', arAman(iu.bulan[ci])) + arBaris('Iuran', arRp(per.nominal));
+  let bawah = '';
+  if (c.s === 'L' || c.s === 'S') {
+    isi += arBaris('Status', c.s === 'S' ? '<span class="ar-chip biru">Dibayar lewat susulan</span>' : '<span class="ar-chip hijau">Lunas</span>') +
+      arBaris('Dicatat', arTglJam(c.waktu) + (c.petugas ? ' · ' + arAman(c.petugas) : ''));
+    if (c.s === 'L' && k > iu.dikocok) {
+      isi += '<div class="field" style="margin-top:12px;"><label for="aiAlasan">Batalkan karena salah catat? Tulis alasannya</label><textarea id="aiAlasan" rows="2" maxlength="150"></textarea></div>';
+      bawah = '<button class="ar-btn ar-btn-merah" onclick="arBatalIuran()">Batalkan pembayaran</button>';
+    } else if (c.s === 'L') {
+      isi += '<p class="ar-ket">Putaran ini sudah dikocok, pembayarannya tidak bisa dibatalkan.</p>';
+    }
+  } else {
+    isi += arBaris('Status', c.s === 'B' ? '<span class="ar-chip merah">Belum bayar</span>' : '<span class="ar-chip abu">Belum jatuh tempo (bayar di muka)</span>') +
+      '<label class="ar-setuju"><input type="checkbox" id="aiWa"' + (r.adaHp ? ' checked' : ' disabled') + '><span>Kirim tanda terima lewat WA' +
+      (r.adaHp ? '' : ' (tidak ada No. WA)') + '</span></label>';
+    bawah = '<button class="ar-btn ar-btn-emas" onclick="arCatatIuran()">Catat iuran ' + arRp(per.nominal) + '</button>';
+  }
+  document.getElementById('aiIsi').innerHTML = isi;
+  document.getElementById('aiBawah').innerHTML = bawah;
+  bukaLembar('lembarIuranAr');
+}
+
+async function arKirimBayar(putaran, ids, wa){
+  Ar.sibuk = true; tunggu(wa ? 'Mencatat & mengirim tanda terima…' : 'Mencatat iuran…');
+  try {
+    const h = await panggilAPI('arisanBayar', { kelompok: Ar.kAdmin, putaran: putaran, ids: ids, wa: wa });
+    selesaiTunggu(); toast(h.message); tutupLembar('lembarIuranAr'); await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+function arCatatIuran(){
+  if (Ar.sibuk || !Ar.sel) return;
+  const wa = document.getElementById('aiWa');
+  arKirimBayar(Ar.sel.putaran, [Ar.sel.id], !!(wa && wa.checked));
+}
+
+async function arBatalIuran(){
+  if (Ar.sibuk || !Ar.sel) return;
+  const alasan = document.getElementById('aiAlasan').value.trim();
+  if (!alasan) return toast('Tuliskan alasan pembatalan.');
+  if (!confirm('Batalkan iuran ' + Ar.sel.nama + ' putaran ' + Ar.sel.putaran + '?\nCatatan asli tetap tersimpan, ditambah baris pembatalan.')) return;
+  Ar.sibuk = true; tunggu('Membatalkan…');
+  try {
+    const h = await panggilAPI('arisanPembalik', { kelompok: Ar.kAdmin, kas: Ar.sel.kas, alasan: alasan });
+    selesaiTunggu(); toast(h.message); tutupLembar('lembarIuranAr'); await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+function arBukaMassal(k){
+  const iu = Ar.admin.iuran, per = Ar.admin.periode;
+  k = k || (iu.selesai ? iu.n : iu.putaranKini);
+  Ar.sel = { massal: k };
+  document.getElementById('aiJudul').textContent = 'Bayar massal';
+  const belum = iu.baris.filter(function(r){ const s = r.sel[k - 1].s; return s === 'B' || s === 'D'; });
+  let isi = '<div class="field"><label for="aiPutaran">Putaran</label><select id="aiPutaran" onchange="arBukaMassal(Number(this.value))">' +
+    iu.bulan.map(function(b, i){ return '<option value="' + (i + 1) + '"' + (i + 1 === k ? ' selected' : '') + '>Putaran ' + (i + 1) + ' · ' + arAman(b) + '</option>'; }).join('') +
+    '</select></div>';
+  if (!belum.length) isi += '<p class="ar-ket">Semua peserta sudah lunas putaran ini.</p>';
+  else {
+    isi += '<label class="ar-cek" style="border-style:dashed;"><input type="checkbox" onchange="arPilihSemua(this.checked)"><span><b>Pilih semua</b></span></label>' +
+      belum.map(function(r){
+        return '<label class="ar-cek"><input type="checkbox" class="aiPilih" value="' + arAman(r.id) + '" onchange="arHitungMassal()"><span><b>' + arAman(r.nama) +
+          '</b><small>' + arAman(r.rumah) + (r.adaHp ? '' : ' · tanpa WA') + '</small></span></label>';
+      }).join('') +
+      '<label class="ar-setuju"><input type="checkbox" id="aiWa" checked><span>Kirim tanda terima lewat WA</span></label>';
+  }
+  document.getElementById('aiIsi').innerHTML = isi;
+  document.getElementById('aiBawah').innerHTML = belum.length ? '<button class="ar-btn ar-btn-emas" id="aiTombolMassal" onclick="arKirimMassal()">Pilih peserta</button>' : '';
+  bukaLembar('lembarIuranAr');
+}
+
+function arPilihSemua(v){ document.querySelectorAll('.aiPilih').forEach(function(c){ c.checked = v; }); arHitungMassal(); }
+
+function arHitungMassal(){
+  const n = document.querySelectorAll('.aiPilih:checked').length, t = document.getElementById('aiTombolMassal');
+  if (t) t.textContent = n ? 'Catat ' + n + ' iuran · ' + arRp(n * Ar.admin.periode.nominal) : 'Pilih peserta';
+}
+
+function arKirimMassal(){
+  if (Ar.sibuk) return;
+  const ids = Array.prototype.map.call(document.querySelectorAll('.aiPilih:checked'), function(c){ return c.value; });
+  if (!ids.length) return toast('Pilih peserta yang membayar.');
+  const k = Ar.sel.massal;
+  if (!confirm('Catat ' + ids.length + ' iuran putaran ' + k + ' (total ' + arRp(ids.length * Ar.admin.periode.nominal) + ')?')) return;
+  arKirimBayar(k, ids, document.getElementById('aiWa').checked);
+}
+
+/* ---------- ADMIN: SUSULAN ---------- */
+async function arPratinjauSusulan(){
+  if (Ar.sibuk || !Ar.detail) return;
+  Ar.sibuk = true; tunggu('Menghitung susulan…');
+  try {
+    const h = await panggilAPI('arisanIkutkan', { kelompok: Ar.kAdmin, id: Ar.detail.id });
+    selesaiTunggu();
+    const w = document.getElementById('adtSusulan');
+    w.innerHTML = '<div class="ar-rincian">' +
+      (h.terlewat ? '<p class="ar-ket" style="margin:0 0 6px;">Putaran yang terlewat: <b>' + h.terlewat + '</b></p>' +
+        '<div class="ar-besar" style="font-size:1.1rem;">Bayar susulan ' + h.terlewat + ' × ' + arRp(h.nominal) + ' = ' + arRp(h.total) + '</div>' +
+        '<p class="ar-ket">Dibagikan ke:</p>' + h.bagi.map(function(b){ return arBaris('Putaran ' + b.putaran + ' · ' + arAman(b.bulan), arAman(b.pemenang) + ' · ' + arRp(b.nominal)); }).join('')
+        : '<p class="ar-ket" style="margin:0;">Belum ada putaran yang dikocok, jadi tidak ada susulan.</p>') +
+      '<p class="ar-ket">Jumlah putaran periode menjadi <b>' + h.nBaru + '</b>.</p></div>' +
+      '<button class="ar-btn ar-btn-emas" onclick="arKonfirmasiSusulan(' + h.total + ')">' + (h.total ? 'Uang susulan ' + arRp(h.total) + ' sudah diterima' : 'Ikutkan sekarang') + '</button>';
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+async function arKonfirmasiSusulan(total){
+  if (Ar.sibuk || !Ar.detail) return;
+  if (!confirm(Ar.detail.nama + ' ikut periode berjalan' + (total ? ' dengan susulan ' + arRp(total) : '') + '?')) return;
+  Ar.sibuk = true; tunggu('Mencatat…');
+  try {
+    const h = await panggilAPI('arisanIkutkan', { kelompok: Ar.kAdmin, id: Ar.detail.id, konfirmasi: true });
+    selesaiTunggu(); toast(h.message); tutupLembar('lembarDetailAr'); await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
 }
 
 function arTabAdmin(t){
@@ -373,6 +667,9 @@ function arDetail(id){
   } else if (p.status === 'MENUNGGU_DEPOSIT') {
     h += '<div class="field"><label for="adtNominal">Deposit yang diterima</label><input id="adtNominal" inputmode="numeric" value="' + (Ar.admin.depositSaran || '') + '"></div>' +
       '<button class="ar-btn ar-btn-emas" onclick="arTerimaDeposit()">Deposit diterima, aktifkan</button>';
+  } else if (p.status === 'ANTRE' && Ar.admin.iuran && !Ar.admin.iuran.selesai) {
+    h += '<p class="ar-ket">Peserta ini menunggu periode berikutnya. Bisa juga ikut periode sekarang dengan membayar putaran yang sudah dikocok (susulan).</p>' +
+      '<div id="adtSusulan"><button class="ar-btn ar-btn-garis" onclick="arPratinjauSusulan()">Ikut sekarang (susulan)</button></div>';
   }
   if (p.hp) h += '<a class="ar-btn ar-btn-wa" href="https://wa.me/' + encodeURIComponent(p.hp) + '" target="_blank" rel="noopener">Chat WhatsApp</a>';
   h += '</div>';
@@ -422,6 +719,10 @@ function arAman(t){
 }
 function arRp(n){ return 'Rp ' + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 function arHpTampil(hp){ hp = String(hp || ''); return hp.indexOf('62') === 0 ? '0' + hp.slice(2) : hp; }
+function arTglJam(iso){
+  const m = String(iso || '').match(/T(\d{2}:\d{2})/);
+  return arTgl(iso) + (m ? ' ' + m[1] : '');
+}
 function arTgl(iso){
   const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return '-';

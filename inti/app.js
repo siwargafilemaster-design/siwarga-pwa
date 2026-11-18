@@ -50,10 +50,10 @@ const NAV_PERAN = {
                { key:'tabungan', aksi:'riwayat', label:'Riwayat', ikon:'i-jam' }],
   ADMIN_ARISAN_RT:  ['home', 'arisan',
                      { key:'arisan', aksi:'peserta', label:'Peserta', ikon:'i-users' },
-                     { key:'arisan', aksi:'aturan',  label:'Aturan',  ikon:'i-book' }],
+                     { key:'arisan', aksi:'iuran',   label:'Iuran',   ikon:'i-coin' }],
   ADMIN_ARISAN_PKK: ['home', 'arisan',
                      { key:'arisan', aksi:'peserta', label:'Peserta', ikon:'i-users' },
-                     { key:'arisan', aksi:'aturan',  label:'Aturan',  ikon:'i-book' }],
+                     { key:'arisan', aksi:'iuran',   label:'Iuran',   ikon:'i-coin' }],
   DEVELOPER:  ['home','keuangan','rumah','setting']
 };
 
