@@ -280,6 +280,7 @@ function arGambarSaya(){
     : 'Belum ada periode berjalan. Admin Arisan akan mengumumkan jadwal periode berikutnya.';
   arGambarTagihan(h);
   arGambarKocokSaya(h);
+  arGambarKeluarSaya(h);
   arPantauLive();
   document.getElementById('apHp').textContent = s.hp ? arHpTampil(s.hp) : '-';
   document.getElementById('apPj').textContent = s.penjamin || 'Tidak perlu (pemilik rumah)';
@@ -287,7 +288,8 @@ function arGambarSaya(){
 }
 
 const AR_JENIS = { DEPOSIT: 'Deposit', IURAN: 'Iuran', SUSULAN: 'Susulan', BAGI_SUSULAN: 'Bagian susulan', PENCAIRAN: 'Pencairan pot',
-                  PEMBALIK: 'Pembatalan', TALANGAN: 'Deposit dipakai menalangi iuran', TALANGAN_KEMBALI: 'Deposit pulih (talangan lunas)', DEPOSIT_KEMBALI: 'Deposit kembali' };
+                  PEMBALIK: 'Pembatalan', TALANGAN: 'Talangan iuran (utang ke kas deposit)', TALANGAN_KEMBALI: 'Talangan lunas',
+                  POTONGAN: 'Iuran belum masuk, pot pemenang terpotong', BAGI_PEMULIHAN: 'Pemulihan pot', HANGUS: 'Deposit hangus', DEPOSIT_KEMBALI: 'Deposit kembali' };
 
 function arGambarTagihan(h){
   const t = h.tagihan, s = h.saya, w = document.getElementById('apTagihan');
@@ -302,7 +304,7 @@ function arGambarTagihan(h){
     x += t.daftar.map(function(d){
       const chip = { LUNAS: '<span class="ar-chip hijau">Lunas</span>', SUSULAN: '<span class="ar-chip biru">Susulan</span>',
                      BELUM: '<span class="ar-chip merah">Belum</span>', NANTI: '<span class="ar-chip abu">Nanti</span>',
-                     DITALANGI: '<span class="ar-chip">Ditalangi deposit</span>' }[d.status];
+                     DITALANGI: '<span class="ar-chip">Ditalangi deposit</span>', MEMOTONG: '<span class="ar-chip merah">Memotong pot</span>' }[d.status];
       return '<div class="ar-tagih"><span class="isi">Putaran ' + d.putaran + '<small>' + arAman(d.bulan) + '</small></span>' + chip + '</div>';
     }).join('');
   }
@@ -311,7 +313,9 @@ function arGambarTagihan(h){
   document.getElementById('apRiwayatKartu').classList.toggle('ar-sembunyi', !r.length);
   // Dari sisi peserta: nominal kas positif = uang yang ia bayarkan, negatif = uang yang ia terima
   document.getElementById('apRiwayat').innerHTML = r.map(function(x){
-    if (x.jenis === 'TALANGAN' || x.jenis === 'TALANGAN_KEMBALI') {
+    if (x.jenis === 'TALANGAN' || x.jenis === 'TALANGAN_KEMBALI' || x.jenis === 'POTONGAN') {
+      if (x.jenis === 'POTONGAN') return '<div class="ar-tagih"><span class="isi">' + arAman(AR_JENIS.POTONGAN) + ' · putaran ' + x.putaran + '<small>' +
+        arTgl(x.waktu) + '</small></span><b style="color:#ff9a9d;">utang ' + arRp(Math.abs(x.nominal)) + '</b></div>';
       return '<div class="ar-tagih"><span class="isi">' + arAman(AR_JENIS[x.jenis]) + ' · putaran ' + x.putaran + '<small>' + arTgl(x.waktu) +
         '</small></span><b style="color:' + (x.nominal < 0 ? '#fbbf24' : '#5ee29a') + ';">deposit ' + (x.nominal < 0 ? '− ' : '+ ') + arRp(Math.abs(x.nominal)) + '</b></div>';
     }
@@ -402,19 +406,31 @@ function arGambarBeranda(){
       arBaris('Pot per putaran', arRp(per.nominal * a.calonIkut)) +
       '<div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaPeriode()">Ubah</button>' +
       '<button class="ar-btn ar-btn-emas" onclick="arMulaiPeriode()">Mulai periode</button></div></div>' +
+      ((a.tertahan || []).length ? '<div class="ar-kartu"><h3>Tertahan (' + a.tertahan.length + ')</h3>' + a.tertahan.map(function(t){
+        return '<button class="ar-item" onclick="arDetail(\'' + arAman(t.id) + '\')"><span class="isi"><b>' + arAman(t.nama) + '</b><small>' + arAman(t.alasan) + '</small></span></button>';
+      }).join('') + '<p class="ar-ket">Peserta tertahan tidak ikut saat periode dimulai. Setelah urusannya selesai, mereka bisa ikut dengan susulan.</p></div>' : '') +
       '<p class="ar-ket">Pendaftar yang depositnya diterima sebelum periode dimulai otomatis ikut. Setelah dimulai, peserta baru masuk antrean atau ikut dengan susulan.</p>';
   } else {
     const iu = a.iuran, pot = iu.pot, persen = pot.target ? Math.round(pot.terkumpul / pot.target * 100) : 0;
     h += '<div class="ar-kartu"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="ar-kecil">' + arAman(per.label) +
       '</span><span class="ar-chip hijau">BERJALAN</span></div>' +
-      (iu.selesai ? '<div class="ar-besar" style="margin-top:6px;">Semua putaran sudah dikocok</div><p>Penutupan periode hadir di pembaruan berikutnya.</p>'
+      (iu.selesai ? '<div class="ar-besar" style="margin-top:6px;">Semua putaran sudah dikocok</div>' +
+          (a.bisaTutup ? '<p>Periode bisa ditutup. Peserta otomatis ikut periode berikutnya; yang tunggakannya belum lunas akan tertahan.</p>' +
+            '<div class="ar-dua"><button class="ar-btn ar-btn-emas" onclick="arTutupPeriode()">Tutup periode</button></div>'
+            : '<p>Selesaikan pencairan pot terakhir di tab Kocok sebelum menutup periode.</p>')
         : '<div class="ar-besar" style="margin-top:6px;">Putaran ' + iu.putaranKini + ' <span class="ar-kecil">dari ' + iu.n + ' · ' + arAman(iu.bulan[iu.putaranKini - 1]) + '</span></div>' +
           '<div class="ar-bar"><i style="width:' + persen + '%"></i></div>' +
           '<div style="display:flex;justify-content:space-between;" class="ar-kecil"><span>Pot terkumpul <b style="color:#fff;">' + arRp(pot.terkumpul) +
           '</b></span><span>' + pot.lunas + '/' + iu.n + ' lunas · target ' + arRp(pot.target) + '</span></div>') +
       '</div>';
-    h += '<div class="ar-angka"><div><b>' + arRp(a.saldoDeposit) + '</b><small>KAS DEPOSIT</small></div>' +
-      '<div><b>' + iu.tunggakan + '</b><small>TUNGGAKAN (KALI)</small></div></div>';
+    const piutang = (a.piutang || []).reduce(function(t, p){ return t + p.total; }, 0);
+    h += '<div class="ar-angka"><div><b>' + arRp(a.saldoDeposit) + '</b><small>DEPOSIT TUNAI</small></div>' +
+      '<div><b>' + arRp(piutang) + '</b><small>PIUTANG TALANGAN</small></div>' +
+      '<div><b>' + iu.tunggakan + '</b><small>BELUM LUNAS</small></div></div>';
+    if (a.piutang && a.piutang.length) h += '<div class="ar-kartu"><h3>Piutang talangan</h3>' + a.piutang.map(function(p){
+      return '<button class="ar-item" onclick="arBukaLunasi(\'' + arAman(p.id) + '\')"><span class="isi"><b>' + arAman(p.nama) + '</b><small>' + arRp(p.total) + ' · ' + p.kali +
+        '× ditalangi</small></span>' + (p.kali >= 3 ? '<span class="ar-chip merah">batas habis</span>' : '<span class="ar-chip">Lunasi</span>') + '</button>';
+    }).join('') + '<p class="ar-ket">Talangan tercatat sebagai utang. Peserta paling banyak ditalangi 3 kali; setelah itu, iuran yang tidak masuk memotong pot dan penunggak serta penjaminnya ditagih lewat WA.</p></div>';
     if (!iu.selesai) {
       h += '<div class="ar-kartu"><h3>Belum bayar putaran ' + iu.putaranKini + ' (' + iu.belumKini.length + ')</h3>' +
         (iu.belumKini.length ? iu.belumKini.map(function(b){
@@ -427,6 +443,7 @@ function arGambarBeranda(){
       arBaris('Batas tunggakan', per.batas + ' bulan') + arBaris('Mulai', arTgl(per.dibuka)) +
       '<div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaPeriode()">Ubah nama / batas</button></div></div>';
   }
+  h += arKartuTindakLanjut(a, per);
   w.innerHTML = h;
 }
 
@@ -499,14 +516,14 @@ function arGambarIuran(){
   iu.baris.forEach(function(r, ri){
     h += '<tr><th>' + arAman(r.nama) + '<small>' + arAman(r.rumah) + (r.menang ? ' · 🏆 ' + r.menang : '') + (r.cara === 'SUSULAN' ? ' · susulan' : '') + '</small></th>';
     r.sel.forEach(function(c, ci){
-      const t = { L: '✓', S: 'S', B: '✗', D: '·', T: '!' }[c.s];
+      const t = { L: '✓', S: 'S', B: '✗', D: '·', T: '!', P: '−' }[c.s];
       h += '<td><button class="ar-sel ' + c.s + (r.menang === ci + 1 ? ' W' : '') + '" onclick="arSel(' + ri + ',' + ci + ')" aria-label="Putaran ' + (ci + 1) + '">' + t + '</button></td>';
     });
     h += '</tr>';
   });
   h += '</tbody></table></div>';
   h += '<div class="ar-legenda"><span><i class="ar-sel L">✓</i>lunas</span><span><i class="ar-sel S">S</i>susulan</span>' +
-    '<span><i class="ar-sel B">✗</i>belum</span><span><i class="ar-sel T">!</i>ditalangi deposit</span><span><i class="ar-sel D">·</i>belum jatuh tempo</span><span><i class="ar-sel D W"></i>putaran menang</span></div>';
+    '<span><i class="ar-sel B">✗</i>belum</span><span><i class="ar-sel T">!</i>ditalangi deposit</span><span><i class="ar-sel P">−</i>memotong pot</span><span><i class="ar-sel D">·</i>belum jatuh tempo</span><span><i class="ar-sel D W"></i>putaran menang</span></div>';
   h += '<p class="ar-ket">Ketuk sel untuk mencatat atau melihat pembayaran. Pembayaran yang salah catat bisa dibatalkan selama putarannya belum dikocok.</p>';
   w.innerHTML = h;
 }
@@ -517,9 +534,10 @@ function arSel(ri, ci){
   document.getElementById('aiJudul').textContent = r.nama + ' · putaran ' + k;
   let isi = arBaris('Bulan', arAman(iu.bulan[ci])) + arBaris('Iuran', arRp(per.nominal));
   let bawah = '';
-  if (c.s === 'T') {
-    isi += arBaris('Status', '<span class="ar-chip">Ditalangi deposit, belum dibayar</span>') +
-      '<p class="ar-ket">Setelah dicatat, talangan otomatis kembali ke kas deposit.</p>' +
+  if (c.s === 'T' || c.s === 'P') {
+    isi += arBaris('Status', c.s === 'T' ? '<span class="ar-chip">Ditalangi deposit, belum dibayar</span>' : '<span class="ar-chip merah">Memotong pot, belum dibayar</span>') +
+      '<p class="ar-ket">' + (c.s === 'T' ? 'Setelah dicatat, talangan otomatis kembali ke kas deposit.'
+        : 'Setelah dicatat, uang ini menjadi pemulihan pot untuk pemenang putaran ' + k + (iu.pemenang[ci] ? ' (' + arAman(iu.pemenang[ci]) + ')' : '') + '. Serahkan kepadanya.') + '</p>' +
       '<label class="ar-setuju"><input type="checkbox" id="aiWa"' + (r.adaHp ? ' checked' : ' disabled') + '><span>Kirim tanda terima lewat WA</span></label>';
     bawah = '<button class="ar-btn ar-btn-emas" onclick="arCatatIuran()">Catat iuran ' + arRp(per.nominal) + '</button>';
   } else if (c.s === 'L' || c.s === 'S') {
@@ -575,7 +593,7 @@ function arBukaMassal(k){
   k = k || (iu.selesai ? iu.n : iu.putaranKini);
   Ar.sel = { massal: k };
   document.getElementById('aiJudul').textContent = 'Bayar massal';
-  const belum = iu.baris.filter(function(r){ const s = r.sel[k - 1].s; return s === 'B' || s === 'D' || s === 'T'; });
+  const belum = iu.baris.filter(function(r){ const s = r.sel[k - 1].s; return s === 'B' || s === 'D' || s === 'T' || s === 'P'; });
   let isi = '<div class="field"><label for="aiPutaran">Putaran</label><select id="aiPutaran" onchange="arBukaMassal(Number(this.value))">' +
     iu.bulan.map(function(b, i){ return '<option value="' + (i + 1) + '"' + (i + 1 === k ? ' selected' : '') + '>Putaran ' + (i + 1) + ' · ' + arAman(b) + '</option>'; }).join('') +
     '</select></div>';
@@ -672,8 +690,12 @@ function arDetail(id){
     arBaris('ID', arAman(p.id)) + arBaris('Rumah', arAman(p.rumah)) + arBaris('NIK', arAman(p.nik)) +
     arBaris('No. WA', arAman(arHpTampil(p.hp))) + arBaris('Penjamin', arAman(p.penjamin || 'Tidak perlu')) +
     arBaris('Terdaftar', arTgl(p.tglDaftar)) + (p.tglAktif ? arBaris('Aktif sejak', arTgl(p.tglAktif)) : '') +
-    arBaris('Hak deposit', arRp(p.deposit)) + (p.catatan ? arBaris('Catatan', arAman(p.catatan)) : '');
-  h += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">';
+    arBaris('Hak deposit', arRp(p.deposit)) + (p.utang ? arBaris('Tunggakan', '<span style="color:#ff9a9d;">' + arRp(p.utang) + '</span> (' + p.talangan + '× ditalangi)') : '') +
+    (p.menang ? arBaris('Menang', 'Putaran ' + p.menang) : '') + (p.catatan ? arBaris('Catatan', arAman(p.catatan)) : '');
+  if (p.pindah) h += '<div class="ar-peringatan" style="margin-top:10px;">🏠 Terdeteksi pindah: ' + arAman(p.pindah) + '. Pilih jalur lewat tombol <b>Pindah rumah</b>.</div>';
+  if (p.blacklistLain) h += '<div class="ar-peringatan" style="margin-top:10px;">⚠️ NIK ini pernah di-blacklist di arisan lain. Pertimbangkan sebelum memverifikasi.</div>';
+  if (p.saranBlacklist) h += '<div class="ar-peringatan" style="margin-top:10px;background:rgba(229,72,77,.12);color:#ffb3b5;border-color:rgba(229,72,77,.35);">Batas talangan habis dan iurannya sudah memotong pot. Sesuai peraturan, peserta ini dapat di-blacklist.</div>';
+  h += '<div id="adtAksi" style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">';
   if (p.status === 'DAFTAR') {
     h += '<div class="field"><label for="adtDepo">Deposit yang ditagihkan</label><input id="adtDepo" inputmode="numeric" value="' + (Ar.admin.depositSaran || '') + '" placeholder="100000"></div>' +
       '<button class="ar-btn ar-btn-emas" onclick="arVerifikasi(\'VALID\')">Data valid, kirim tagihan deposit</button>' +
@@ -685,6 +707,18 @@ function arDetail(id){
   } else if (p.status === 'ANTRE' && Ar.admin.iuran && !Ar.admin.iuran.selesai) {
     h += '<p class="ar-ket">Peserta ini menunggu periode berikutnya. Bisa juga ikut periode sekarang dengan membayar putaran yang sudah dikocok (susulan).</p>' +
       '<div id="adtSusulan"><button class="ar-btn ar-btn-garis" onclick="arPratinjauSusulan()">Ikut sekarang (susulan)</button></div>';
+  }
+  if (p.status === 'MINTA_KELUAR') {
+    h += '<p class="ar-ket">Mengajukan keluar. Hak deposit ' + arRp(Math.max(0, p.deposit)) + ' dikembalikan sesuai antrean.</p>' +
+      '<button class="ar-btn ar-btn-emas" onclick="arProsesKeluar(\'SETUJU\')">Setujui &amp; kembalikan deposit</button>' +
+      '<button class="ar-btn ar-btn-garis" onclick="arProsesKeluar(\'TOLAK\')">Batalkan pengajuan (tetap jadi peserta)</button>';
+  }
+  if (['AKTIF', 'ANTRE', 'MINTA_KELUAR'].indexOf(p.status) !== -1) {
+    if (p.utang) h += '<button class="ar-btn ar-btn-emas" onclick="arBukaLunasi(\'' + arAman(p.id) + '\')">Lunasi tunggakan ' + arRp(p.utang) + '</button>';
+    h += '<div style="display:flex;gap:8px;"><input id="adtTambah" inputmode="numeric" placeholder="Tambah deposit (Rp)" style="flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font:inherit;">' +
+      '<button class="ar-btn ar-btn-garis" style="width:auto;" onclick="arTambahDeposit()">Terima</button></div>' +
+      '<button class="ar-btn ar-btn-garis" onclick="arMulaiPindah()">Pindah rumah…</button>' +
+      '<button class="ar-btn ar-btn-garis" style="color:#ff9a9d;border-color:rgba(229,72,77,.45);" onclick="arMulaiBlacklist()">Blacklist…</button>';
   }
   if (p.hp) h += '<a class="ar-btn ar-btn-wa" href="https://wa.me/' + encodeURIComponent(p.hp) + '" target="_blank" rel="noopener">Chat WhatsApp</a>';
   h += '</div>';
@@ -770,9 +804,11 @@ function arGambarKocok(){
       'Pemenang menandatangani surat pernyataan di HP ini, lalu pot diserahkan.</p>' +
       (d.talangan.peserta.length ? '<p style="margin-top:6px;">Akan ditalangi deposit: ' + d.talangan.peserta.map(function(p){ return arAman(p.nama); }).join(', ') +
         ' (' + arRp(d.talangan.total) + ').</p>' : '') +
+      (d.talangan.potong.length ? '<p style="margin-top:6px;color:#ffb3b5;">Pot berkurang ' + arRp(d.talangan.totalPotong) + ' karena: ' +
+        d.talangan.potong.map(function(p){ return arAman(p.nama); }).join(', ') + '. Bila mereka membayar sebelum pencairan, pot kembali penuh.</p>' : '') +
       '<div class="ar-dua"><button class="ar-btn ar-btn-emas" onclick="arBukaSurat(\'' + arAman(t.id) + '\')">Surat pernyataan &amp; serahkan pot</button></div></div>';
   } else if (d.selesai) {
-    h += '<div class="ar-kartu"><h3>Semua putaran sudah dikocok</h3><p>Penutupan periode hadir di pembaruan berikutnya.</p></div>';
+    h += '<div class="ar-kartu"><h3>Semua putaran sudah dikocok</h3><p>Tutup periode dari Beranda.</p></div>';
   } else {
     h += '<div class="ar-kartu"><span class="ar-kecil">' + arAman(d.periode.label) + '</span>' +
       '<div class="ar-besar" style="margin-top:4px;">Putaran ' + d.putaran + ' <span class="ar-kecil">dari ' + d.n + ' · ' + arAman(d.bulan) + '</span></div>' +
@@ -786,7 +822,12 @@ function arGambarKocok(){
       d.tidak.map(function(p){ return arBaris(arAman(p.nama), arAman(p.alasan.join('; '))); }).join('') +
       '<p class="ar-ket">Alasan hanya terlihat oleh Admin dan peserta yang bersangkutan. Peserta lain hanya melihat "belum memenuhi syarat".</p></div>';
     if (d.talangan.peserta.length) h += '<div class="ar-peringatan">Saat pot dicairkan, ' + d.talangan.peserta.length + ' iuran yang belum masuk (' +
-      arRp(d.talangan.total) + ') ditalangi kas deposit (saldo ' + arRp(d.talangan.kasDeposit) + '). Pemenang tetap menerima pot penuh.</div>';
+      arRp(d.talangan.total) + ') ditalangi kas deposit (tunai ' + arRp(d.talangan.kasDeposit) + '): ' +
+      d.talangan.peserta.map(function(p){ return arAman(p.nama); }).join(', ') + '.</div>';
+    if (d.talangan.potong.length) h += '<div class="ar-peringatan" style="background:rgba(229,72,77,.12);color:#ffb3b5;border-color:rgba(229,72,77,.35);">' +
+      'Tidak bisa ditalangi, pot berkurang ' + arRp(d.talangan.totalPotong) + ': ' +
+      d.talangan.potong.map(function(p){ return arAman(p.nama) + ' (' + arAman(p.sebab.toLowerCase()) + ')'; }).join(', ') +
+      '. Tagih sebelum pencairan supaya pemenang menerima pot penuh.</div>';
     if (d.menang.length) h += '<div class="ar-kartu"><h3>Sudah menang</h3>' +
       d.menang.map(function(p){ return arBaris('Putaran ' + p.putaran, arAman(p.nama)); }).join('') + '</div>';
   }
@@ -870,6 +911,7 @@ async function arBukaSurat(id){
       isi += '<p class="ar-ket" style="margin-top:12px;">Pemenang membaca surat di atas, lalu tanda tangan dengan jari:</p>' +
         '<div class="ar-ttd"><canvas id="asTtd"></canvas><div class="garis"></div><button type="button" onclick="arHapusTtd()">Hapus</button></div>' +
         (h.talangan && h.talangan.length ? '<p class="ar-ket">Ditalangi deposit saat dicairkan: ' + h.talangan.map(arAman).join(', ') + '.</p>' : '') +
+        (h.potong && h.potong.length ? '<p class="ar-ket" style="color:#ffb3b5;">Memotong pot: ' + h.potong.map(arAman).join(', ') + '.</p>' : '') +
         '<label class="ar-setuju"><input type="checkbox" id="asSerah"><span>Pot <b>' + arRp(h.nominal) +
         '</b> sudah diserahkan kepada pemenang.</span></label>';
       bawah = '<button class="ar-btn ar-btn-emas" onclick="arCairkan()">Simpan tanda tangan &amp; cairkan</button>';
@@ -1305,4 +1347,169 @@ function arTonton(){
   const L = Ar.liveTerakhir;
   if (!L) return;
   arBukaPanggung('PENONTON', Ar.kSaya, L.live, L.now);
+}
+
+/* =================================================================
+   7E-4 · KELUAR, PINDAH, BLACKLIST, TUTUP PERIODE (admin)
+   ================================================================= */
+function arKartuTindakLanjut(a, per){
+  let h = '';
+  const pindah = a.peserta.filter(function(p){ return p.pindah; });
+  if (pindah.length) h += '<div class="ar-kartu"><h3>🏠 Terdeteksi pindah (' + pindah.length + ')</h3>' + pindah.map(function(p){
+    return '<button class="ar-item" onclick="arDetail(\'' + arAman(p.id) + '\')"><span class="isi"><b>' + arAman(p.nama) + '</b><small>' + arAman(p.pindah) + '</small></span><span class="ar-chip">Proses</span></button>';
+  }).join('') + '</div>';
+  if ((a.antreKeluar || []).length) h += '<div class="ar-kartu"><h3>Antrean keluar (' + a.antreKeluar.length + ')</h3>' + a.antreKeluar.map(function(p, i){
+    return '<button class="ar-item" onclick="arDetail(\'' + arAman(p.id) + '\')"><span class="ar-no">' + (i + 1) + '</span><span class="isi"><b>' + arAman(p.nama) +
+      '</b><small>Diajukan ' + arTglJam(p.waktu) + '</small></span><span class="ar-chip">Proses</span></button>';
+  }).join('') + '<p class="ar-ket">Pengembalian deposit dilayani sesuai urutan pengajuan.</p></div>';
+  if ((a.kewajiban || []).length) h += '<div class="ar-kartu"><h3>Pengembalian iuran peserta keluar</h3>' + a.kewajiban.map(function(w){
+    return '<div class="ar-tagih"><span class="isi">' + arAman(w.pemenang) + ' → ' + arAman(w.untuk) + '<small>putaran ' + w.putaran + ' · ' + arRp(w.nominal) + '</small></span>' +
+      '<button class="ar-chip hijau" style="border:none;" onclick="arKewajibanLunas(\'' + arAman(w.kas) + '\',\'' + arAman(w.pemenang) + '\',\'' + arAman(w.untuk) + '\',' + w.nominal + ')">Sudah</button></div>';
+  }).join('') + '<p class="ar-ket">Pemenang yang potnya berisi iuran peserta yang keluar mengembalikan bagian itu. Tekan <b>Sudah</b> setelah uangnya diterima, lalu serahkan kepada yang berhak.</p></div>';
+  if (a.cadangan) h += '<div class="ar-kartu">' + arBaris('Cadangan kas', arRp(a.cadangan)) + '<p class="ar-ket">Dari deposit dan iuran yang hangus karena blacklist. Ikut menambah kas tunai untuk talangan.</p></div>';
+  return h;
+}
+
+async function arAksiAdmin(api, form, pesanTunggu, tutup){
+  if (Ar.sibuk) return null;
+  Ar.sibuk = true; tunggu(pesanTunggu || 'Memproses…');
+  try {
+    const h = await panggilAPI(api, Object.assign({ kelompok: Ar.kAdmin }, form));
+    selesaiTunggu();
+    if (h && h.message) toast(h.message);
+    if (tutup) { tutupLembar(tutup); Ar.kocok = null; await arMuatAdmin(); }
+    return h;
+  } catch (e) { selesaiTunggu(); toast(e.message); return null; }
+  finally { Ar.sibuk = false; }
+}
+
+function arTutupPeriode(){
+  if (!confirm('Tutup ' + Ar.admin.periode.label + '?\nPeserta menerima WA terima kasih dan otomatis ikut periode berikutnya.')) return;
+  arAksiAdmin('arisanTutupPeriode', {}, 'Menutup periode…').then(function(h){ if (h) arMuatAdmin(); });
+}
+
+function arKewajibanLunas(kas, dari, untuk, nominal){
+  if (!confirm(dari + ' sudah mengembalikan ' + arRp(nominal) + ' untuk ' + untuk + '?')) return;
+  arAksiAdmin('arisanKewajibanLunas', { kas: kas }, 'Mencatat…').then(function(h){ if (h) arMuatAdmin(); });
+}
+
+async function arBukaLunasi(id){
+  const h = await arAksiAdmin('arisanLunasi', { id: id }, 'Menghitung tunggakan…');
+  if (!h) return;
+  Ar.sel = { lunasi: id };
+  document.getElementById('aiJudul').textContent = 'Lunasi tunggakan ' + h.nama;
+  document.getElementById('aiIsi').innerHTML = h.item.map(function(i){
+    return arBaris(arAman(i.label) + ' · putaran ' + i.putaran, arAman(i.jenis) + ' · ' + arRp(i.nominal));
+  }).join('') + arBaris('<b>Total</b>', '<b>' + arRp(h.total) + '</b>') +
+    '<p class="ar-ket">Talangan kembali ke kas deposit. Iuran yang dulu memotong pot diserahkan kepada pemenangnya.</p>';
+  document.getElementById('aiBawah').innerHTML = '<button class="ar-btn ar-btn-emas" onclick="arKonfirmasiLunasi()">Uang ' + arRp(h.total) + ' sudah diterima</button>';
+  tutupLembar('lembarDetailAr');
+  bukaLembar('lembarIuranAr');
+}
+
+function arKonfirmasiLunasi(){
+  arAksiAdmin('arisanLunasi', { id: Ar.sel.lunasi, konfirmasi: true }, 'Mencatat pelunasan…', 'lembarIuranAr');
+}
+
+function arTambahDeposit(){
+  const n = document.getElementById('adtTambah').value.replace(/\D/g, '');
+  if (!(Number(n) > 0)) return toast('Isi nominal tambahan deposit.');
+  if (!confirm('Terima tambahan deposit ' + arRp(n) + ' dari ' + Ar.detail.nama + '?')) return;
+  arAksiAdmin('arisanTambahDeposit', { id: Ar.detail.id, nominal: n }, 'Mencatat deposit…', 'lembarDetailAr');
+}
+
+function arProsesKeluar(aksi){
+  const p = Ar.detail;
+  if (!confirm(aksi === 'SETUJU' ? 'Setujui ' + p.nama + ' keluar dan kembalikan deposit ' + arRp(Math.max(0, p.deposit)) + '?' : 'Batalkan pengajuan keluar ' + p.nama + '?')) return;
+  arAksiAdmin('arisanProsesKeluar', { id: p.id, aksi: aksi }, 'Memproses…', 'lembarDetailAr');
+}
+
+/* ---------- Pindah rumah ---------- */
+function arMulaiPindah(){
+  const p = Ar.detail;
+  Ar.pindah = { id: p.id, jalur: '' };
+  const pilihan = [['LANJUT', 'Lanjut dari jauh', 'Tetap ikut, iuran dibayar seperti biasa (mis. transfer).'],
+                   ['OPER', 'Oper ke warga lain', 'Kursi beserta status & kewajibannya diteruskan. Tunggakan wajib lunas dulu.']];
+  if (p.menang) pilihan.push(['LUNASI', 'Lunasi lalu keluar', 'Bayar seluruh sisa iuran sekaligus, lalu deposit dikembalikan.']);
+  else pilihan.push(['KELUAR', 'Keluar (belum menang)', 'Putaran berkurang 1. Iurannya dikembalikan oleh pemenang yang menerimanya.']);
+  document.getElementById('adtAksi').innerHTML = '<p class="ar-langkah">PINDAH RUMAH · PILIH JALUR</p>' + pilihan.map(function(x){
+    return '<button class="ar-item" onclick="arJalurPindah(\'' + x[0] + '\')"><span class="isi"><b>' + x[1] + '</b><small>' + x[2] + '</small></span></button>';
+  }).join('') + '<button class="ar-btn ar-btn-garis" onclick="arDetail(\'' + arAman(p.id) + '\')">Batal</button>';
+}
+
+function arJalurPindah(j){ Ar.pindah = { id: Ar.detail.id, jalur: j }; arLangkahPindah(false); }
+
+async function arLangkahPindah(konfirmasi){
+  const P = Ar.pindah, form = { id: P.id, jalur: P.jalur, konfirmasi: !!konfirmasi };
+  const el = function(id){ const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  if (P.jalur === 'OPER') {
+    P.nik = el('apNik') || P.nik || ''; P.rumahPj = el('apRumahPj') || P.rumahPj || '';
+    const pj = document.querySelector('input[name="apPj"]:checked');
+    if (pj) P.penjamin = pj.value;
+    form.nik = P.nik; form.rumahPenjamin = P.rumahPj; form.penjamin = P.penjamin || '';
+  }
+  const h = await arAksiAdmin('arisanPindah', form, konfirmasi ? 'Memproses pindah…' : 'Memeriksa…', konfirmasi ? 'lembarDetailAr' : '');
+  if (!h || konfirmasi) return;
+  const w = document.getElementById('adtAksi');
+  let x = '<p class="ar-langkah">PINDAH RUMAH · ' + { LANJUT: 'LANJUT DARI JAUH', OPER: 'OPER', LUNASI: 'LUNASI LALU KELUAR', KELUAR: 'KELUAR' }[P.jalur] + '</p>';
+  if (h.tahap === 'NIK') {
+    x += '<div class="field"><label for="apNik">NIK warga penerima oper</label><input id="apNik" inputmode="numeric" maxlength="16" value="' + arAman(P.nik || '') + '"></div>' +
+      '<button class="ar-btn ar-btn-emas" onclick="arLangkahPindah(false)">Periksa</button>';
+  } else if (h.tahap === 'PENJAMIN') {
+    x += '<p class="ar-ket">' + arAman(h.ringkas) + '</p><div class="field"><label for="apRumahPj">Nomor rumah penjamin</label><input id="apRumahPj" value="' + arAman(P.rumahPj || '') + '"></div>' +
+      (h.calon ? (h.calon.length ? h.calon.map(function(c){
+        return '<label class="ar-radio' + (c.penuh ? ' mati' : '') + '"><input type="radio" name="apPj" value="' + arAman(c.kode) + '"' + (c.penuh ? ' disabled' : '') +
+          '><span><b>' + arAman(c.nama) + '</b><small>' + arAman(c.ket) + (c.penuh ? ' · sudah menjamin 2 peserta' : '') + '</small></span></label>';
+      }).join('') : '<p class="ar-ket">Tidak ada calon penjamin di rumah itu.</p>') : '') +
+      '<button class="ar-btn ar-btn-emas" onclick="arLangkahPindah(false)">' + (h.calon ? 'Lanjut' : 'Cari penjamin') + '</button>';
+  } else {
+    x += '<div class="ar-rincian"><p class="ar-ket" style="margin:0;color:#e6f1ff;">' + arAman(h.ringkas) + '</p></div>' +
+      '<button class="ar-btn ar-btn-emas" onclick="if(confirm(\'Proses sekarang?\'))arLangkahPindah(true)">Proses</button>';
+  }
+  x += '<button class="ar-btn ar-btn-garis" onclick="arDetail(\'' + arAman(P.id) + '\')">Batal</button>';
+  w.innerHTML = x;
+}
+
+/* ---------- Blacklist ---------- */
+async function arMulaiBlacklist(){
+  const h = await arAksiAdmin('arisanBlacklist', { id: Ar.detail.id }, 'Menghitung akibat…');
+  if (!h) return;
+  document.getElementById('adtAksi').innerHTML = '<p class="ar-langkah" style="color:#ff9a9d;">BLACKLIST · ' + arAman(h.nama.toUpperCase()) + '</p>' +
+    '<div class="ar-rincian">' + arBaris('Hak deposit', arRp(h.hak)) + arBaris('Tunggakan', arRp(h.piutang)) +
+    (h.menang ? arBaris('Sisa iuran', arRp(h.sisaIuran)) : '') + arBaris('Penjamin', arAman(h.penjamin || '-')) +
+    '<p class="ar-ket" style="color:#e6f1ff;">' + arAman(h.akibat) + '</p></div>' +
+    '<div class="field"><label for="abAlasan">Alasan (wajib, tercatat)</label><textarea id="abAlasan" rows="2" maxlength="150"></textarea></div>' +
+    '<button class="ar-btn ar-btn-merah" onclick="arKonfirmasiBlacklist()">Blacklist ' + arAman(h.nama) + '</button>' +
+    '<button class="ar-btn ar-btn-garis" onclick="arDetail(\'' + arAman(Ar.detail.id) + '\')">Batal</button>';
+}
+
+function arKonfirmasiBlacklist(){
+  const alasan = document.getElementById('abAlasan').value.trim();
+  if (!alasan) return toast('Tuliskan alasan blacklist.');
+  if (!confirm('Yakin mem-blacklist ' + Ar.detail.nama + '? Tindakan ini tidak bisa dibatalkan dari aplikasi.')) return;
+  arAksiAdmin('arisanBlacklist', { id: Ar.detail.id, alasan: alasan, konfirmasi: true }, 'Memproses…', 'lembarDetailAr');
+}
+
+/* =================================================================
+   7E-4 · PESERTA: ajukan keluar, kewajiban
+   ================================================================= */
+function arGambarKeluarSaya(h){
+  const w = document.getElementById('apKeluar');
+  if (!w) return;
+  let x = '';
+  if (h.utang) x += '<div class="ar-peringatan">Tunggakan Anda: <b>' + arRp(h.utang) + '</b>. Selama belum lunas, Anda tidak ikut diundi dan tertahan di periode berikutnya.</div>';
+  (h.kewajiban || []).forEach(function(k){
+    x += '<div class="ar-peringatan">Mohon kembalikan <b>' + arRp(k.nominal) + '</b> (iuran ' + arAman(k.untuk) + ' di pot putaran ' + k.putaran + ' yang Anda terima) melalui Admin Arisan.</div>';
+  });
+  if (h.saya.status === 'MINTA_KELUAR') x += '<div class="ar-peringatan">Pengajuan keluar Anda sedang diproses Admin Arisan. Deposit dikembalikan sesuai antrean.</div>';
+  else if (h.bisaKeluar) x += '<button class="ar-btn ar-btn-garis" style="color:#ff9a9d;border-color:rgba(229,72,77,.4);" onclick="arAjukanKeluar()">Ajukan keluar dari arisan</button>';
+  w.innerHTML = x;
+}
+
+async function arAjukanKeluar(){
+  const alasan = prompt('Ajukan keluar dari Arisan ' + Ar.kSaya + '?\nDeposit Anda dikembalikan sesuai antrean.\n\nAlasan (boleh dikosongkan):', '');
+  if (alasan === null) return;
+  tunggu('Mengirim pengajuan…');
+  try { const h = await arPanggil('arisanAjukanKeluar', { kelompok: Ar.kSaya, alasan: alasan }); selesaiTunggu(); toast(h.message); arMuatSaya(Ar.kSaya); }
+  catch (e) { selesaiTunggu(); toast(e.message); }
 }
