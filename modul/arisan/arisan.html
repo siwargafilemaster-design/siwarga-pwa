@@ -110,6 +110,51 @@
 .ar-tagih .isi{flex:1;} .ar-tagih small{color:var(--redup);font-size:.68rem;margin-left:6px;}
 .ar-rincian{background:rgba(0,0,0,.25);border:1px solid var(--garis);border-radius:12px;padding:10px 12px;margin:8px 0;}
 .ar .field input:disabled{opacity:.5;}
+/* --- 7E-3: kocokan --- */
+.ar-sel.T{background:rgba(245,158,11,.2);color:#fbbf24;}
+.ar-daftar-chip{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.ar-daftar-chip span{font-size:.72rem;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.07);}
+.ar-daftar-chip span.ok{background:rgba(37,211,102,.15);color:#8ff0b8;}
+.ar-daftar-chip span.no{background:rgba(255,255,255,.05);color:var(--redup);}
+.ar-live{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;margin-bottom:12px;
+  background:linear-gradient(135deg,rgba(229,72,77,.25),rgba(204,164,59,.2));border:1px solid rgba(229,72,77,.4);}
+.ar-live .titik{width:10px;height:10px;border-radius:50%;background:#ff4d4f;flex:none;animation:arKedip 1s infinite;}
+@keyframes arKedip{50%{opacity:.25;}}
+.ar-live .isi{flex:1;font-size:.8rem;} .ar-live .isi b{display:block;color:#fff;}
+.ar-live button{width:auto;padding:10px 16px;}
+/* Panggung kocokan (layar penuh) */
+.ar-panggung{position:fixed;inset:0;z-index:10000;display:none;flex-direction:column;
+  background:radial-gradient(circle at 50% 30%,#16305a 0,#0a192f 55%,#020c1b 100%);color:#e6f1ff;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);user-select:none;-webkit-user-select:none;}
+.ar-panggung.on{display:flex;}
+.ar-pg-atas{display:flex;align-items:center;gap:10px;padding:12px 14px;}
+.ar-pg-atas .judul{flex:1;min-width:0;}
+.ar-pg-atas b{display:block;font-size:.9rem;letter-spacing:.12em;color:#cca43b;}
+.ar-pg-atas small{font-size:.68rem;color:#a8b2d1;}
+.ar-pg-atas button{width:40px;height:40px;border-radius:12px;border:1px solid rgba(204,164,59,.35);background:rgba(255,255,255,.05);
+  color:#cca43b;font-size:1.05rem;flex:none;}
+.ar-pg-svg{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;}
+.ar-pg-svg svg{width:100%;height:100%;max-width:520px;}
+.ar-pg-info{text-align:center;padding:0 18px;min-height:52px;}
+.ar-pg-info .besar{font-size:1.05rem;font-weight:800;color:#fff;}
+.ar-pg-info .kecil{font-size:.74rem;color:#a8b2d1;margin-top:2px;}
+.ar-pg-hitung{font-size:3rem;font-weight:900;color:#e6b422;line-height:1;}
+.ar-pg-aksi{display:flex;flex-direction:column;gap:8px;padding:12px 16px 18px;}
+.ar-pg-kocok{font-size:1.25rem !important;padding:18px !important;letter-spacing:.14em;box-shadow:0 0 30px rgba(230,180,34,.35);}
+/* Surat pernyataan */
+.ar-surat{background:#fff;color:#14213d;border-radius:12px;padding:18px 16px;font-family:Georgia,'Times New Roman',serif;font-size:.82rem;line-height:1.55;}
+.ar-surat h4{text-align:center;margin:0 0 2px;font-size:.92rem;letter-spacing:.04em;text-decoration:underline;}
+.ar-surat .sub{text-align:center;font-size:.72rem;margin-bottom:12px;}
+.ar-surat table{border-collapse:collapse;margin:6px 0 10px;font-size:.8rem;} .ar-surat td{padding:1px 6px 1px 0;vertical-align:top;}
+.ar-surat ol{padding-left:18px;margin:6px 0 12px;} .ar-surat li{margin-bottom:4px;}
+.ar-surat .tt{display:flex;justify-content:space-between;gap:10px;margin-top:10px;text-align:center;font-size:.76rem;}
+.ar-surat .tt > div{width:48%;} .ar-surat .tt img{display:block;height:64px;max-width:100%;margin:4px auto;object-fit:contain;}
+.ar-surat .tt .kosong{height:64px;}
+.ar-ttd{position:relative;border:1.5px solid var(--emas);border-radius:12px;background:#fff;margin-top:10px;}
+.ar-ttd canvas{display:block;width:100%;height:170px;touch-action:none;border-radius:12px;}
+.ar-ttd .garis{position:absolute;left:16px;right:16px;bottom:34px;border-bottom:1px dashed #b8c0c8;pointer-events:none;}
+.ar-ttd button{position:absolute;right:8px;top:8px;font:inherit;font-size:.66rem;font-weight:700;border:none;border-radius:999px;
+  padding:5px 10px;background:#eef1f5;color:#14213d;}
 </style>
 
 <div class="ar" id="ar">
@@ -195,6 +240,7 @@
   <!-- ============ PESERTA ============ -->
   <div id="arPeserta" class="ar-sembunyi ar-wrap">
     <div id="apGanti" class="ar-seg ar-sembunyi"></div>
+    <div id="apLive" class="ar-live ar-sembunyi"></div>
     <div class="ar-kartu-id" id="apKartu">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="kecil">ARISAN DIGITAL <b id="apKel" style="color:#fff;">RT</b></span><span class="ar-chip" id="apStatus">-</span>
@@ -214,6 +260,7 @@
       <h3>Periode</h3><p id="apPeriode">-</p>
       <div id="apTagihan"></div>
     </div>
+    <div class="ar-kartu ar-sembunyi" id="apKocokKartu"><h3>Kocokan</h3><div id="apKocok"></div></div>
     <div class="ar-kartu ar-sembunyi" id="apRiwayatKartu"><h3>Riwayat transaksi</h3><div id="apRiwayat"></div></div>
     <div class="ar-kartu">
       <div class="ar-baris"><span>No. WhatsApp</span><b id="apHp">-</b></div>
@@ -222,7 +269,7 @@
       <div class="ar-dua"><button class="ar-btn ar-btn-garis" onclick="arBukaHp()">Ubah No. WA</button>
         <button class="ar-btn ar-btn-garis" onclick="arBukaAturan(Ar.kSaya)">Peraturan</button></div>
     </div>
-    <p class="ar-ket">Kocokan live hadir di pembaruan berikutnya.</p>
+    <p class="ar-ket">Saat kocokan berlangsung, tombol <b>Tonton</b> muncul di bagian atas halaman ini.</p>
   </div>
 
   <!-- ============ ADMIN ============ -->
@@ -231,10 +278,12 @@
       <button data-h="BERANDA" onclick="arHalAdmin('BERANDA')">Beranda</button>
       <button data-h="PESERTA" onclick="arHalAdmin('PESERTA')">Peserta</button>
       <button data-h="IURAN" onclick="arHalAdmin('IURAN')">Iuran</button>
+      <button data-h="KOCOK" onclick="arHalAdmin('KOCOK')">Kocok</button>
     </div>
     <div id="aaPeringatan" class="ar-peringatan ar-sembunyi"></div>
     <div id="aaBeranda"></div>
     <div id="aaIuran" class="ar-sembunyi"></div>
+    <div id="aaKocok" class="ar-sembunyi"></div>
     <div id="aaPeserta" class="ar-sembunyi">
     <div class="ar-angka">
       <div><b id="aaN1">0</b><small>VERIFIKASI</small></div>
@@ -303,6 +352,16 @@
     </div>
   </div>
 
+  <!-- ============ LEMBAR: SURAT PERNYATAAN PEMENANG ============ -->
+  <div class="lembar" id="lembarSuratAr">
+    <div class="lembar-isi">
+      <div class="lembar-atas"><h2 id="asJudul">Surat pernyataan</h2>
+        <button onclick="tutupLembar('lembarSuratAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
+      <div class="lembar-badan"><div id="asIsi"></div></div>
+      <div class="lembar-bawah" id="asBawah"></div>
+    </div>
+  </div>
+
   <!-- ============ LEMBAR: DETAIL PESERTA (ADMIN) ============ -->
   <div class="lembar" id="lembarDetailAr">
     <div class="lembar-isi">
@@ -310,5 +369,17 @@
         <button onclick="tutupLembar('lembarDetailAr')"><svg class="ic ic-sm"><use href="#i-tutup"/></svg></button></div>
       <div class="lembar-badan"><div id="adtIsi"></div></div>
     </div>
+  </div>
+
+  <!-- ============ PANGGUNG KOCOKAN (LAYAR PENUH) ============ -->
+  <div class="ar-panggung" id="arPanggung" role="dialog" aria-label="Kocokan arisan">
+    <div class="ar-pg-atas">
+      <div class="judul"><b id="pgJudul">KOCOKAN</b><small id="pgSub">-</small></div>
+      <button id="pgSuara" onclick="arTombolSuara()" aria-label="Suara">🔊</button>
+      <button onclick="arTutupPanggung()" aria-label="Tutup">✕</button>
+    </div>
+    <div class="ar-pg-svg" id="pgSvg"></div>
+    <div class="ar-pg-info" id="pgInfo"></div>
+    <div class="ar-pg-aksi" id="pgAksi"></div>
   </div>
 </div>

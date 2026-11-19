@@ -18,7 +18,7 @@ async function init_arisan(){
   if (AR_ADMIN_PERAN[App.peran]) {
     Ar.kAdmin = AR_ADMIN_PERAN[App.peran];
     if (aksi === 'aturan') { Ar.kAturan = Ar.kAdmin; Ar.aturanDari = 'admin'; arTampil('aturan'); return arMuatDepan(); }
-    Ar.halAdmin = aksi === 'peserta' ? 'PESERTA' : aksi === 'iuran' ? 'IURAN' : 'BERANDA';
+    Ar.halAdmin = { peserta: 'PESERTA', iuran: 'IURAN', kocok: 'KOCOK' }[aksi] || 'BERANDA';
     return arBukaAdmin(Ar.kAdmin);
   }
   if (aksi === 'aturan') { Ar.aturanDari = 'depan'; arTampil('aturan'); return arMuatDepan(); }
@@ -279,13 +279,15 @@ function arGambarSaya(){
     ? h.periode.label + (h.periode.status === 'PERSIAPAN' ? ' (persiapan)' : ' (berjalan)')
     : 'Belum ada periode berjalan. Admin Arisan akan mengumumkan jadwal periode berikutnya.';
   arGambarTagihan(h);
+  arGambarKocokSaya(h);
+  arPantauLive();
   document.getElementById('apHp').textContent = s.hp ? arHpTampil(s.hp) : '-';
   document.getElementById('apPj').textContent = s.penjamin || 'Tidak perlu (pemilik rumah)';
   document.getElementById('apTgl').textContent = arTgl(s.tglDaftar);
 }
 
 const AR_JENIS = { DEPOSIT: 'Deposit', IURAN: 'Iuran', SUSULAN: 'Susulan', BAGI_SUSULAN: 'Bagian susulan', PENCAIRAN: 'Pencairan pot',
-                  PEMBALIK: 'Pembatalan', TALANGAN: 'Talangan', TALANGAN_KEMBALI: 'Talangan kembali', DEPOSIT_KEMBALI: 'Deposit kembali' };
+                  PEMBALIK: 'Pembatalan', TALANGAN: 'Deposit dipakai menalangi iuran', TALANGAN_KEMBALI: 'Deposit pulih (talangan lunas)', DEPOSIT_KEMBALI: 'Deposit kembali' };
 
 function arGambarTagihan(h){
   const t = h.tagihan, s = h.saya, w = document.getElementById('apTagihan');
@@ -299,7 +301,8 @@ function arGambarTagihan(h){
     if (t.belum) x += '<div class="ar-peringatan">Ada ' + t.belum + ' iuran yang belum lunas. Peserta yang belum lunas tidak ikut diundi.</div>';
     x += t.daftar.map(function(d){
       const chip = { LUNAS: '<span class="ar-chip hijau">Lunas</span>', SUSULAN: '<span class="ar-chip biru">Susulan</span>',
-                     BELUM: '<span class="ar-chip merah">Belum</span>', NANTI: '<span class="ar-chip abu">Nanti</span>' }[d.status];
+                     BELUM: '<span class="ar-chip merah">Belum</span>', NANTI: '<span class="ar-chip abu">Nanti</span>',
+                     DITALANGI: '<span class="ar-chip">Ditalangi deposit</span>' }[d.status];
       return '<div class="ar-tagih"><span class="isi">Putaran ' + d.putaran + '<small>' + arAman(d.bulan) + '</small></span>' + chip + '</div>';
     }).join('');
   }
@@ -308,6 +311,10 @@ function arGambarTagihan(h){
   document.getElementById('apRiwayatKartu').classList.toggle('ar-sembunyi', !r.length);
   // Dari sisi peserta: nominal kas positif = uang yang ia bayarkan, negatif = uang yang ia terima
   document.getElementById('apRiwayat').innerHTML = r.map(function(x){
+    if (x.jenis === 'TALANGAN' || x.jenis === 'TALANGAN_KEMBALI') {
+      return '<div class="ar-tagih"><span class="isi">' + arAman(AR_JENIS[x.jenis]) + ' · putaran ' + x.putaran + '<small>' + arTgl(x.waktu) +
+        '</small></span><b style="color:' + (x.nominal < 0 ? '#fbbf24' : '#5ee29a') + ';">deposit ' + (x.nominal < 0 ? '− ' : '+ ') + arRp(Math.abs(x.nominal)) + '</b></div>';
+    }
     return '<div class="ar-tagih"><span class="isi">' + arAman(AR_JENIS[x.jenis] || x.jenis) + (x.putaran ? ' · putaran ' + x.putaran : '') +
       '<small>' + arTgl(x.waktu) + '</small></span><b style="color:' + (x.nominal < 0 ? '#5ee29a' : '#fff') + ';">' +
       (x.nominal < 0 ? 'terima ' : 'bayar ') + arRp(Math.abs(x.nominal)) + '</b></div>';
@@ -363,6 +370,7 @@ function arGambarAdminSemua(){
   arTabAdmin(Ar.tabAdmin);
   arGambarBeranda();
   arGambarIuran();
+  if (Ar.halAdmin === 'KOCOK') Ar.kocok = null;
   arHalAdmin(Ar.halAdmin);
 }
 
@@ -372,6 +380,8 @@ function arHalAdmin(h){
   document.getElementById('aaBeranda').classList.toggle('ar-sembunyi', h !== 'BERANDA');
   document.getElementById('aaPeserta').classList.toggle('ar-sembunyi', h !== 'PESERTA');
   document.getElementById('aaIuran').classList.toggle('ar-sembunyi', h !== 'IURAN');
+  document.getElementById('aaKocok').classList.toggle('ar-sembunyi', h !== 'KOCOK');
+  if (h === 'KOCOK') arMuatKocok();
 }
 
 /* ---------- ADMIN: BERANDA & PERIODE ---------- */
@@ -489,14 +499,14 @@ function arGambarIuran(){
   iu.baris.forEach(function(r, ri){
     h += '<tr><th>' + arAman(r.nama) + '<small>' + arAman(r.rumah) + (r.menang ? ' · 🏆 ' + r.menang : '') + (r.cara === 'SUSULAN' ? ' · susulan' : '') + '</small></th>';
     r.sel.forEach(function(c, ci){
-      const t = { L: '✓', S: 'S', B: '✗', D: '·' }[c.s];
+      const t = { L: '✓', S: 'S', B: '✗', D: '·', T: '!' }[c.s];
       h += '<td><button class="ar-sel ' + c.s + (r.menang === ci + 1 ? ' W' : '') + '" onclick="arSel(' + ri + ',' + ci + ')" aria-label="Putaran ' + (ci + 1) + '">' + t + '</button></td>';
     });
     h += '</tr>';
   });
   h += '</tbody></table></div>';
   h += '<div class="ar-legenda"><span><i class="ar-sel L">✓</i>lunas</span><span><i class="ar-sel S">S</i>susulan</span>' +
-    '<span><i class="ar-sel B">✗</i>belum</span><span><i class="ar-sel D">·</i>belum jatuh tempo</span><span><i class="ar-sel D W"></i>putaran menang</span></div>';
+    '<span><i class="ar-sel B">✗</i>belum</span><span><i class="ar-sel T">!</i>ditalangi deposit</span><span><i class="ar-sel D">·</i>belum jatuh tempo</span><span><i class="ar-sel D W"></i>putaran menang</span></div>';
   h += '<p class="ar-ket">Ketuk sel untuk mencatat atau melihat pembayaran. Pembayaran yang salah catat bisa dibatalkan selama putarannya belum dikocok.</p>';
   w.innerHTML = h;
 }
@@ -507,7 +517,12 @@ function arSel(ri, ci){
   document.getElementById('aiJudul').textContent = r.nama + ' · putaran ' + k;
   let isi = arBaris('Bulan', arAman(iu.bulan[ci])) + arBaris('Iuran', arRp(per.nominal));
   let bawah = '';
-  if (c.s === 'L' || c.s === 'S') {
+  if (c.s === 'T') {
+    isi += arBaris('Status', '<span class="ar-chip">Ditalangi deposit, belum dibayar</span>') +
+      '<p class="ar-ket">Setelah dicatat, talangan otomatis kembali ke kas deposit.</p>' +
+      '<label class="ar-setuju"><input type="checkbox" id="aiWa"' + (r.adaHp ? ' checked' : ' disabled') + '><span>Kirim tanda terima lewat WA</span></label>';
+    bawah = '<button class="ar-btn ar-btn-emas" onclick="arCatatIuran()">Catat iuran ' + arRp(per.nominal) + '</button>';
+  } else if (c.s === 'L' || c.s === 'S') {
     isi += arBaris('Status', c.s === 'S' ? '<span class="ar-chip biru">Dibayar lewat susulan</span>' : '<span class="ar-chip hijau">Lunas</span>') +
       arBaris('Dicatat', arTglJam(c.waktu) + (c.petugas ? ' · ' + arAman(c.petugas) : ''));
     if (c.s === 'L' && k > iu.dikocok) {
@@ -560,7 +575,7 @@ function arBukaMassal(k){
   k = k || (iu.selesai ? iu.n : iu.putaranKini);
   Ar.sel = { massal: k };
   document.getElementById('aiJudul').textContent = 'Bayar massal';
-  const belum = iu.baris.filter(function(r){ const s = r.sel[k - 1].s; return s === 'B' || s === 'D'; });
+  const belum = iu.baris.filter(function(r){ const s = r.sel[k - 1].s; return s === 'B' || s === 'D' || s === 'T'; });
   let isi = '<div class="field"><label for="aiPutaran">Putaran</label><select id="aiPutaran" onchange="arBukaMassal(Number(this.value))">' +
     iu.bulan.map(function(b, i){ return '<option value="' + (i + 1) + '"' + (i + 1 === k ? ' selected' : '') + '>Putaran ' + (i + 1) + ' · ' + arAman(b) + '</option>'; }).join('') +
     '</select></div>';
@@ -727,4 +742,567 @@ function arTgl(iso){
   const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return '-';
   return Number(m[3]) + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][Number(m[2]) - 1] + ' ' + m[1];
+}
+
+/* =================================================================
+   7E-3 · KOCOK (ADMIN)
+   ================================================================= */
+async function arMuatKocok(){
+  const w = document.getElementById('aaKocok');
+  if (!Ar.admin || !Ar.admin.iuran) {
+    w.innerHTML = '<div class="ar-kartu"><p>Kocokan bisa dilakukan setelah periode dimulai.</p></div>';
+    return;
+  }
+  if (!Ar.kocok) w.innerHTML = '<div class="ar-kartu"><p>Memeriksa kelayakan peserta…</p></div>';
+  try {
+    Ar.kocok = await panggilAPI('arisanKelayakan', { kelompok: Ar.kAdmin });
+    if (document.getElementById('aaKocok')) arGambarKocok();
+  } catch (e) { w.innerHTML = '<div class="ar-kartu"><p>' + arAman(e.message) + '</p></div>'; }
+}
+
+function arGambarKocok(){
+  const d = Ar.kocok, w = document.getElementById('aaKocok');
+  let h = '';
+  if (d.tertunda) {
+    const t = d.tertunda;
+    h += '<div class="ar-kartu" style="border-color:rgba(37,211,102,.4);"><span class="ar-chip hijau">PEMENANG PUTARAN ' + t.putaran + '</span>' +
+      '<div class="ar-besar" style="margin:8px 0 2px;">' + arAman(t.nama) + '</div><p>Pot ' + arRp(t.nominal) + ' belum diserahkan. ' +
+      'Pemenang menandatangani surat pernyataan di HP ini, lalu pot diserahkan.</p>' +
+      (d.talangan.peserta.length ? '<p style="margin-top:6px;">Akan ditalangi deposit: ' + d.talangan.peserta.map(function(p){ return arAman(p.nama); }).join(', ') +
+        ' (' + arRp(d.talangan.total) + ').</p>' : '') +
+      '<div class="ar-dua"><button class="ar-btn ar-btn-emas" onclick="arBukaSurat(\'' + arAman(t.id) + '\')">Surat pernyataan &amp; serahkan pot</button></div></div>';
+  } else if (d.selesai) {
+    h += '<div class="ar-kartu"><h3>Semua putaran sudah dikocok</h3><p>Penutupan periode hadir di pembaruan berikutnya.</p></div>';
+  } else {
+    h += '<div class="ar-kartu"><span class="ar-kecil">' + arAman(d.periode.label) + '</span>' +
+      '<div class="ar-besar" style="margin-top:4px;">Putaran ' + d.putaran + ' <span class="ar-kecil">dari ' + d.n + ' · ' + arAman(d.bulan) + '</span></div>' +
+      '<p style="margin-top:4px;">Pot <b style="color:#fff;">' + arRp(d.pot) + '</b> · ' + d.layak.length + ' gulungan di dalam gelas</p>' +
+      '<div class="ar-dua"><button class="ar-btn ar-btn-emas" onclick="arBukaLayar()"' + (d.layak.length ? '' : ' disabled') + '>Buka layar kocokan</button></div></div>';
+    h += '<div class="ar-kartu"><h3>Layak diundi (' + d.layak.length + ')</h3>' +
+      (d.layak.length ? '<div class="ar-daftar-chip">' + d.layak.map(function(p){ return '<span class="ok">' + arAman(p.nama) + '</span>'; }).join('') + '</div>'
+        : '<p>Belum ada. Pastikan iuran putaran ini sudah dicatat.</p>') +
+      d.layak.filter(function(p){ return p.catat; }).map(function(p){ return '<p class="ar-ket">⚠️ ' + arAman(p.nama) + ': ' + arAman(p.catat) + '</p>'; }).join('') + '</div>';
+    if (d.tidak.length) h += '<div class="ar-kartu"><h3>Belum memenuhi syarat (' + d.tidak.length + ')</h3>' +
+      d.tidak.map(function(p){ return arBaris(arAman(p.nama), arAman(p.alasan.join('; '))); }).join('') +
+      '<p class="ar-ket">Alasan hanya terlihat oleh Admin dan peserta yang bersangkutan. Peserta lain hanya melihat "belum memenuhi syarat".</p></div>';
+    if (d.talangan.peserta.length) h += '<div class="ar-peringatan">Saat pot dicairkan, ' + d.talangan.peserta.length + ' iuran yang belum masuk (' +
+      arRp(d.talangan.total) + ') ditalangi kas deposit (saldo ' + arRp(d.talangan.kasDeposit) + '). Pemenang tetap menerima pot penuh.</div>';
+    if (d.menang.length) h += '<div class="ar-kartu"><h3>Sudah menang</h3>' +
+      d.menang.map(function(p){ return arBaris('Putaran ' + p.putaran, arAman(p.nama)); }).join('') + '</div>';
+  }
+  if (d.riwayat.length) {
+    const akhirSah = d.riwayat.filter(function(r){ return r.status === 'SAH'; })[0];
+    h += '<div class="ar-kartu"><h3>Riwayat kocokan</h3>' + d.riwayat.map(function(r){
+      const aksi = r.status === 'SAH'
+        ? (r.adaSurat ? '<button class="ar-chip hijau" style="border:none;" onclick="arBukaSurat(\'' + arAman(r.id) + '\')">Surat</button>' : '') +
+          (akhirSah && akhirSah.id === r.id ? ' <button class="ar-chip merah" style="border:none;" onclick="arBukaBatalKocok(\'' + arAman(r.id) + '\')">Batalkan</button>' : '')
+        : '<span class="ar-chip abu">BATAL</span>';
+      return '<div class="ar-tagih"><span class="isi">Putaran ' + r.putaran + ' · ' + arAman(r.nama) + '<small>' + arAman(r.bulan) + ' · ' + arRp(r.nominal) +
+        (r.status === 'BATAL' ? ' · ' + arAman(r.catatan) : '') + '</small></span>' + aksi + '</div>';
+    }).join('') + '</div>';
+  }
+  h += '<button class="ar-btn ar-btn-garis" onclick="Ar.kocok=null;arMuatKocok()">Periksa ulang kelayakan</button>';
+  w.innerHTML = h;
+}
+
+async function arBukaLayar(){
+  if (Ar.sibuk) return;
+  arSiapkanAudio();                 // dibuat saat jari menekan tombol, supaya suara diizinkan browser
+  Ar.sibuk = true; tunggu('Membuka layar kocokan…');
+  try {
+    const h = await panggilAPI('arisanBukaLayar', { kelompok: Ar.kAdmin });
+    selesaiTunggu();
+    arBukaPanggung('ADMIN', Ar.kAdmin, h.live, h.now);
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+async function arKocokSekarang(){
+  if (Ar.sibuk) return;
+  Ar.sibuk = true;
+  const tb = document.getElementById('pgTombolKocok');
+  if (tb) { tb.disabled = true; tb.textContent = 'Mengundi…'; }
+  try {
+    const h = await panggilAPI('arisanKocok', { kelompok: Ar.kAdmin });
+    arTerimaLive(h.live, h.now);
+  } catch (e) {
+    toast(e.message);
+    if (tb) { tb.disabled = false; tb.textContent = 'KOCOK!'; }
+  } finally { Ar.sibuk = false; }
+}
+
+function arBukaBatalKocok(id){
+  const r = Ar.kocok.riwayat.filter(function(x){ return x.id === id; })[0];
+  Ar.sel = { kocok: id };
+  document.getElementById('aiJudul').textContent = 'Batalkan kocokan putaran ' + r.putaran;
+  document.getElementById('aiIsi').innerHTML = arBaris('Pemenang', arAman(r.nama)) + arBaris('Pot', arRp(r.nominal)) +
+    '<p class="ar-ket">Pencairan dan talangan putaran ini dibalik dengan baris pembatalan. Kocokan tetap tercatat sebagai BATAL, lalu putaran ini bisa dikocok ulang.</p>' +
+    '<div class="field"><label for="aiAlasan">Alasan pembatalan</label><textarea id="aiAlasan" rows="2" maxlength="150"></textarea></div>';
+  document.getElementById('aiBawah').innerHTML = '<button class="ar-btn ar-btn-merah" onclick="arBatalKocok()">Batalkan kocokan</button>';
+  bukaLembar('lembarIuranAr');
+}
+
+async function arBatalKocok(){
+  if (Ar.sibuk) return;
+  const alasan = document.getElementById('aiAlasan').value.trim();
+  if (!alasan) return toast('Tuliskan alasan pembatalan.');
+  if (!confirm('Yakin membatalkan kocokan ini?')) return;
+  Ar.sibuk = true; tunggu('Membatalkan…');
+  try {
+    const h = await panggilAPI('arisanBatalKocok', { kelompok: Ar.kAdmin, kocok: Ar.sel.kocok, alasan: alasan });
+    selesaiTunggu(); toast(h.message); tutupLembar('lembarIuranAr'); Ar.kocok = null; await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+/* ---------- SURAT PERNYATAAN ---------- */
+async function arBukaSurat(id){
+  if (Ar.sibuk) return;
+  Ar.sibuk = true; tunggu('Menyiapkan surat…');
+  try {
+    const h = await panggilAPI('arisanSurat', { kelompok: Ar.kAdmin, kocok: id });
+    selesaiTunggu();
+    Ar.surat = { id: id, data: h, coret: false };
+    document.getElementById('asJudul').textContent = h.dicairkan ? 'Surat pernyataan' : 'Tanda tangan pemenang';
+    let isi = arHtmlSurat(h);
+    let bawah = '';
+    if (!h.dicairkan) {
+      isi += '<p class="ar-ket" style="margin-top:12px;">Pemenang membaca surat di atas, lalu tanda tangan dengan jari:</p>' +
+        '<div class="ar-ttd"><canvas id="asTtd"></canvas><div class="garis"></div><button type="button" onclick="arHapusTtd()">Hapus</button></div>' +
+        (h.talangan && h.talangan.length ? '<p class="ar-ket">Ditalangi deposit saat dicairkan: ' + h.talangan.map(arAman).join(', ') + '.</p>' : '') +
+        '<label class="ar-setuju"><input type="checkbox" id="asSerah"><span>Pot <b>' + arRp(h.nominal) +
+        '</b> sudah diserahkan kepada pemenang.</span></label>';
+      bawah = '<button class="ar-btn ar-btn-emas" onclick="arCairkan()">Simpan tanda tangan &amp; cairkan</button>';
+    }
+    document.getElementById('asIsi').innerHTML = isi;
+    document.getElementById('asBawah').innerHTML = bawah;
+    bukaLembar('lembarSuratAr');
+    if (!h.dicairkan) setTimeout(arSiapkanTtd, 350);
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+function arHtmlSurat(h){
+  const s = h.surat;
+  const tgl = h.waktu ? arTgl(h.waktu) : arTgl(new Date().toISOString().slice(0, 10));
+  return '<div class="ar-surat"><h4>' + arAman(s.judul) + '</h4><div class="sub">' + arAman(s.lingkungan) + '</div>' +
+    '<p style="margin:0;">Yang bertanda tangan di bawah ini:</p><table>' +
+    '<tr><td>Nama</td><td>: <b>' + arAman(s.nama) + '</b></td></tr><tr><td>NIK</td><td>: ' + arAman(s.nik) + '</td></tr>' +
+    '<tr><td>Rumah</td><td>: ' + arAman(s.rumah) + '</td></tr><tr><td>ID peserta</td><td>: ' + arAman(s.idPeserta) + '</td></tr>' +
+    (s.penjamin ? '<tr><td>Penjamin</td><td>: ' + arAman(s.penjamin) + '</td></tr>' : '') + '</table>' +
+    '<p style="margin:0;">dengan ini menyatakan:</p><ol>' + s.butir.map(function(b){ return '<li>' + arAman(b) + '</li>'; }).join('') + '</ol>' +
+    '<div style="text-align:right;font-size:.76rem;">' + arAman(s.tempat) + ', ' + tgl + '</div>' +
+    '<div class="tt"><div>Admin Arisan,<div class="kosong"></div><b>' + arAman(h.petugas || '') + '</b></div>' +
+    '<div>Yang menyatakan,' + (h.ttd ? '<img src="' + h.ttd + '" alt="Tanda tangan">' : '<div class="kosong"></div>') + '<b>' + arAman(s.nama) + '</b></div></div></div>';
+}
+
+function arSiapkanTtd(){
+  const c = document.getElementById('asTtd');
+  if (!c) return;
+  const r = c.getBoundingClientRect();
+  if (!r.width) return;
+  const dpr = window.devicePixelRatio || 1;
+  c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+  const g = c.getContext('2d');
+  g.scale(dpr, dpr); g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#14213d';
+  let gores = false;
+  const titik = function(e){ const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  c.addEventListener('pointerdown', function(e){
+    gores = true; c.setPointerCapture(e.pointerId);
+    const p = titik(e); g.beginPath(); g.moveTo(p[0], p[1]); g.lineTo(p[0] + 0.1, p[1] + 0.1); g.stroke();
+    Ar.surat.coret = true;
+  });
+  c.addEventListener('pointermove', function(e){ if (!gores) return; const p = titik(e); g.lineTo(p[0], p[1]); g.stroke(); });
+  c.addEventListener('pointerup', function(){ gores = false; });
+  c.addEventListener('pointercancel', function(){ gores = false; });
+}
+
+function arHapusTtd(){
+  const c = document.getElementById('asTtd');
+  if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  if (Ar.surat) Ar.surat.coret = false;
+}
+
+async function arCairkan(){
+  if (Ar.sibuk || !Ar.surat) return;
+  if (!Ar.surat.coret) return toast('Pemenang belum tanda tangan.');
+  if (!document.getElementById('asSerah').checked) return toast('Centang bahwa pot sudah diserahkan.');
+  const c = document.getElementById('asTtd');
+  // Perkecil supaya ringan disimpan
+  const k = document.createElement('canvas');
+  k.width = 600; k.height = Math.round(600 * c.height / c.width);
+  k.getContext('2d').drawImage(c, 0, 0, k.width, k.height);
+  Ar.sibuk = true; tunggu('Menyimpan surat & mencatat pencairan…');
+  try {
+    const h = await panggilAPI('arisanCairkan', { kelompok: Ar.kAdmin, kocok: Ar.surat.id, ttd: k.toDataURL('image/png') });
+    selesaiTunggu(); toast(h.message); tutupLembar('lembarSuratAr'); Ar.kocok = null; await arMuatAdmin();
+  } catch (e) { selesaiTunggu(); toast(e.message); }
+  finally { Ar.sibuk = false; }
+}
+
+/* =================================================================
+   7E-3 · PANGGUNG KOCOKAN (admin & penonton)
+   Server menentukan pemenang dan jam mulai. Setiap HP memutar animasi yang sama,
+   dihitung dari waktu berjalan (bisa bergabung di tengah).
+   ================================================================= */
+const AR_PG = { DURASI: 13, KOCOK: 8.5, CEPAT: 2.4 };
+
+function arBukaPanggung(peran, kelompok, live, now){
+  arHentikanPanggung();
+  Ar.pg = { peran: peran, k: kelompok, live: null, offset: 0, raf: 0, timer: 0, idAnim: '', suara: Ar.pg ? Ar.pg.suara !== false : true, kunci: null };
+  const el = document.getElementById('arPanggung');
+  el.classList.add('on');
+  try { if (el.requestFullscreen) el.requestFullscreen().catch(function(){}); } catch (e) {}
+  try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function(k){ if (Ar.pg) Ar.pg.kunci = k; }).catch(function(){}); } catch (e) {}
+  document.getElementById('pgSuara').textContent = Ar.pg.suara ? '🔊' : '🔇';
+  arTerimaLive(live, now);
+  Ar.pg.timer = setInterval(arTanyaLive, peran === 'ADMIN' ? 4000 : 2000);
+}
+
+async function arTanyaLive(){
+  if (!Ar.pg || document.hidden) return;
+  try {
+    const h = await panggilAPI('arisanLive', { kelompok: Ar.pg.k });
+    if (Ar.pg) arTerimaLive(h.live, h.now);
+  } catch (e) {}
+}
+
+function arTerimaLive(live, now){
+  const pg = Ar.pg;
+  if (!pg) return;
+  if (now) pg.offset = now - Date.now();
+  if (!live) {
+    // Layar ditutup admin. Penonton yang sudah melihat hasil tetap melihatnya.
+    if (pg.peran !== 'ADMIN' && pg.live && pg.live.s === 'KOCOK') { clearInterval(pg.timer); arAksiPanggung('SELESAI'); return; }
+    if (pg.peran !== 'ADMIN') { document.getElementById('pgInfo').innerHTML = '<div class="besar">Kocokan sudah ditutup</div>'; arAksiPanggung('TUTUP'); clearInterval(pg.timer); }
+    return;
+  }
+  const lama = pg.live;
+  pg.live = live;
+  document.getElementById('pgJudul').textContent = 'KOCOKAN PUTARAN ' + live.putaran;
+  document.getElementById('pgSub').textContent = (live.periode || '') + ' · ' + (live.bulan || '') + ' · pot ' + arRp(live.pot);
+  if (live.s === 'SIAP') {
+    if (!lama || lama.s !== 'SIAP' || lama.gulungan !== live.gulungan) {
+      arBangunPanggung(live.gulungan, 'SIAP' + live.putaran);
+      arGambarAdegan(-1);
+    }
+    document.getElementById('pgInfo').innerHTML = '<div class="besar">' + live.gulungan + ' gulungan nama di dalam gelas</div><div class="kecil">' +
+      (live.daftar || []).map(function(d){ return arAman(d.nama) + (d.layak ? '' : ' (belum memenuhi syarat)'); }).join(' · ') + '</div>';
+    arAksiPanggung('SIAP');
+    return;
+  }
+  if (live.s === 'KOCOK' && pg.idAnim !== live.id) {
+    pg.idAnim = live.id;
+    arBangunPanggung(live.gulungan, live.id);
+    arMulaiAnimasi();
+  }
+}
+
+function arAksiPanggung(tahap){
+  const a = document.getElementById('pgAksi'), pg = Ar.pg;
+  if (pg.peran === 'ADMIN') {
+    if (tahap === 'SIAP') a.innerHTML = '<button class="ar-btn ar-btn-emas ar-pg-kocok" id="pgTombolKocok" onclick="arKocokSekarang()">KOCOK!</button>';
+    else if (tahap === 'SELESAI') a.innerHTML = '<button class="ar-btn ar-btn-emas" onclick="arLanjutSurat()">Lanjut: surat pernyataan pemenang</button>' +
+      '<button class="ar-btn ar-btn-garis" onclick="arTutupPanggung()">Tutup layar</button>';
+    else a.innerHTML = '';
+  } else {
+    if (tahap === 'SIAP') a.innerHTML = '<p class="ar-ket" style="text-align:center;">Menunggu Admin menekan tombol kocok…</p>';
+    else if (tahap === 'SELESAI' || tahap === 'TUTUP') a.innerHTML = '<button class="ar-btn ar-btn-garis" onclick="arTutupPanggung()">Tutup</button>';
+    else a.innerHTML = '';
+  }
+}
+
+async function arLanjutSurat(){
+  const id = Ar.pg && Ar.pg.live && Ar.pg.live.id;
+  await arTutupPanggung();
+  Ar.kocok = null;
+  await arMuatAdmin();
+  if (id) arBukaSurat(id);
+}
+
+async function arTutupPanggung(){
+  const pg = Ar.pg;
+  if (pg && pg.peran === 'ADMIN') {
+    try { await panggilAPI('arisanBukaLayar', { kelompok: pg.k, tutup: true }); } catch (e) {}
+  }
+  arHentikanPanggung();
+  document.getElementById('arPanggung').classList.remove('on');
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  if (pg && pg.peran === 'ADMIN' && Ar.mode === 'admin') { Ar.kocok = null; arMuatKocok(); }
+  if (pg && pg.peran !== 'ADMIN' && Ar.mode === 'peserta') arMuatSaya(Ar.kSaya);
+}
+
+function arHentikanPanggung(){
+  const pg = Ar.pg;
+  if (!pg) return;
+  clearInterval(pg.timer); cancelAnimationFrame(pg.raf);
+  try { if (pg.kunci) pg.kunci.release(); } catch (e) {}
+  pg.timer = 0; pg.raf = 0;
+}
+
+function arTombolSuara(){
+  if (!Ar.pg) return;
+  Ar.pg.suara = !Ar.pg.suara;
+  arSiapkanAudio();
+  document.getElementById('pgSuara').textContent = Ar.pg.suara ? '🔊' : '🔇';
+}
+
+/* ---------- ANIMASI GELAS ---------- */
+function arAcak(seed){
+  let h = 2166136261;
+  String(seed).split('').forEach(function(c){ h = Math.imul(h ^ c.charCodeAt(0), 16777619); });
+  return function(){ h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+}
+
+function arBangunPanggung(n, seed){
+  const r = arAcak(seed), pg = Ar.pg;
+  n = Math.max(1, Math.min(Number(n) || 1, 40));
+  const gul = [];
+  for (let i = 0; i < n; i++) {
+    const y = 342 - (i / Math.max(n - 1, 1)) * 92 * Math.min(1, n / 12) - r() * 10;
+    const lebar = 82 + (352 - y) * 0.43;                    // gelas melebar ke atas
+    const x = 125 + (r() - 0.5) * (lebar - 20);
+    gul.push({ x: x, y: y, rot: (r() - 0.5) * 60, fase: r() * 6.28, warna: ['#c0392b', '#cca43b', '#2e86de', '#27ae60', '#8e44ad'][i % 5] });
+  }
+  pg.gul = gul;
+  pg.pilih = Math.floor(r() * n);
+  const gulSvg = function(g, id){
+    return '<g id="' + id + '"><rect x="-6" y="-21" width="12" height="42" rx="3" fill="#f6ecd2" stroke="#d9c79b" stroke-width=".8"/>' +
+      '<ellipse cx="0" cy="-21" rx="6" ry="2.2" fill="#e6d6ad"/><ellipse cx="0" cy="21" rx="6" ry="2.2" fill="#e6d6ad"/>' +
+      '<rect x="-6" y="-3.5" width="12" height="7" fill="' + g.warna + '"/></g>';
+  };
+  document.getElementById('pgSvg').innerHTML =
+    '<svg viewBox="0 0 380 440" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<defs><clipPath id="pgKlip"><path d="M68 146 L82 352 Q84 362 94 362 L156 362 Q166 362 168 352 L182 146 Z"/></clipPath>' +
+    '<linearGradient id="pgKaca" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".5" stop-color="#fff" stop-opacity=".05"/>' +
+    '<stop offset="1" stop-color="#fff" stop-opacity=".14"/></linearGradient></defs>' +
+    '<ellipse cx="125" cy="378" rx="70" ry="7" fill="#000" opacity=".35"/>' +
+    '<g id="pgGelas"><path d="M61 140 L76 356 Q78 370 92 370 L158 370 Q172 370 174 356 L189 140 Z" fill="url(#pgKaca)" stroke="rgba(255,255,255,.55)" stroke-width="2"/>' +
+    '<g clip-path="url(#pgKlip)">' + gul.map(function(g, i){ return gulSvg(g, 'pgG' + i); }).join('') + '</g>' +
+    '<path d="M74 160 L86 340" stroke="rgba(255,255,255,.35)" stroke-width="4" stroke-linecap="round"/>' +
+    '<ellipse cx="125" cy="140" rx="64" ry="5" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"/></g>' +
+    '<g id="pgKeluar" style="display:none">' + gulSvg(gul[pg.pilih], 'pgKeluarIsi') + '</g>' +
+    '<g id="pgKertas" style="display:none">' +
+      '<rect id="pgKertasBadan" x="202" y="207" width="136" height="0" fill="#fbf4e2" stroke="#d9c79b"/>' +
+      '<g id="pgKertasTeks" opacity="0"><text id="pgT1" x="270" y="236" text-anchor="middle" font-size="9" fill="#8a6d1d" letter-spacing="2">PEMENANG</text>' +
+      '<text id="pgT2" x="270" y="268" text-anchor="middle" font-family="Georgia,serif" font-size="21" font-weight="700" fill="#14213d"></text>' +
+      '<text id="pgT3" x="270" y="292" text-anchor="middle" font-family="Georgia,serif" font-size="21" font-weight="700" fill="#14213d"></text>' +
+      '<text id="pgT4" x="270" y="352" text-anchor="middle" font-size="10" fill="#555"></text>' +
+      '<text id="pgT5" x="270" y="370" text-anchor="middle" font-size="12" font-weight="700" fill="#8a6d1d"></text></g>' +
+      '<rect id="pgGulAtas" x="196" y="200" width="148" height="14" rx="7" fill="#e6d6ad" stroke="#cbb27a"/>' +
+      '<rect id="pgGulBawah" x="196" y="200" width="148" height="14" rx="7" fill="#e6d6ad" stroke="#cbb27a"/></g>' +
+    '<g id="pgKonfeti"></g></svg>';
+  pg.konfeti = Array.from({ length: 46 }, function(){ return { x: 120 + r() * 260, v: 60 + r() * 90, a: r() * 6.28, w: ['#e6b422', '#e5484d', '#25d366', '#5aa9ff', '#fff'][Math.floor(r() * 5)] }; });
+  document.getElementById('pgKonfeti').innerHTML = pg.konfeti.map(function(k, i){
+    return '<rect id="pgK' + i + '" width="5" height="9" fill="' + k.w + '" opacity="0"/>';
+  }).join('');
+  pg.ekstrem = null; pg.tLalu = -99;
+}
+
+/** Fase ayunan (radian) dan amplitudo pada detik t. 7 Hz lalu melambat ke 1,4 Hz. */
+function arAyun(t){
+  const C = AR_PG.CEPAT, L = AR_PG.KOCOK - C;
+  let siklus;
+  if (t < C) siklus = 7 * t;
+  else { const u = Math.min(t, AR_PG.KOCOK) - C; siklus = 7 * C + 7 * u - 5.6 * u * u / (2 * L); }
+  const q = t < C ? 0 : Math.min(1, (t - C) / L);
+  return { fase: 2 * Math.PI * siklus, amp: Math.pow(1 - q, 1.4) };
+}
+
+function arMudah(x){ x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+
+/** Menggambar keadaan pada detik t (t < 0 = diam, menunggu). */
+function arGambarAdegan(t){
+  const pg = Ar.pg;
+  if (!pg || !pg.gul) return;
+  const live = pg.live || {};
+  const ay = t >= 0 && t < AR_PG.KOCOK ? arAyun(t) : { fase: 0, amp: 0 };
+  const sudut = 15 * Math.sin(ay.fase) * ay.amp;
+  const gelas = document.getElementById('pgGelas');
+  gelas.setAttribute('transform', 'rotate(' + sudut.toFixed(2) + ' 125 370)');
+  gelas.setAttribute('opacity', t > 10 ? (1 - 0.7 * arMudah((t - 10) / 0.5)).toFixed(2) : '1');
+  pg.gul.forEach(function(g, i){
+    const el = document.getElementById('pgG' + i);
+    if (i === pg.pilih && t >= AR_PG.KOCOK) { el.setAttribute('display', 'none'); return; }
+    el.removeAttribute('display');
+    const s = Math.sin(ay.fase * 1.0 + g.fase);
+    const dx = s * ay.amp * 7, dy = -Math.abs(Math.sin(ay.fase + g.fase)) * ay.amp * (18 + (i % 5) * 6);
+    const rot = g.rot + Math.sin(ay.fase * 1.3 + g.fase) * ay.amp * 35;
+    el.setAttribute('transform', 'translate(' + (g.x + dx).toFixed(1) + ' ' + (g.y + dy).toFixed(1) + ') rotate(' + rot.toFixed(1) + ')');
+  });
+  // Gulungan terpilih keluar dari mulut gelas, melengkung ke samping
+  const kel = document.getElementById('pgKeluar'), isi = document.getElementById('pgKeluarIsi');
+  if (t >= AR_PG.KOCOK && t < 10.35) {
+    const g = pg.gul[pg.pilih];
+    let x, y, rot, op = 1;
+    if (t < 9.3) { const u = arMudah((t - AR_PG.KOCOK) / 0.8); x = g.x + (125 - g.x) * u; y = g.y + (95 - g.y) * u; rot = g.rot * (1 - u); }
+    else if (t < 10) { const u = (t - 9.3) / 0.7; x = 125 + 175 * arMudah(u); y = 95 + 235 * u * u - 120 * u * (1 - u); rot = 90 * u; }
+    else { const u = (t - 10) / 0.35; x = 300 - 30 * u; y = 330 - 130 * u; rot = 90; op = 1 - u; }
+    kel.style.display = '';
+    isi.setAttribute('transform', 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + rot.toFixed(1) + ')');
+    isi.setAttribute('opacity', op.toFixed(2));
+  } else kel.style.display = 'none';
+  // Kertas dibuka
+  const ker = document.getElementById('pgKertas');
+  if (t >= 10.0) {
+    ker.style.display = '';
+    ker.setAttribute('opacity', arMudah((t - 10) / 0.35).toFixed(2));
+    const tinggi = 180 * arMudah((t - 10.35) / 1.15);
+    document.getElementById('pgKertasBadan').setAttribute('height', tinggi.toFixed(1));
+    document.getElementById('pgGulBawah').setAttribute('y', (200 + tinggi).toFixed(1));
+    const nm = String(live.nama || '');
+    let b1 = nm, b2 = '';
+    if (nm.length > 12) { const sp = nm.lastIndexOf(' ', 13) > 0 ? nm.lastIndexOf(' ', 13) : nm.indexOf(' '); if (sp > 0) { b1 = nm.slice(0, sp); b2 = nm.slice(sp + 1); } }
+    document.getElementById('pgT2').textContent = b1;
+    document.getElementById('pgT3').textContent = b2;
+    document.getElementById('pgT2').setAttribute('y', b2 ? '268' : '282');
+    document.getElementById('pgT4').textContent = 'Putaran ' + (live.putaran || '') + ' · ' + (live.bulan || '');
+    document.getElementById('pgT5').textContent = arRp(live.pot);
+    document.getElementById('pgKertasTeks').setAttribute('opacity', arMudah((t - 11.4) / 0.5).toFixed(2));
+  } else ker.style.display = 'none';
+  // Konfeti
+  (pg.konfeti || []).forEach(function(k, i){
+    const el = document.getElementById('pgK' + i), u = t - 11.5;
+    if (u < 0 || u > 2.6) { el.setAttribute('opacity', '0'); return; }
+    el.setAttribute('opacity', (1 - u / 2.6).toFixed(2));
+    el.setAttribute('transform', 'translate(' + (k.x + Math.sin(u * 3 + k.a) * 14).toFixed(1) + ' ' + (130 + k.v * u + 40 * u * u).toFixed(1) +
+      ') rotate(' + ((k.a + u * 4) * 57).toFixed(0) + ')');
+  });
+}
+
+function arMulaiAnimasi(){
+  const pg = Ar.pg;
+  cancelAnimationFrame(pg.raf);
+  arAksiPanggung('JALAN');
+  const langkah = function(){
+    if (!Ar.pg || Ar.pg !== pg) return;
+    const t = (Date.now() + pg.offset - pg.live.mulai) / 1000;
+    const info = document.getElementById('pgInfo');
+    if (t < 0) {
+      info.innerHTML = '<div class="ar-pg-hitung">' + Math.ceil(-t) + '</div><div class="kecil">Kocokan dimulai…</div>';
+      arGambarAdegan(-1);
+    } else {
+      arBunyiPada(t);
+      arGambarAdegan(Math.min(t, AR_PG.DURASI));
+      if (t < AR_PG.KOCOK) info.innerHTML = '<div class="besar">Mengocok ' + pg.live.gulungan + ' gulungan…</div>';
+      else if (t < 11.5) info.innerHTML = '<div class="besar">Satu gulungan keluar!</div>';
+      else info.innerHTML = '<div class="besar">🎉 Selamat, ' + arAman(pg.live.nama) + '!</div><div class="kecil">Pemenang putaran ' + pg.live.putaran + ' · ' + arRp(pg.live.pot) + '</div>';
+    }
+    if (t >= AR_PG.DURASI) { arAksiPanggung('SELESAI'); if (pg.peran !== 'ADMIN') { clearInterval(pg.timer); pg.timer = setInterval(arTanyaLive, 8000); } return; }
+    pg.raf = requestAnimationFrame(langkah);
+  };
+  langkah();
+}
+
+/* ---------- SUARA (WebAudio, tanpa berkas) ---------- */
+function arSiapkanAudio(){
+  try {
+    if (!window.AudioContext && !window.webkitAudioContext) return;
+    if (!Ar.audio) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 1.5, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      Ar.audio = { ctx: ctx, noise: buf };
+    }
+    if (Ar.audio.ctx.state === 'suspended') Ar.audio.ctx.resume();
+  } catch (e) {}
+}
+
+function arNada(f, mulai, lama, vol, tipe){
+  const A = Ar.audio, c = A.ctx, o = c.createOscillator(), g = c.createGain();
+  o.type = tipe || 'sine'; o.frequency.setValueAtTime(f, mulai);
+  g.gain.setValueAtTime(vol, mulai); g.gain.exponentialRampToValueAtTime(0.0001, mulai + lama);
+  o.connect(g).connect(c.destination); o.start(mulai); o.stop(mulai + lama + 0.05);
+  return o;
+}
+
+function arDesis(mulai, lama, vol, f1, f2, q){
+  const A = Ar.audio, c = A.ctx, s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = A.noise; bp.type = 'bandpass'; bp.Q.value = q || 1.2;
+  bp.frequency.setValueAtTime(f1, mulai); bp.frequency.exponentialRampToValueAtTime(f2 || f1, mulai + lama);
+  g.gain.setValueAtTime(vol, mulai); g.gain.exponentialRampToValueAtTime(0.0001, mulai + lama);
+  s.connect(bp).connect(g).connect(c.destination); s.start(mulai); s.stop(mulai + lama + 0.05);
+}
+
+function arBunyi(jenis, kuat){
+  const pg = Ar.pg;
+  if (!pg || !pg.suara || !Ar.audio || Ar.audio.ctx.state !== 'running') return;
+  try {
+    const t = Ar.audio.ctx.currentTime + 0.01;
+    if (jenis === 'kocok') {
+      arDesis(t, 0.07, 0.35 * kuat, 2200 + Math.random() * 2000, 0, 2.5);
+      arNada(2000 + Math.random() * 1200, t, 0.08, 0.06 * kuat, 'triangle');
+    } else if (jenis === 'pop') {
+      const o = arNada(620, t, 0.12, 0.25); o.frequency.exponentialRampToValueAtTime(200, t + 0.12);
+    } else if (jenis === 'duk') {
+      arNada(120, t, 0.18, 0.4); arDesis(t, 0.08, 0.2, 400, 0, 0.8);
+    } else if (jenis === 'srek') {
+      arDesis(t, 1.1, 0.18, 800, 3000, 0.9);
+    } else if (jenis === 'ting') {
+      [1047, 1319, 1568, 2093].forEach(function(f, i){ arNada(f, t + i * 0.12, 0.9, 0.18); });
+    }
+  } catch (e) {}
+}
+
+/** Memicu bunyi untuk kejadian yang terlewati sejak bingkai sebelumnya. */
+function arBunyiPada(t){
+  const pg = Ar.pg, lalu = pg.tLalu;
+  pg.tLalu = t;
+  if (t - lalu > 0.5) { pg.ekstrem = null; return; }     // baru bergabung / tab tertidur: jangan memborong bunyi
+  if (t < AR_PG.KOCOK) {
+    const ay = arAyun(t), idx = Math.floor((ay.fase - Math.PI / 2) / Math.PI);
+    if (pg.ekstrem !== null && idx !== pg.ekstrem && ay.amp > 0.04) arBunyi('kocok', Math.max(0.2, ay.amp));
+    pg.ekstrem = idx;
+  }
+  [[9.0, 'pop'], [10.0, 'duk'], [10.35, 'srek'], [11.5, 'ting']].forEach(function(e){ if (lalu < e[0] && t >= e[0]) arBunyi(e[1], 1); });
+}
+
+/* =================================================================
+   7E-3 · PESERTA: kocokan & siaran langsung
+   ================================================================= */
+function arGambarKocokSaya(h){
+  const k = h.kocok, kartu = document.getElementById('apKocokKartu');
+  kartu.classList.toggle('ar-sembunyi', !k);
+  if (!k) return;
+  let x = '';
+  if (k.saya) {
+    if (k.saya.status === 'LAYAK') x += '<div class="ar-peringatan" style="background:rgba(37,211,102,.12);color:#8ff0b8;border-color:rgba(37,211,102,.3);">✅ Anda ikut diundi di putaran ' + k.putaran + ' (' + arAman(k.bulan) + ').</div>';
+    else if (k.saya.status === 'TIDAK') x += '<div class="ar-peringatan">Anda belum memenuhi syarat putaran ' + k.putaran + ':<br>• ' + k.saya.alasan.map(arAman).join('<br>• ') + '</div>';
+  }
+  x += k.riwayat.length ? k.riwayat.map(function(r){
+    return '<div class="ar-tagih"><span class="isi">Putaran ' + r.putaran + '<small>' + arAman(r.bulan) + '</small></span><b>' + (r.saya ? '🏆 ' : '') + arAman(r.nama) + '</b></div>';
+  }).join('') : '<p>Belum ada pemenang di periode ini.</p>';
+  document.getElementById('apKocok').innerHTML = x;
+}
+
+function arPantauLive(){
+  clearTimeout(Ar.pantau);
+  const jalan = async function(){
+    if (Ar.mode !== 'peserta' || !document.getElementById('apLive') || !Ar.saya) return;
+    if (!document.hidden && !(Ar.pg && document.getElementById('arPanggung').classList.contains('on'))) {
+      try {
+        const h = await panggilAPI('arisanLive', { kelompok: Ar.kSaya });
+        arTampilBanner(h.live, h.now);
+      } catch (e) {}
+    }
+    Ar.pantau = setTimeout(jalan, 12000);
+  };
+  jalan();
+}
+
+function arTampilBanner(live, now){
+  const b = document.getElementById('apLive');
+  if (!b) return;
+  if (!live) { b.classList.add('ar-sembunyi'); return; }
+  Ar.liveTerakhir = { live: live, now: now };
+  b.classList.remove('ar-sembunyi');
+  b.innerHTML = '<span class="titik"></span><span class="isi"><b>Kocokan putaran ' + live.putaran + ' ' + (live.s === 'KOCOK' ? 'sedang berlangsung' : 'akan dimulai') +
+    '</b>' + arAman(live.bulan || '') + ' · pot ' + arRp(live.pot) + '</span><button class="ar-btn ar-btn-emas" onclick="arTonton()">Tonton</button>';
+}
+
+function arTonton(){
+  arSiapkanAudio();
+  const L = Ar.liveTerakhir;
+  if (!L) return;
+  arBukaPanggung('PENONTON', Ar.kSaya, L.live, L.now);
 }

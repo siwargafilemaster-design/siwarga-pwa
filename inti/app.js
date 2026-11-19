@@ -48,12 +48,16 @@ const NAV_PERAN = {
   TELLER:     ['home', 'tabungan',
                { key:'tabungan', aksi:'catat',   label:'Catat',   ikon:'i-plus', menonjol:true },
                { key:'tabungan', aksi:'riwayat', label:'Riwayat', ikon:'i-jam' }],
-  ADMIN_ARISAN_RT:  ['home', 'arisan',
+  ADMIN_ARISAN_RT:  ['home',
                      { key:'arisan', aksi:'peserta', label:'Peserta', ikon:'i-users' },
-                     { key:'arisan', aksi:'iuran',   label:'Iuran',   ikon:'i-coin' }],
-  ADMIN_ARISAN_PKK: ['home', 'arisan',
+                     { key:'arisan', aksi:'kocok',   label:'Kocok',   ikon:'i-gift', menonjol:true },
+                     { key:'arisan', aksi:'iuran',   label:'Iuran',   ikon:'i-coin' },
+                     'arisan'],
+  ADMIN_ARISAN_PKK: ['home',
                      { key:'arisan', aksi:'peserta', label:'Peserta', ikon:'i-users' },
-                     { key:'arisan', aksi:'iuran',   label:'Iuran',   ikon:'i-coin' }],
+                     { key:'arisan', aksi:'kocok',   label:'Kocok',   ikon:'i-gift', menonjol:true },
+                     { key:'arisan', aksi:'iuran',   label:'Iuran',   ikon:'i-coin' },
+                     'arisan'],
   DEVELOPER:  ['home','keuangan','rumah','setting']
 };
 
